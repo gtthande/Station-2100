@@ -1,6 +1,7 @@
 
 import { GradientButton } from "@/components/ui/gradient-button";
 import { GlassCard, GlassCardHeader, GlassCardTitle, GlassCardDescription, GlassCardContent } from "@/components/ui/glass-card";
+import { UserMenu } from "@/components/navigation/UserMenu";
 import { Settings, Package, FileText, Users, TrendingUp, Shield } from "lucide-react";
 
 const Index = () => {
@@ -39,6 +40,19 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-surface-dark">
+      {/* Navigation Header */}
+      <header className="border-b border-white/10 backdrop-blur-sm bg-surface-dark/80">
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center">
+              <Shield className="w-5 h-5 text-white" />
+            </div>
+            <h1 className="text-xl font-bold text-white">Station-2100</h1>
+          </div>
+          <UserMenu />
+        </div>
+      </header>
+
       {/* Hero Section */}
       <section className="section-ornament relative overflow-hidden">
         <div className="container mx-auto px-6 py-24 max-w-container">
