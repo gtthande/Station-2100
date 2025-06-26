@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -18,6 +19,18 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				'manrope': ['Manrope', 'Inter', 'sans-serif'],
+				'inter': ['Inter', 'sans-serif'],
+			},
+			fontSize: {
+				'display': ['32px', { lineHeight: '1.2', fontWeight: '800' }],
+				'h1': ['32px', { lineHeight: '1.25', fontWeight: '700' }],
+				'h2': ['24px', { lineHeight: '1.3', fontWeight: '600' }],
+				'h3': ['18px', { lineHeight: '1.4', fontWeight: '600' }],
+				'body': ['16px', { lineHeight: '1.5', fontWeight: '400' }],
+				'caption': ['14px', { lineHeight: '1.4', fontWeight: '400' }],
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -26,7 +39,9 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					from: 'hsl(var(--primary-from))',
+					to: 'hsl(var(--primary-to))',
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -42,7 +57,8 @@ export default {
 				},
 				accent: {
 					DEFAULT: 'hsl(var(--accent))',
-					foreground: 'hsl(var(--accent-foreground))'
+					foreground: 'hsl(var(--accent-foreground))',
+					orange: 'hsl(var(--accent-orange))',
 				},
 				popover: {
 					DEFAULT: 'hsl(var(--popover))',
@@ -61,7 +77,9 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				'text-primary': 'hsl(var(--text-primary))',
+				'surface-dark': 'hsl(var(--surface-dark))',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +102,40 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'fade-in': {
+					'0%': {
+						opacity: '0',
+						transform: 'translateY(10px)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
+				},
+				'slide-up': {
+					'0%': {
+						opacity: '0',
+						transform: 'translateY(20px)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fade-in 0.3s ease-out',
+				'slide-up': 'slide-up 0.4s ease-out',
+			},
+			maxWidth: {
+				'container': '1280px',
+			},
+			spacing: {
+				'gutter-xl': '64px',
+				'gutter-lg': '32px',
 			}
 		}
 	},
