@@ -10,11 +10,12 @@ import { Loader2, Shield } from 'lucide-react';
 
 export const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, resetPassword } = useAuth();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,7 +23,23 @@ export const AuthForm = () => {
     setLoading(true);
 
     try {
-      if (isLogin) {
+      if (showForgotPassword) {
+        const { error } = await resetPassword(email);
+        if (error) {
+          toast({
+            title: "Reset Failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Reset Email Sent!",
+            description: "Check your email for password reset instructions.",
+          });
+          setShowForgotPassword(false);
+          setIsLogin(true);
+        }
+      } else if (isLogin) {
         const { error } = await signIn(email, password);
         if (error) {
           toast({
@@ -63,6 +80,28 @@ export const AuthForm = () => {
     }
   };
 
+  const getTitle = () => {
+    if (showForgotPassword) return 'Reset Password';
+    return isLogin ? 'Welcome Back' : 'Join Station-2100';
+  };
+
+  const getDescription = () => {
+    if (showForgotPassword) return 'Enter your email to receive reset instructions';
+    return isLogin 
+      ? 'Sign in to access your aviation maintenance dashboard' 
+      : 'Create your account to get started';
+  };
+
+  const fillTestCredentials = () => {
+    setEmail('test@station2100.com');
+    setPassword('test123');
+    setFullName('Test User');
+    toast({
+      title: "Test Credentials Filled",
+      description: "You can now create a test account or modify these credentials",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-surface-dark flex items-center justify-center p-6">
       <div className="w-full max-w-md">
@@ -72,19 +111,16 @@ export const AuthForm = () => {
               <Shield className="w-8 h-8 text-white" />
             </div>
             <GlassCardTitle className="text-2xl">
-              {isLogin ? 'Welcome Back' : 'Join Station-2100'}
+              {getTitle()}
             </GlassCardTitle>
             <p className="text-white/70">
-              {isLogin 
-                ? 'Sign in to access your aviation maintenance dashboard' 
-                : 'Create your account to get started'
-              }
+              {getDescription()}
             </p>
           </GlassCardHeader>
           
           <GlassCardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {!isLogin && (
+              {!isLogin && !showForgotPassword && (
                 <div className="space-y-2">
                   <Label htmlFor="fullName" className="text-white">Full Name</Label>
                   <Input
@@ -93,7 +129,7 @@ export const AuthForm = () => {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Enter your full name"
-                    required={!isLogin}
+                    required={!isLogin && !showForgotPassword}
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
                   />
                 </div>
@@ -112,18 +148,20 @@ export const AuthForm = () => {
                 />
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-white">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  required
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                />
-              </div>
+              {!showForgotPassword && (
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-white">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    required
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                  />
+                </div>
+              )}
               
               <GradientButton
                 type="submit"
@@ -133,25 +171,62 @@ export const AuthForm = () => {
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    {isLogin ? 'Signing In...' : 'Creating Account...'}
+                    {showForgotPassword ? 'Sending Reset Email...' : (isLogin ? 'Signing In...' : 'Creating Account...')}
                   </>
                 ) : (
-                  isLogin ? 'Sign In' : 'Create Account'
+                  showForgotPassword ? 'Send Reset Email' : (isLogin ? 'Sign In' : 'Create Account')
                 )}
               </GradientButton>
             </form>
             
-            <div className="mt-6 text-center">
-              <button
-                type="button"
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-white/70 hover:text-white transition-colors"
-              >
-                {isLogin 
-                  ? "Don't have an account? Sign up" 
-                  : "Already have an account? Sign in"
-                }
-              </button>
+            <div className="mt-6 space-y-3 text-center">
+              {!showForgotPassword && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setIsLogin(!isLogin)}
+                    className="text-white/70 hover:text-white transition-colors block w-full"
+                  >
+                    {isLogin 
+                      ? "Don't have an account? Sign up" 
+                      : "Already have an account? Sign in"
+                    }
+                  </button>
+                  
+                  {isLogin && (
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-white/70 hover:text-white transition-colors text-sm"
+                    >
+                      Forgot your password?
+                    </button>
+                  )}
+                </>
+              )}
+              
+              {showForgotPassword && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForgotPassword(false);
+                    setIsLogin(true);
+                  }}
+                  className="text-white/70 hover:text-white transition-colors"
+                >
+                  Back to sign in
+                </button>
+              )}
+              
+              <div className="border-t border-white/10 pt-4">
+                <button
+                  type="button"
+                  onClick={fillTestCredentials}
+                  className="text-sm text-white/50 hover:text-white/70 transition-colors"
+                >
+                  Fill test credentials
+                </button>
+              </div>
             </div>
           </GlassCardContent>
         </GlassCard>
