@@ -139,7 +139,7 @@ const Index = () => {
                   <p className="text-white/70 mb-4">{feature.description}</p>
                   <div className="flex items-center justify-between">
                     <GradientButton 
-                      variant={isClickable ? "default" : "outline"}
+                      variant={isClickable ? "gradient" : "outline"}
                       size="sm"
                       className="gap-2"
                       disabled={!isClickable}
