@@ -1,152 +1,198 @@
 
-import { GradientButton } from "@/components/ui/gradient-button";
-import { GlassCard, GlassCardHeader, GlassCardTitle, GlassCardDescription, GlassCardContent } from "@/components/ui/glass-card";
-import { UserMenu } from "@/components/navigation/UserMenu";
-import { Settings, Package, FileText, Users, TrendingUp, Shield } from "lucide-react";
+import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/components/ui/glass-card';
+import { GradientButton } from '@/components/ui/gradient-button';
+import { UserMenu } from '@/components/navigation/UserMenu';
+import { Users, Building, Package, ClipboardList, BarChart3, Settings, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Index = () => {
   const features = [
     {
-      icon: Package,
-      title: "Inventory Management",
-      description: "Track stock items, batch receiving, and real-time inventory levels across multiple warehouses."
-    },
-    {
-      icon: FileText,
-      title: "Job Cards",
-      description: "Create, manage, and approve job cards with automated calculations and approval workflows."
-    },
-    {
       icon: Users,
-      title: "Customer & Supplier Management",
-      description: "Maintain comprehensive records of customers and suppliers with contact information."
+      title: 'Customer Management',
+      description: 'Manage your customer database with aircraft details and contact information',
+      link: '/customers',
+      color: 'from-blue-500 to-cyan-500'
     },
     {
-      icon: TrendingUp,
-      title: "Reporting & Analytics",
-      description: "Generate detailed reports for stock valuation, job summaries, and business insights."
+      icon: Building,
+      title: 'Supplier Management',
+      description: 'Track your parts suppliers and vendor relationships',
+      link: '/suppliers',
+      color: 'from-green-500 to-emerald-500'
     },
     {
-      icon: Shield,
-      title: "Role-Based Access",
-      description: "Secure multi-user environment with customizable roles and permissions."
+      icon: Package,
+      title: 'Inventory Management',
+      description: 'Track parts, stock levels, and locations across your facility',
+      link: '#',
+      color: 'from-purple-500 to-indigo-500'
+    },
+    {
+      icon: ClipboardList,
+      title: 'Job Cards & Work Orders',
+      description: 'Create and manage maintenance tasks and work orders',
+      link: '#',
+      color: 'from-orange-500 to-red-500'
+    },
+    {
+      icon: BarChart3,
+      title: 'Reports & Analytics',
+      description: 'Generate insights and reports on your maintenance operations',
+      link: '#',
+      color: 'from-pink-500 to-rose-500'
     },
     {
       icon: Settings,
-      title: "Period Management",
-      description: "Close accounting periods with automated locking and audit trail compliance."
+      title: 'System Settings',
+      description: 'Configure users, permissions, and system preferences',
+      link: '#',
+      color: 'from-gray-500 to-slate-500'
     }
   ];
 
   return (
     <div className="min-h-screen bg-surface-dark">
-      {/* Navigation Header */}
-      <header className="border-b border-white/10 backdrop-blur-sm bg-surface-dark/80">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center">
-              <Shield className="w-5 h-5 text-white" />
+      {/* Header */}
+      <div className="border-b border-white/10 bg-surface-dark/50 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-white">Station-2100</h1>
+              <p className="text-white/60">Aviation Maintenance Management System</p>
             </div>
-            <h1 className="text-xl font-bold text-white">Station-2100</h1>
+            <UserMenu />
           </div>
-          <UserMenu />
         </div>
-      </header>
+      </div>
 
       {/* Hero Section */}
-      <section className="section-ornament relative overflow-hidden">
-        <div className="container mx-auto px-6 py-24 max-w-container">
-          <div className="text-center space-y-8 animate-fade-in">
-            <div className="space-y-4">
-              <h1 className="text-display font-bold gradient-text">
-                Station-2100 Web
-              </h1>
-              <p className="text-h2 text-white/80 max-w-3xl mx-auto">
-                Modern inventory and workshop management system for aviation maintenance
-              </p>
-              <p className="text-body text-white/60 max-w-2xl mx-auto">
-                Modernized from the ground up with real-time stock visibility, 
-                automated workflows, and comprehensive audit compliance.
-              </p>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <GradientButton size="lg" className="px-8">
-                Get Started
-              </GradientButton>
-              <GradientButton variant="outline" size="lg" className="px-8">
-                View Demo
-              </GradientButton>
-            </div>
-          </div>
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-white mb-4">
+            Welcome to Station-2100
+          </h2>
+          <p className="text-xl text-white/80 mb-8 max-w-3xl mx-auto">
+            Your comprehensive aviation maintenance management system. 
+            Streamline operations, track inventory, and manage customer relationships all in one place.
+          </p>
         </div>
-        
-        {/* Background Gradient Orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-from/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary-to/10 rounded-full blur-3xl"></div>
-      </section>
 
-      {/* Features Section */}
-      <section className="section-ornament py-24">
-        <div className="container mx-auto px-6 max-w-container">
-          <div className="text-center space-y-4 mb-16">
-            <h2 className="text-h1 font-bold gradient-text">
-              Everything You Need
-            </h2>
-            <p className="text-body text-white/70 max-w-2xl mx-auto">
-              Built for aviation professionals who demand reliability, compliance, and efficiency.
-            </p>
-          </div>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+          <GlassCard>
+            <GlassCardContent className="p-6 text-center">
+              <div className="w-12 h-12 gradient-primary rounded-xl flex items-center justify-center mx-auto mb-3">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-1">0</h3>
+              <p className="text-white/70">Active Customers</p>
+            </GlassCardContent>
+          </GlassCard>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <GlassCard 
-                key={feature.title}
-                className="animate-slide-up"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <GlassCardHeader>
-                  <div className="w-12 h-12 gradient-primary rounded-xl flex items-center justify-center mb-4">
-                    <feature.icon className="w-6 h-6 text-white" />
-                  </div>
-                  <GlassCardTitle>{feature.title}</GlassCardTitle>
-                </GlassCardHeader>
-                <GlassCardContent>
-                  <GlassCardDescription>
-                    {feature.description}
-                  </GlassCardDescription>
-                </GlassCardContent>
-              </GlassCard>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-24">
-        <div className="container mx-auto px-6 max-w-container">
-          <GlassCard className="text-center space-y-8 p-12">
-            <div className="space-y-4">
-              <h2 className="text-h1 font-bold text-white">
-                Ready to Modernize Your Workshop?
-              </h2>
-              <p className="text-body text-white/70 max-w-2xl mx-auto">
-                Join the future of aviation maintenance management with zero-install, 
-                browser-based access from any device.
-              </p>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <GradientButton size="lg" className="px-8">
-                Start Free Trial
-              </GradientButton>
-              <GradientButton variant="ghost" size="lg" className="px-8">
-                Schedule Demo
-              </GradientButton>
-            </div>
+          <GlassCard>
+            <GlassCardContent className="p-6 text-center">
+              <div className="w-12 h-12 gradient-primary rounded-xl flex items-center justify-center mx-auto mb-3">
+                <Building className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-1">0</h3>
+              <p className="text-white/70">Suppliers</p>
+            </GlassCardContent>
+          </GlassCard>
+          
+          <GlassCard>
+            <GlassCardContent className="p-6 text-center">
+              <div className="w-12 h-12 gradient-primary rounded-xl flex items-center justify-center mx-auto mb-3">
+                <Package className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-1">0</h3>
+              <p className="text-white/70">Parts in Stock</p>
+            </GlassCardContent>
+          </GlassCard>
+          
+          <GlassCard>
+            <GlassCardContent className="p-6 text-center">
+              <div className="w-12 h-12 gradient-primary rounded-xl flex items-center justify-center mx-auto mb-3">
+                <ClipboardList className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-1">0</h3>
+              <p className="text-white/70">Active Jobs</p>
+            </GlassCardContent>
           </GlassCard>
         </div>
-      </section>
+
+        {/* Feature Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {features.map((feature, index) => {
+            const IconComponent = feature.icon;
+            const isClickable = feature.link !== '#';
+            
+            const CardContent = (
+              <GlassCard className={`h-full ${isClickable ? 'hover:bg-white/5 transition-all duration-300 cursor-pointer' : 'opacity-60'}`}>
+                <GlassCardHeader className="pb-4">
+                  <div className={`w-12 h-12 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center mb-4`}>
+                    <IconComponent className="w-6 h-6 text-white" />
+                  </div>
+                  <GlassCardTitle className="text-xl mb-2">{feature.title}</GlassCardTitle>
+                </GlassCardHeader>
+                <GlassCardContent className="pt-0">
+                  <p className="text-white/70 mb-4">{feature.description}</p>
+                  <div className="flex items-center justify-between">
+                    <GradientButton 
+                      variant={isClickable ? "default" : "outline"}
+                      size="sm"
+                      className="gap-2"
+                      disabled={!isClickable}
+                    >
+                      {isClickable ? 'Open' : 'Coming Soon'}
+                      {isClickable && <ArrowRight className="w-4 h-4" />}
+                    </GradientButton>
+                    {!isClickable && (
+                      <span className="text-xs text-white/50">Under Development</span>
+                    )}
+                  </div>
+                </GlassCardContent>
+              </GlassCard>
+            );
+
+            return isClickable ? (
+              <Link key={index} to={feature.link} className="block h-full">
+                {CardContent}
+              </Link>
+            ) : (
+              <div key={index} className="h-full">
+                {CardContent}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Call to Action */}
+        <div className="mt-16 text-center">
+          <GlassCard className="p-8">
+            <GlassCardContent>
+              <h3 className="text-2xl font-bold text-white mb-4">Ready to Get Started?</h3>
+              <p className="text-white/70 mb-6 max-w-2xl mx-auto">
+                Begin by adding your customers and suppliers to build your comprehensive aviation maintenance database.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link to="/customers">
+                  <GradientButton size="lg" className="gap-2">
+                    <Users className="w-5 h-5" />
+                    Add Customers
+                  </GradientButton>
+                </Link>
+                <Link to="/suppliers">
+                  <GradientButton size="lg" variant="outline" className="gap-2">
+                    <Building className="w-5 h-5" />
+                    Add Suppliers
+                  </GradientButton>
+                </Link>
+              </div>
+            </GlassCardContent>
+          </GlassCard>
+        </div>
+      </div>
     </div>
   );
 };
