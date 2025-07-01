@@ -68,11 +68,17 @@ export type Database = {
       }
       inventory_batches: {
         Row: {
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
           batch_number: string
           cost_per_unit: number | null
           created_at: string
           expiry_date: string | null
           id: string
+          job_allocated_at: string | null
+          job_allocated_by: string | null
+          job_allocated_to: string | null
           location: string | null
           notes: string | null
           product_id: string
@@ -86,11 +92,17 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           batch_number: string
           cost_per_unit?: number | null
           created_at?: string
           expiry_date?: string | null
           id?: string
+          job_allocated_at?: string | null
+          job_allocated_by?: string | null
+          job_allocated_to?: string | null
           location?: string | null
           notes?: string | null
           product_id: string
@@ -104,11 +116,17 @@ export type Database = {
           user_id: string
         }
         Update: {
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           batch_number?: string
           cost_per_unit?: number | null
           created_at?: string
           expiry_date?: string | null
           id?: string
+          job_allocated_at?: string | null
+          job_allocated_by?: string | null
+          job_allocated_to?: string | null
           location?: string | null
           notes?: string | null
           product_id?: string
@@ -280,6 +298,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       inventory_summary: {
@@ -302,12 +344,34 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles_view: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string | null
+          role: Database["public"]["Enums"]["app_role"] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
+      is_admin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "parts_approver" | "job_allocator" | "batch_manager"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -422,6 +486,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "parts_approver", "job_allocator", "batch_manager"],
+    },
   },
 } as const
