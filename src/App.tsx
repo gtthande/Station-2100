@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +14,7 @@ import Inventory from "./pages/Inventory";
 import NotFound from "./pages/NotFound";
 import Approvals from "./pages/Approvals";
 import Admin from "./pages/Admin";
+import BatchSubmission from "./pages/BatchSubmission";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +59,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <Inventory />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/batch-submission" 
+                element={
+                  <ProtectedRoute>
+                    <BatchSubmission />
                   </ProtectedRoute>
                 } 
               />

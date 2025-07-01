@@ -1,118 +1,190 @@
-import { GlassCard, GlassCardContent } from "@/components/ui/glass-card";
-import { Activity } from "lucide-react";
-import { Package, Shield, Truck, Users, CheckCircle } from 'lucide-react';
-import { Link } from "react-router-dom";
+
+import { useState } from 'react';
+import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/components/ui/glass-card';
+import { GradientButton } from '@/components/ui/gradient-button';
+import { UserMenu } from '@/components/navigation/UserMenu';
+import { useUserRoles } from '@/hooks/useUserRoles';
+import { 
+  Users, 
+  Truck, 
+  Package, 
+  BarChart3, 
+  CheckCircle,
+  Shield,
+  Send,
+  Plus,
+  TrendingUp,
+  Building2,
+  Wrench
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Index = () => {
+  const { isAdmin, isPartsApprover, isJobAllocator, isBatchManager } = useUserRoles();
+
+  const canAccessApprovals = isPartsApprover() || isJobAllocator() || isAdmin();
+  const canAccessAdmin = isAdmin();
+  const canSubmitBatches = isBatchManager() || isAdmin();
+
   return (
     <div className="min-h-screen bg-surface-dark">
-      {/* Header */}
-      <div className="border-b border-white/10 bg-surface-dark/50 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <h1 className="text-3xl font-bold text-white">
-            Station-2100 Dashboard
-          </h1>
-          <p className="text-white/60">
-            Welcome to your aircraft maintenance management platform
-          </p>
-        </div>
-      </div>
-
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Navigation Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <Link to="/customers">
-              <GlassCard className="hover:scale-105 transition-transform cursor-pointer">
-                <GlassCardContent className="p-6 text-center">
-                  <div className="w-16 h-16 gradient-primary rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <Users className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-white mb-2">Customer Management</h3>
-                  <p className="text-white/70">Manage aircraft owners and maintenance records</p>
-                </GlassCardContent>
-              </GlassCard>
-            </Link>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-12">
+          <div>
+            <h1 className="text-4xl font-bold text-white mb-2">Station-2100</h1>
+            <p className="text-white/70 text-lg">Aircraft Parts Management System</p>
+          </div>
+          <UserMenu />
+        </div>
 
-            <Link to="/suppliers">
-              <GlassCard className="hover:scale-105 transition-transform cursor-pointer">
-                <GlassCardContent className="p-6 text-center">
-                  <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <Truck className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-white mb-2">Supplier Network</h3>
-                  <p className="text-white/70">Connect with parts suppliers and vendors</p>
-                </GlassCardContent>
-              </GlassCard>
-            </Link>
-
-            <Link to="/inventory">
-              <GlassCard className="hover:scale-105 transition-transform cursor-pointer">
-                <GlassCardContent className="p-6 text-center">
-                  <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <Package className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-white mb-2">Inventory Control</h3>
-                  <p className="text-white/70">Track parts, batches, and stock levels</p>
-                </GlassCardContent>
-              </GlassCard>
-            </Link>
-
-            <Link to="/approvals">
-              <GlassCard className="hover:scale-105 transition-transform cursor-pointer">
-                <GlassCardContent className="p-6 text-center">
-                  <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <CheckCircle className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-white mb-2">Parts Approval</h3>
-                  <p className="text-white/70">Review incoming parts and job allocation</p>
-                </GlassCardContent>
-              </GlassCard>
-            </Link>
-
-            <Link to="/admin">
-              <GlassCard className="hover:scale-105 transition-transform cursor-pointer">
-                <GlassCardContent className="p-6 text-center">
-                  <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <Shield className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-white mb-2">Administration</h3>
-                  <p className="text-white/70">Manage user roles and system settings</p>
-                </GlassCardContent>
-              </GlassCard>
-            </Link>
-
-            <GlassCard className="hover:scale-105 transition-transform cursor-pointer opacity-60">
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <Link to="/inventory">
+            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
               <GlassCardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <Activity className="w-8 h-8 text-white" />
+                <div className="w-12 h-12 gradient-primary rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <Package className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">Analytics Dashboard</h3>
-                <p className="text-white/70">Coming Soon - Performance metrics and insights</p>
+                <h3 className="text-lg font-semibold text-white mb-2">Inventory</h3>
+                <p className="text-white/60 text-sm">Manage parts and products</p>
               </GlassCardContent>
             </GlassCard>
-          </div>
+          </Link>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <GlassCard>
-            <GlassCardContent className="p-6 text-center">
-              <h3 className="text-2xl font-bold text-white mb-1">0</h3>
-              <p className="text-white/70">Aircraft in Maintenance</p>
-            </GlassCardContent>
-          </GlassCard>
+          {canSubmitBatches && (
+            <Link to="/batch-submission">
+              <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
+                <GlassCardContent className="p-6 text-center">
+                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <Send className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white mb-2">Submit Batch</h3>
+                  <p className="text-white/60 text-sm">Submit new batches for approval</p>
+                </GlassCardContent>
+              </GlassCard>
+            </Link>
+          )}
 
-          <GlassCard>
-            <GlassCardContent className="p-6 text-center">
-              <h3 className="text-2xl font-bold text-white mb-1">0</h3>
-              <p className="text-white/70">Parts on Order</p>
-            </GlassCardContent>
-          </GlassCard>
+          {canAccessApprovals && (
+            <Link to="/approvals">
+              <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
+                <GlassCardContent className="p-6 text-center">
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <CheckCircle className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white mb-2">Approvals</h3>
+                  <p className="text-white/60 text-sm">Review and approve batches</p>
+                </GlassCardContent>
+              </GlassCard>
+            </Link>
+          )}
 
+          {canAccessAdmin && (
+            <Link to="/admin">
+              <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
+                <GlassCardContent className="p-6 text-center">
+                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <Shield className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white mb-2">Admin</h3>
+                  <p className="text-white/60 text-sm">Manage users and roles</p>
+                </GlassCardContent>
+              </GlassCard>
+            </Link>
+          )}
+        </div>
+
+        {/* Main Navigation */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <Link to="/customers">
+            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
+              <GlassCardHeader>
+                <GlassCardTitle className="flex items-center gap-3">
+                  <Users className="w-6 h-6" />
+                  Customers
+                </GlassCardTitle>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <p className="text-white/70 mb-4">
+                  Manage customer information, aircraft details, and service records.
+                </p>
+                <div className="flex items-center text-blue-400 font-medium">
+                  View Customers
+                  <TrendingUp className="w-4 h-4 ml-2" />
+                </div>
+              </GlassCardContent>
+            </GlassCard>
+          </Link>
+
+          <Link to="/suppliers">
+            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
+              <GlassCardHeader>
+                <GlassCardTitle className="flex items-center gap-3">
+                  <Truck className="w-6 h-6" />
+                  Suppliers
+                </GlassCardTitle>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <p className="text-white/70 mb-4">
+                  Track supplier relationships, parts sourcing, and delivery schedules.
+                </p>
+                <div className="flex items-center text-blue-400 font-medium">
+                  View Suppliers
+                  <Building2 className="w-4 h-4 ml-2" />
+                </div>
+              </GlassCardContent>
+            </GlassCard>
+          </Link>
+
+          <Link to="/inventory">
+            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
+              <GlassCardHeader>
+                <GlassCardTitle className="flex items-center gap-3">
+                  <Package className="w-6 h-6" />
+                  Inventory
+                </GlassCardTitle>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <p className="text-white/70 mb-4">
+                  Monitor stock levels, track parts movement, and manage inventory batches.
+                </p>
+                <div className="flex items-center text-blue-400 font-medium">
+                  View Inventory
+                  <BarChart3 className="w-4 h-4 ml-2" />
+                </div>
+              </GlassCardContent>
+            </GlassCard>
+          </Link>
+        </div>
+
+        {/* System Status */}
+        <div className="mt-12">
           <GlassCard>
-            <GlassCardContent className="p-6 text-center">
-              <h3 className="text-2xl font-bold text-white mb-1">0</h3>
-              <p className="text-white/70">Technicians Available</p>
+            <GlassCardHeader>
+              <GlassCardTitle className="flex items-center gap-3">
+                <Wrench className="w-6 h-6" />
+                System Status
+              </GlassCardTitle>
+            </GlassCardHeader>
+            <GlassCardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="text-center">
+                  <div className="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2"></div>
+                  <p className="text-white font-medium">Inventory System</p>
+                  <p className="text-white/60 text-sm">Operational</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2"></div>
+                  <p className="text-white font-medium">Database</p>
+                  <p className="text-white/60 text-sm">Connected</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2"></div>
+                  <p className="text-white font-medium">Security</p>
+                  <p className="text-white/60 text-sm">Active</p>
+                </div>
+              </div>
             </GlassCardContent>
           </GlassCard>
         </div>
