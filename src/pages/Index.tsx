@@ -1,4 +1,3 @@
-
 import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/components/ui/glass-card';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { UserMenu } from '@/components/navigation/UserMenu';
@@ -25,7 +24,7 @@ const Index = () => {
       icon: Package,
       title: 'Inventory Management',
       description: 'Track parts, stock levels, and locations across your facility',
-      link: '#',
+      link: '/inventory',
       color: 'from-purple-500 to-indigo-500'
     },
     {

@@ -66,6 +66,133 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_batches: {
+        Row: {
+          batch_number: string
+          cost_per_unit: number | null
+          created_at: string
+          expiry_date: string | null
+          id: string
+          location: string | null
+          notes: string | null
+          product_id: string
+          purchase_order: string | null
+          quantity: number
+          received_date: string | null
+          status: string | null
+          supplier_id: string | null
+          updated_at: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          batch_number: string
+          cost_per_unit?: number | null
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          product_id: string
+          purchase_order?: string | null
+          quantity?: number
+          received_date?: string | null
+          status?: string | null
+          supplier_id?: string | null
+          updated_at?: string
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          batch_number?: string
+          cost_per_unit?: number | null
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          product_id?: string
+          purchase_order?: string | null
+          quantity?: number
+          received_date?: string | null
+          status?: string | null
+          supplier_id?: string | null
+          updated_at?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_batches_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_batches_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_batches_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_products: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          manufacturer: string | null
+          minimum_stock: number | null
+          name: string
+          part_number: string
+          reorder_point: number | null
+          unit_cost: number | null
+          unit_of_measure: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          manufacturer?: string | null
+          minimum_stock?: number | null
+          name: string
+          part_number: string
+          reorder_point?: number | null
+          unit_cost?: number | null
+          unit_of_measure?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          manufacturer?: string | null
+          minimum_stock?: number | null
+          name?: string
+          part_number?: string
+          reorder_point?: number | null
+          unit_cost?: number | null
+          unit_of_measure?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -155,7 +282,26 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      inventory_summary: {
+        Row: {
+          batch_count: number | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          manufacturer: string | null
+          minimum_stock: number | null
+          name: string | null
+          part_number: string | null
+          reorder_point: number | null
+          total_quantity: number | null
+          unit_cost: number | null
+          unit_of_measure: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
