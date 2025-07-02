@@ -8,6 +8,25 @@ import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Clock, Package, Shield } from 'lucide-react';
 import { format } from 'date-fns';
 
+interface UnapprovedBatch {
+  id: string;
+  batch_number: string;
+  quantity: number;
+  created_at: string;
+  received_date: string | null;
+  inventory_products: {
+    name: string;
+    part_number: string;
+  } | null;
+  suppliers: {
+    name: string;
+  } | null;
+  profiles: {
+    full_name: string | null;
+    email: string;
+  } | null;
+}
+
 export const UnapprovedBatchesReport = () => {
   const { user } = useAuth();
   const { isAdmin, isSupervisor, isPartsApprover } = useUserRoles();
@@ -20,14 +39,40 @@ export const UnapprovedBatchesReport = () => {
       if (!user || !canViewReport) return [];
       
       const { data, error } = await supabase
-        .from('unapproved_batches_report')
-        .select('*');
+        .from('inventory_batches')
+        .select(`
+          id,
+          batch_number,
+          quantity,
+          created_at,
+          received_date,
+          inventory_products (
+            name,
+            part_number
+          ),
+          suppliers (
+            name
+          ),
+          profiles (
+            full_name,
+            email
+          )
+        `)
+        .eq('approval_status', 'pending')
+        .order('created_at', { ascending: true });
       
       if (error) throw error;
-      return data;
+      return data as UnapprovedBatch[];
     },
     enabled: !!user && canViewReport,
   });
+
+  const calculateDaysPending = (createdAt: string): number => {
+    const now = new Date();
+    const created = new Date(createdAt);
+    const diffTime = Math.abs(now.getTime() - created.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
 
   if (!canViewReport) {
     return (
@@ -78,61 +123,65 @@ export const UnapprovedBatchesReport = () => {
         </GlassCard>
       ) : (
         <div className="space-y-4">
-          {unapprovedBatches.map((batch) => (
-            <GlassCard key={batch.id} className="hover:bg-white/5 transition-all duration-300">
-              <GlassCardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-white mb-1">
-                      {batch.batch_number}
-                    </h3>
-                    <p className="text-white/70">
-                      {batch.product_name} ({batch.part_number})
-                    </p>
+          {unapprovedBatches.map((batch) => {
+            const daysPending = calculateDaysPending(batch.created_at);
+            
+            return (
+              <GlassCard key={batch.id} className="hover:bg-white/5 transition-all duration-300">
+                <GlassCardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-1">
+                        {batch.batch_number}
+                      </h3>
+                      <p className="text-white/70">
+                        {batch.inventory_products?.name} ({batch.inventory_products?.part_number})
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge 
+                        className={`${
+                          daysPending > 7 
+                            ? 'bg-red-500/20 text-red-300 border-red-500/30' 
+                            : daysPending > 3
+                            ? 'bg-orange-500/20 text-orange-300 border-orange-500/30'
+                            : 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
+                        } border flex items-center gap-1`}
+                      >
+                        <Clock className="w-3 h-3" />
+                        {daysPending} days
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge 
-                      className={`${
-                        batch.days_pending > 7 
-                          ? 'bg-red-500/20 text-red-300 border-red-500/30' 
-                          : batch.days_pending > 3
-                          ? 'bg-orange-500/20 text-orange-300 border-orange-500/30'
-                          : 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
-                      } border flex items-center gap-1`}
-                    >
-                      <Clock className="w-3 h-3" />
-                      {batch.days_pending} days
-                    </Badge>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <span className="text-white/60">Quantity:</span>
-                    <span className="ml-2 text-white font-semibold">{batch.quantity}</span>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <span className="text-white/60">Quantity:</span>
+                      <span className="ml-2 text-white font-semibold">{batch.quantity}</span>
+                    </div>
+                    <div>
+                      <span className="text-white/60">Supplier:</span>
+                      <span className="ml-2 text-white">{batch.suppliers?.name || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-white/60">Submitted by:</span>
+                      <span className="ml-2 text-white">{batch.profiles?.full_name || batch.profiles?.email}</span>
+                    </div>
+                    <div>
+                      <span className="text-white/60">Received:</span>
+                      <span className="ml-2 text-white">
+                        {batch.received_date ? format(new Date(batch.received_date), 'MMM dd, yyyy') : 'N/A'}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-white/60">Supplier:</span>
-                    <span className="ml-2 text-white">{batch.supplier_name || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span className="text-white/60">Submitted by:</span>
-                    <span className="ml-2 text-white">{batch.submitted_by || batch.submitter_email}</span>
-                  </div>
-                  <div>
-                    <span className="text-white/60">Received:</span>
-                    <span className="ml-2 text-white">
-                      {batch.received_date ? format(new Date(batch.received_date), 'MMM dd, yyyy') : 'N/A'}
-                    </span>
-                  </div>
-                </div>
 
-                <div className="mt-4 text-xs text-white/50">
-                  Submitted: {format(new Date(batch.created_at), 'MMM dd, yyyy HH:mm')}
-                </div>
-              </GlassCardContent>
-            </GlassCard>
-          ))}
+                  <div className="mt-4 text-xs text-white/50">
+                    Submitted: {format(new Date(batch.created_at), 'MMM dd, yyyy HH:mm')}
+                  </div>
+                </GlassCardContent>
+              </GlassCard>
+            );
+          })}
         </div>
       )}
     </div>
