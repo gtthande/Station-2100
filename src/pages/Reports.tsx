@@ -1,8 +1,9 @@
 
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { Link } from 'react-router-dom';
-import { FileText, AlertTriangle } from 'lucide-react';
+import { FileText, AlertTriangle, Plus } from 'lucide-react';
 import { UnapprovedBatchesReport } from '@/components/inventory/UnapprovedBatchesReport';
+import { Button } from '@/components/ui/button';
 
 const Reports = () => {
   return (
@@ -23,7 +24,15 @@ const Reports = () => {
                 <p className="text-white/60">View system reports and pending approvals</p>
               </div>
             </div>
-            <UserMenu />
+            <div className="flex items-center gap-4">
+              <Link to="/batch-submission">
+                <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create New Batch
+                </Button>
+              </Link>
+              <UserMenu />
+            </div>
           </div>
         </div>
       </div>

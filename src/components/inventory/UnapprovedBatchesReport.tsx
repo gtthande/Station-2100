@@ -1,11 +1,14 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/components/ui/glass-card';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Clock, Package, Shield } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { AlertTriangle, Clock, Package, Shield, Check } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface UnapprovedBatch {
@@ -32,8 +35,11 @@ interface ProfileData {
 export const UnapprovedBatchesReport = () => {
   const { user } = useAuth();
   const { isAdmin, isSupervisor, isPartsApprover } = useUserRoles();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const canViewReport = isAdmin() || isSupervisor() || isPartsApprover();
+  const canApprove = isAdmin() || isSupervisor() || isPartsApprover();
 
   const { data: unapprovedBatches, isLoading } = useQuery({
     queryKey: ['unapproved-batches-report'],
@@ -102,11 +108,47 @@ export const UnapprovedBatchesReport = () => {
     enabled: !!unapprovedBatches && unapprovedBatches.length > 0,
   });
 
+  const approveBatchMutation = useMutation({
+    mutationFn: async (batchId: string) => {
+      if (!user) throw new Error('User not authenticated');
+      
+      const { error } = await supabase
+        .from('inventory_batches')
+        .update({
+          approval_status: 'approved',
+          approved_by: user.id,
+          approved_at: new Date().toISOString(),
+        })
+        .eq('id', batchId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['unapproved-batches-report'] });
+      queryClient.invalidateQueries({ queryKey: ['approval-batches'] });
+      toast({
+        title: "Batch Approved",
+        description: "The batch has been successfully approved",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const calculateDaysPending = (createdAt: string): number => {
     const now = new Date();
     const created = new Date(createdAt);
     const diffTime = Math.abs(now.getTime() - created.getTime());
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  const handleBatchApproval = (batchId: string) => {
+    approveBatchMutation.mutate(batchId);
   };
 
   if (!canViewReport) {
@@ -145,6 +187,11 @@ export const UnapprovedBatchesReport = () => {
           <p className="text-white/70 mb-4">
             {unapprovedBatches?.length || 0} batches pending approval
           </p>
+          {canApprove && (
+            <p className="text-white/60 text-sm">
+              Click the checkbox or double-click on a batch to approve it
+            </p>
+          )}
         </GlassCardContent>
       </GlassCard>
 
@@ -163,16 +210,36 @@ export const UnapprovedBatchesReport = () => {
             const userProfile = profilesData?.[batch.user_id];
             
             return (
-              <GlassCard key={batch.id} className="hover:bg-white/5 transition-all duration-300">
+              <GlassCard 
+                key={batch.id} 
+                className="hover:bg-white/5 transition-all duration-300 cursor-pointer"
+                onDoubleClick={() => canApprove && handleBatchApproval(batch.id)}
+              >
                 <GlassCardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-white mb-1">
-                        {batch.batch_number}
-                      </h3>
-                      <p className="text-white/70">
-                        {batch.inventory_products?.name} ({batch.inventory_products?.part_number})
-                      </p>
+                    <div className="flex items-start gap-4">
+                      {canApprove && (
+                        <div className="mt-1">
+                          <Checkbox
+                            id={`approve-${batch.id}`}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                handleBatchApproval(batch.id);
+                              }
+                            }}
+                            disabled={approveBatchMutation.isPending}
+                            className="border-white/30 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="text-lg font-semibold text-white mb-1">
+                          {batch.batch_number}
+                        </h3>
+                        <p className="text-white/70">
+                          {batch.inventory_products?.name} ({batch.inventory_products?.part_number})
+                        </p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge 
@@ -211,8 +278,24 @@ export const UnapprovedBatchesReport = () => {
                     </div>
                   </div>
 
-                  <div className="mt-4 text-xs text-white/50">
-                    Submitted: {format(new Date(batch.created_at), 'MMM dd, yyyy HH:mm')}
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="text-xs text-white/50">
+                      Submitted: {format(new Date(batch.created_at), 'MMM dd, yyyy HH:mm')}
+                    </div>
+                    {canApprove && (
+                      <Button
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleBatchApproval(batch.id);
+                        }}
+                        disabled={approveBatchMutation.isPending}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        <Check className="w-4 h-4 mr-1" />
+                        Approve
+                      </Button>
+                    )}
                   </div>
                 </GlassCardContent>
               </GlassCard>
