@@ -20,14 +20,15 @@ interface BatchApprovalCardProps {
 
 export const BatchApprovalCard = ({ batch }: BatchApprovalCardProps) => {
   const { user } = useAuth();
-  const { isPartsApprover, isJobAllocator, isAdmin } = useUserRoles();
+  const { isPartsApprover, isSupervisor, isJobAllocator, isAdmin } = useUserRoles();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
   const [jobAllocation, setJobAllocation] = useState(batch.job_allocated_to || '');
   const [notes, setNotes] = useState(batch.notes || '');
 
-  const canApprove = isPartsApprover() || isAdmin();
+  // Supervisors and parts approvers can approve batches
+  const canApprove = isSupervisor() || isPartsApprover() || isAdmin();
   const canAllocateJob = (isJobAllocator() || isAdmin()) && batch.approval_status === 'approved';
 
   const approveRejectMutation = useMutation({
@@ -49,7 +50,9 @@ export const BatchApprovalCard = ({ batch }: BatchApprovalCardProps) => {
         title: status === 'approved' ? "Batch Approved" : "Batch Rejected",
         description: `Batch ${batch.batch_number} has been ${status}`,
       });
+      queryClient.invalidateQueries({ queryKey: ['approval-batches'] });
       queryClient.invalidateQueries({ queryKey: ['inventory-batches'] });
+      queryClient.invalidateQueries({ queryKey: ['unapproved-batches-report'] });
     },
     onError: (error) => {
       toast({
@@ -79,6 +82,7 @@ export const BatchApprovalCard = ({ batch }: BatchApprovalCardProps) => {
         title: "Job Allocated",
         description: `Batch ${batch.batch_number} allocated to ${jobAllocation}`,
       });
+      queryClient.invalidateQueries({ queryKey: ['approval-batches'] });
       queryClient.invalidateQueries({ queryKey: ['inventory-batches'] });
     },
     onError: (error) => {

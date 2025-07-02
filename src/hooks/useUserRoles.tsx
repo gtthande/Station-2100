@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Tables } from '@/integrations/supabase/types';
 
 type UserRole = Tables<'user_roles'>;
-type AppRole = 'admin' | 'parts_approver' | 'job_allocator' | 'batch_manager';
+type AppRole = 'admin' | 'supervisor' | 'parts_approver' | 'job_allocator' | 'batch_manager';
 
 export const useUserRoles = () => {
   const { user } = useAuth();
@@ -33,6 +33,7 @@ export const useUserRoles = () => {
   };
 
   const isAdmin = (): boolean => hasRole('admin');
+  const isSupervisor = (): boolean => hasRole('supervisor');
   const isPartsApprover = (): boolean => hasRole('parts_approver');
   const isJobAllocator = (): boolean => hasRole('job_allocator');
   const isBatchManager = (): boolean => hasRole('batch_manager');
@@ -72,6 +73,7 @@ export const useUserRoles = () => {
     isLoading,
     hasRole,
     isAdmin,
+    isSupervisor,
     isPartsApprover,
     isJobAllocator,
     isBatchManager,

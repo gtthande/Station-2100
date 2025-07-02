@@ -11,10 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Users, UserPlus, UserMinus, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-type AppRole = 'admin' | 'parts_approver' | 'job_allocator' | 'batch_manager';
+type AppRole = 'admin' | 'supervisor' | 'parts_approver' | 'job_allocator' | 'batch_manager';
 
 const roleLabels: Record<AppRole, string> = {
   admin: 'Administrator',
+  supervisor: 'Supervisor',
   parts_approver: 'Parts Approver',
   job_allocator: 'Job Allocator',
   batch_manager: 'Batch Manager'
@@ -22,6 +23,7 @@ const roleLabels: Record<AppRole, string> = {
 
 const roleColors: Record<AppRole, string> = {
   admin: 'bg-red-500/20 text-red-300 border-red-500/30',
+  supervisor: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
   parts_approver: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
   job_allocator: 'bg-green-500/20 text-green-300 border-green-500/30',
   batch_manager: 'bg-purple-500/20 text-purple-300 border-purple-500/30'

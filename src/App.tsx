@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound";
 import Approvals from "./pages/Approvals";
 import Admin from "./pages/Admin";
 import BatchSubmission from "./pages/BatchSubmission";
+import Reports from "./pages/Reports";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +76,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <Approvals />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/reports" 
+                element={
+                  <ProtectedRoute>
+                    <Reports />
                   </ProtectedRoute>
                 } 
               />

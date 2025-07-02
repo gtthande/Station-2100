@@ -12,11 +12,11 @@ import { BatchApprovalCard } from './BatchApprovalCard';
 
 export const BatchApprovalList = () => {
   const { user } = useAuth();
-  const { isPartsApprover, isJobAllocator, isAdmin } = useUserRoles();
+  const { isPartsApprover, isSupervisor, isJobAllocator, isAdmin } = useUserRoles();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const canAccess = isPartsApprover() || isJobAllocator() || isAdmin();
+  const canAccess = isPartsApprover() || isSupervisor() || isJobAllocator() || isAdmin();
 
   const { data: batches, isLoading } = useQuery({
     queryKey: ['approval-batches', statusFilter],

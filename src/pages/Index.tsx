@@ -15,16 +15,18 @@ import {
   Plus,
   TrendingUp,
   Building2,
-  Wrench
+  Wrench,
+  FileText
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Index = () => {
-  const { isAdmin, isPartsApprover, isJobAllocator, isBatchManager } = useUserRoles();
+  const { isAdmin, isSupervisor, isPartsApprover, isJobAllocator, isBatchManager } = useUserRoles();
 
-  const canAccessApprovals = isPartsApprover() || isJobAllocator() || isAdmin();
+  const canAccessApprovals = isPartsApprover() || isSupervisor() || isJobAllocator() || isAdmin();
   const canAccessAdmin = isAdmin();
-  const canSubmitBatches = isBatchManager() || isAdmin();
+  const canSubmitBatches = isBatchManager() || isSupervisor() || isAdmin();
+  const canViewReports = isSupervisor() || isPartsApprover() || isAdmin();
 
   return (
     <div className="min-h-screen bg-surface-dark">
@@ -75,6 +77,20 @@ const Index = () => {
                   </div>
                   <h3 className="text-lg font-semibold text-white mb-2">Approvals</h3>
                   <p className="text-white/60 text-sm">Review and approve batches</p>
+                </GlassCardContent>
+              </GlassCard>
+            </Link>
+          )}
+
+          {canViewReports && (
+            <Link to="/reports">
+              <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
+                <GlassCardContent className="p-6 text-center">
+                  <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <FileText className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white mb-2">Reports</h3>
+                  <p className="text-white/60 text-sm">View reminders and reports</p>
                 </GlassCardContent>
               </GlassCard>
             </Link>
