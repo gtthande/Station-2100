@@ -46,14 +46,14 @@ export const UnapprovedBatchesReport = () => {
           quantity,
           created_at,
           received_date,
-          inventory_products (
+          inventory_products!inner (
             name,
             part_number
           ),
           suppliers (
             name
           ),
-          profiles (
+          profiles!inner (
             full_name,
             email
           )
@@ -61,8 +61,12 @@ export const UnapprovedBatchesReport = () => {
         .eq('approval_status', 'pending')
         .order('created_at', { ascending: true });
       
-      if (error) throw error;
-      return data as UnapprovedBatch[];
+      if (error) {
+        console.error('Error fetching unapproved batches:', error);
+        throw error;
+      }
+      
+      return data || [];
     },
     enabled: !!user && canViewReport,
   });
