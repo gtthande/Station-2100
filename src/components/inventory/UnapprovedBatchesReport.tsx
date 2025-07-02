@@ -14,6 +14,7 @@ interface UnapprovedBatch {
   quantity: number;
   created_at: string;
   received_date: string | null;
+  user_id: string;
   inventory_products: {
     name: string;
     part_number: string;
@@ -21,10 +22,11 @@ interface UnapprovedBatch {
   suppliers: {
     name: string;
   } | null;
-  profiles: {
-    full_name: string | null;
-    email: string;
-  } | null;
+}
+
+interface ProfileData {
+  full_name: string | null;
+  email: string;
 }
 
 export const UnapprovedBatchesReport = () => {
@@ -46,16 +48,13 @@ export const UnapprovedBatchesReport = () => {
           quantity,
           created_at,
           received_date,
+          user_id,
           inventory_products!inner (
             name,
             part_number
           ),
           suppliers (
             name
-          ),
-          profiles!inner (
-            full_name,
-            email
           )
         `)
         .eq('approval_status', 'pending')
@@ -69,6 +68,38 @@ export const UnapprovedBatchesReport = () => {
       return data || [];
     },
     enabled: !!user && canViewReport,
+  });
+
+  // Separate query to get profile data for the users
+  const { data: profilesData } = useQuery({
+    queryKey: ['batch-profiles', unapprovedBatches?.map(b => b.user_id)],
+    queryFn: async () => {
+      if (!unapprovedBatches || unapprovedBatches.length === 0) return {};
+      
+      const userIds = [...new Set(unapprovedBatches.map(batch => batch.user_id))];
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', userIds);
+      
+      if (error) {
+        console.error('Error fetching profiles:', error);
+        return {};
+      }
+      
+      // Convert to lookup object
+      const profilesLookup: Record<string, ProfileData> = {};
+      data?.forEach(profile => {
+        profilesLookup[profile.id] = {
+          full_name: profile.full_name,
+          email: profile.email
+        };
+      });
+      
+      return profilesLookup;
+    },
+    enabled: !!unapprovedBatches && unapprovedBatches.length > 0,
   });
 
   const calculateDaysPending = (createdAt: string): number => {
@@ -129,6 +160,7 @@ export const UnapprovedBatchesReport = () => {
         <div className="space-y-4">
           {unapprovedBatches.map((batch) => {
             const daysPending = calculateDaysPending(batch.created_at);
+            const userProfile = profilesData?.[batch.user_id];
             
             return (
               <GlassCard key={batch.id} className="hover:bg-white/5 transition-all duration-300">
@@ -169,7 +201,7 @@ export const UnapprovedBatchesReport = () => {
                     </div>
                     <div>
                       <span className="text-white/60">Submitted by:</span>
-                      <span className="ml-2 text-white">{batch.profiles?.full_name || batch.profiles?.email}</span>
+                      <span className="ml-2 text-white">{userProfile?.full_name || userProfile?.email || 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-white/60">Received:</span>
