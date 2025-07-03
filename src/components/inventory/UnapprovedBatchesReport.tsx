@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -7,8 +8,10 @@ import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, Clock, Package, Shield, Check } from 'lucide-react';
+import { AlertTriangle, Clock, Package, Shield, Check, Search, Filter } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface UnapprovedBatch {
@@ -18,6 +21,7 @@ interface UnapprovedBatch {
   created_at: string;
   received_date: string | null;
   user_id: string;
+  location: string | null;
   inventory_products: {
     name: string;
     part_number: string;
@@ -37,6 +41,10 @@ export const UnapprovedBatchesReport = () => {
   const { isAdmin, isSupervisor, isPartsApprover } = useUserRoles();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedSupplier, setSelectedSupplier] = useState<string>('all');
+  const [daysPendingFilter, setDaysPendingFilter] = useState<string>('all');
 
   const canViewReport = isAdmin() || isSupervisor() || isPartsApprover();
   const canApprove = isAdmin() || isSupervisor() || isPartsApprover();
@@ -55,6 +63,7 @@ export const UnapprovedBatchesReport = () => {
           created_at,
           received_date,
           user_id,
+          location,
           inventory_products!inner (
             name,
             part_number
@@ -76,7 +85,6 @@ export const UnapprovedBatchesReport = () => {
     enabled: !!user && canViewReport,
   });
 
-  // Separate query to get profile data for the users
   const { data: profilesData } = useQuery({
     queryKey: ['batch-profiles', unapprovedBatches?.map(b => b.user_id)],
     queryFn: async () => {
@@ -94,7 +102,6 @@ export const UnapprovedBatchesReport = () => {
         return {};
       }
       
-      // Convert to lookup object
       const profilesLookup: Record<string, ProfileData> = {};
       data?.forEach(profile => {
         profilesLookup[profile.id] = {
@@ -151,6 +158,31 @@ export const UnapprovedBatchesReport = () => {
     approveBatchMutation.mutate(batchId);
   };
 
+  // Get unique suppliers for filter
+  const uniqueSuppliers = Array.from(
+    new Set(unapprovedBatches?.map(batch => batch.suppliers?.name).filter(Boolean))
+  );
+
+  // Filter batches based on search and filters
+  const filteredBatches = unapprovedBatches?.filter(batch => {
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = !searchTerm || 
+      batch.batch_number.toLowerCase().includes(searchLower) ||
+      batch.inventory_products?.name.toLowerCase().includes(searchLower) ||
+      batch.inventory_products?.part_number.toLowerCase().includes(searchLower) ||
+      batch.suppliers?.name?.toLowerCase().includes(searchLower);
+
+    const matchesSupplier = selectedSupplier === 'all' || batch.suppliers?.name === selectedSupplier;
+
+    const daysPending = calculateDaysPending(batch.created_at);
+    const matchesDays = daysPendingFilter === 'all' ||
+      (daysPendingFilter === '1-3' && daysPending <= 3) ||
+      (daysPendingFilter === '4-7' && daysPending >= 4 && daysPending <= 7) ||
+      (daysPendingFilter === '8+' && daysPending > 7);
+
+    return matchesSearch && matchesSupplier && matchesDays;
+  }) || [];
+
   if (!canViewReport) {
     return (
       <GlassCard>
@@ -184,28 +216,79 @@ export const UnapprovedBatchesReport = () => {
           </GlassCardTitle>
         </GlassCardHeader>
         <GlassCardContent>
-          <p className="text-white/70 mb-4">
-            {unapprovedBatches?.length || 0} batches pending approval
-          </p>
-          {canApprove && (
-            <p className="text-white/60 text-sm">
-              Click the checkbox or double-click on a batch to approve it
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 w-4 h-4" />
+                <Input
+                  placeholder="Search batches, products, or suppliers..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-white/5 border-white/10 text-white"
+                />
+              </div>
+            </div>
+            
+            <Select value={selectedSupplier} onValueChange={setSelectedSupplier}>
+              <SelectTrigger className="w-48 bg-white/5 border-white/10 text-white">
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Filter by supplier" />
+              </SelectTrigger>
+              <SelectContent className="bg-surface-dark border-white/20">
+                <SelectItem value="all" className="text-white">All Suppliers</SelectItem>
+                {uniqueSuppliers.map((supplier) => (
+                  <SelectItem key={supplier} value={supplier} className="text-white">
+                    {supplier}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={daysPendingFilter} onValueChange={setDaysPendingFilter}>
+              <SelectTrigger className="w-48 bg-white/5 border-white/10 text-white">
+                <Clock className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Filter by days" />
+              </SelectTrigger>
+              <SelectContent className="bg-surface-dark border-white/20">
+                <SelectItem value="all" className="text-white">All Days</SelectItem>
+                <SelectItem value="1-3" className="text-white">1-3 Days</SelectItem>
+                <SelectItem value="4-7" className="text-white">4-7 Days</SelectItem>
+                <SelectItem value="8+" className="text-white">8+ Days</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <p className="text-white/70">
+              {filteredBatches.length} of {unapprovedBatches?.length || 0} batches shown
             </p>
-          )}
+            {canApprove && (
+              <p className="text-white/60 text-sm">
+                Click checkbox or double-click to approve
+              </p>
+            )}
+          </div>
         </GlassCardContent>
       </GlassCard>
 
-      {!unapprovedBatches || unapprovedBatches.length === 0 ? (
+      {filteredBatches.length === 0 ? (
         <GlassCard>
           <GlassCardContent className="p-12 text-center">
             <Package className="w-16 h-16 text-green-400/30 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">All Caught Up!</h3>
-            <p className="text-white/60">No batches are pending approval at this time.</p>
+            <h3 className="text-xl font-semibold text-white mb-2">
+              {unapprovedBatches?.length === 0 ? 'All Caught Up!' : 'No matches found'}
+            </h3>
+            <p className="text-white/60">
+              {unapprovedBatches?.length === 0 
+                ? 'No batches are pending approval at this time.'
+                : 'Try adjusting your search or filter criteria.'
+              }
+            </p>
           </GlassCardContent>
         </GlassCard>
       ) : (
         <div className="space-y-4">
-          {unapprovedBatches.map((batch) => {
+          {filteredBatches.map((batch) => {
             const daysPending = calculateDaysPending(batch.created_at);
             const userProfile = profilesData?.[batch.user_id];
             
@@ -257,10 +340,14 @@ export const UnapprovedBatchesReport = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                     <div>
                       <span className="text-white/60">Quantity:</span>
                       <span className="ml-2 text-white font-semibold">{batch.quantity}</span>
+                    </div>
+                    <div>
+                      <span className="text-white/60">Location:</span>
+                      <span className="ml-2 text-white">{batch.location || 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-white/60">Supplier:</span>

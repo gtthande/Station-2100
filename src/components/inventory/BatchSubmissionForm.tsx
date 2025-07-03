@@ -100,7 +100,7 @@ export const BatchSubmissionForm = () => {
         description: `Batch ${batchNumber} submitted for approval`,
       });
       queryClient.invalidateQueries({ queryKey: ['inventory-batches'] });
-      queryClient.invalidateQueries({ queryKey: ['approval-batches'] });
+      queryClient.invalidateQueries({ queryKey: ['unapproved-batches-report'] });
       
       // Reset form
       setFormData({
@@ -219,7 +219,7 @@ export const BatchSubmissionForm = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="quantity">Quantity *</Label>
               <Input
@@ -234,13 +234,26 @@ export const BatchSubmissionForm = () => {
             </div>
             
             <div>
-              <Label htmlFor="location">Location</Label>
+              <Label htmlFor="location">Warehouse Location</Label>
               <Input
                 id="location"
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 className="bg-white/5 border-white/10 text-white"
-                placeholder="e.g., Warehouse A, Shelf 1"
+                placeholder="Rack-Bin (e.g., A1-B3)"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="cost_per_unit">Cost per Unit ($)</Label>
+              <Input
+                id="cost_per_unit"
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.cost_per_unit}
+                onChange={(e) => setFormData({ ...formData, cost_per_unit: parseFloat(e.target.value) || 0 })}
+                className="bg-white/5 border-white/10 text-white"
               />
             </div>
           </div>
@@ -269,29 +282,14 @@ export const BatchSubmissionForm = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="purchase_order">Purchase Order</Label>
-              <Input
-                id="purchase_order"
-                value={formData.purchase_order}
-                onChange={(e) => setFormData({ ...formData, purchase_order: e.target.value })}
-                className="bg-white/5 border-white/10 text-white"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="cost_per_unit">Cost per Unit ($)</Label>
-              <Input
-                id="cost_per_unit"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.cost_per_unit}
-                onChange={(e) => setFormData({ ...formData, cost_per_unit: parseFloat(e.target.value) || 0 })}
-                className="bg-white/5 border-white/10 text-white"
-              />
-            </div>
+          <div>
+            <Label htmlFor="purchase_order">Purchase Order</Label>
+            <Input
+              id="purchase_order"
+              value={formData.purchase_order}
+              onChange={(e) => setFormData({ ...formData, purchase_order: e.target.value })}
+              className="bg-white/5 border-white/10 text-white"
+            />
           </div>
 
           <div>
