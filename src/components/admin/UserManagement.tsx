@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,47 +9,58 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Users, UserPlus, UserMinus, Shield, Settings, Search } from 'lucide-react';
+import { Users, UserPlus, UserMinus, Shield, Settings, Search, CheckCircle, Package, ClipboardCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 type AppRole = 'admin' | 'supervisor' | 'parts_approver' | 'job_allocator' | 'batch_manager';
 
 const roleLabels: Record<AppRole, string> = {
-  admin: 'Administrator',
+  admin: 'System Administrator',
   supervisor: 'Supervisor',
-  parts_approver: 'Parts Approver', 
-  job_allocator: 'Job Allocator',
-  batch_manager: 'Batch Manager'
+  parts_approver: 'Parts Batch Approver', 
+  job_allocator: 'Parts Issue Approver',
+  batch_manager: 'Job Closer'
 };
 
 const roleDescriptions: Record<AppRole, string> = {
   admin: 'Full system access and user management',
-  supervisor: 'Can approve batches and manage warehouse operations',
-  parts_approver: 'Can approve pending inventory batches',
-  job_allocator: 'Can allocate approved batches to warehouse locations',
-  batch_manager: 'Can create and submit inventory batches'
+  supervisor: 'Can supervise all warehouse operations and approve batches',
+  parts_approver: 'Can approve parts batched into the system',
+  job_allocator: 'Can approve parts issued out of the system',
+  batch_manager: 'Can close completed jobs and manage final inventory'
 };
 
 const roleColors: Record<AppRole, string> = {
   admin: 'bg-red-500/20 text-red-300 border-red-500/30',
   supervisor: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
-  parts_approver: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-  job_allocator: 'bg-green-500/20 text-green-300 border-green-500/30',
+  parts_approver: 'bg-green-500/20 text-green-300 border-green-500/30',
+  job_allocator: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
   batch_manager: 'bg-purple-500/20 text-purple-300 border-purple-500/30'
 };
+
+const roleIcons: Record<AppRole, React.ReactNode> = {
+  admin: <Shield className="w-4 h-4" />,
+  supervisor: <Users className="w-4 h-4" />,
+  parts_approver: <CheckCircle className="w-4 h-4" />,
+  job_allocator: <Package className="w-4 h-4" />,
+  batch_manager: <ClipboardCheck className="w-4 h-4" />
+};
+
+// Main workflow roles that should be highlighted
+const mainWorkflowRoles: AppRole[] = ['parts_approver', 'job_allocator', 'batch_manager'];
 
 export const UserManagement = () => {
   const { isAdmin, assignRole, removeRole, isAssigningRole, isRemovingRole } = useUserRoles();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedRole, setSelectedRole] = useState<AppRole>('batch_manager');
+  const [selectedRole, setSelectedRole] = useState<AppRole>('parts_approver');
   const [emailFilter, setEmailFilter] = useState('');
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [newUserData, setNewUserData] = useState({
     email: '',
     password: '',
     full_name: '',
-    role: 'batch_manager' as AppRole
+    role: 'parts_approver' as AppRole
   });
 
   const { data: allUserRoles, isLoading } = useQuery({
@@ -83,19 +93,17 @@ export const UserManagement = () => {
 
   const createUserMutation = useMutation({
     mutationFn: async (userData: typeof newUserData) => {
-      // Create user account
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: userData.email,
         password: userData.password,
         user_metadata: {
           full_name: userData.full_name
         },
-        email_confirm: true // Auto-confirm email for admin-created users
+        email_confirm: true
       });
 
       if (authError) throw authError;
 
-      // Assign role to the new user
       if (authData.user) {
         const { error: roleError } = await supabase
           .from('user_roles')
@@ -121,7 +129,7 @@ export const UserManagement = () => {
         email: '',
         password: '',
         full_name: '',
-        role: 'batch_manager'
+        role: 'parts_approver'
       });
     },
     onError: (error) => {
@@ -212,7 +220,6 @@ export const UserManagement = () => {
     );
   }
 
-  // Group users by email/profile
   const userGroups = profiles?.map(profile => {
     const userRoles = allUserRoles?.filter(role => role.user_id === profile.id) || [];
     return {
@@ -223,12 +230,43 @@ export const UserManagement = () => {
 
   return (
     <div className="space-y-6">
+      {/* Main Workflow Roles Overview */}
+      <GlassCard>
+        <GlassCardHeader>
+          <GlassCardTitle className="flex items-center gap-2">
+            <Settings className="w-5 h-5" />
+            Main Workflow Roles
+          </GlassCardTitle>
+        </GlassCardHeader>
+        <GlassCardContent>
+          <div className="grid md:grid-cols-3 gap-4 mb-6">
+            {mainWorkflowRoles.map((role) => (
+              <div key={role} className="p-4 bg-white/5 rounded-lg border border-white/10">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className={`p-2 rounded-lg ${roleColors[role]}`}>
+                    {roleIcons[role]}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-white">{roleLabels[role]}</h4>
+                  </div>
+                </div>
+                <p className="text-sm text-white/70">{roleDescriptions[role]}</p>
+              </div>
+            ))}
+          </div>
+          <div className="text-center text-white/60 text-sm">
+            These are the three main roles for your workflow: approving parts batched in, approving parts issued out, and closing jobs.
+          </div>
+        </GlassCardContent>
+      </GlassCard>
+
+      {/* User Management */}
       <GlassCard>
         <GlassCardHeader>
           <div className="flex items-center justify-between">
             <GlassCardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5" />
-              User Management & Role Assignment
+              User Role Assignment
             </GlassCardTitle>
             <Dialog open={isCreateUserOpen} onOpenChange={setIsCreateUserOpen}>
               <DialogTrigger asChild>
@@ -285,9 +323,12 @@ export const UserManagement = () => {
                       <SelectContent className="bg-surface-dark border-white/20">
                         {Object.entries(roleLabels).map(([role, label]) => (
                           <SelectItem key={role} value={role} className="text-white">
-                            <div>
-                              <div className="font-medium">{label}</div>
-                              <div className="text-xs text-white/60">{roleDescriptions[role as AppRole]}</div>
+                            <div className="flex items-center gap-2">
+                              {roleIcons[role as AppRole]}
+                              <div>
+                                <div className="font-medium">{label}</div>
+                                <div className="text-xs text-white/60">{roleDescriptions[role as AppRole]}</div>
+                              </div>
                             </div>
                           </SelectItem>
                         ))}
@@ -345,9 +386,12 @@ export const UserManagement = () => {
                       <SelectContent className="bg-surface-dark border-white/20">
                         {Object.entries(roleLabels).map(([role, label]) => (
                           <SelectItem key={role} value={role} className="text-white">
-                            <div>
-                              <div className="font-medium">{label}</div>
-                              <div className="text-xs text-white/60">{roleDescriptions[role as AppRole]}</div>
+                            <div className="flex items-center gap-2">
+                              {roleIcons[role as AppRole]}
+                              <div>
+                                <div className="font-medium">{label}</div>
+                                <div className="text-xs text-white/60">{roleDescriptions[role as AppRole]}</div>
+                              </div>
                             </div>
                           </SelectItem>
                         ))}
@@ -367,7 +411,8 @@ export const UserManagement = () => {
                 <div className="flex flex-wrap gap-2">
                   {user.roles.map((userRole) => (
                     <div key={userRole.id} className="flex items-center gap-1">
-                      <Badge className={`${roleColors[userRole.role as AppRole]} border`}>
+                      <Badge className={`${roleColors[userRole.role as AppRole]} border flex items-center gap-1`}>
+                        {roleIcons[userRole.role as AppRole]}
                         {roleLabels[userRole.role as AppRole]}
                       </Badge>
                       <Button
@@ -385,30 +430,6 @@ export const UserManagement = () => {
                     <span className="text-white/40 text-sm">No roles assigned</span>
                   )}
                 </div>
-              </div>
-            ))}
-          </div>
-        </GlassCardContent>
-      </GlassCard>
-
-      {/* Role Information Card */}
-      <GlassCard>
-        <GlassCardHeader>
-          <GlassCardTitle className="flex items-center gap-2">
-            <Settings className="w-5 h-5" />
-            Role Permissions Overview
-          </GlassCardTitle>
-        </GlassCardHeader>
-        <GlassCardContent>
-          <div className="grid gap-4">
-            {Object.entries(roleLabels).map(([role, label]) => (
-              <div key={role} className="p-3 bg-white/5 rounded-lg border border-white/10">
-                <div className="flex items-center gap-3 mb-2">
-                  <Badge className={`${roleColors[role as AppRole]} border`}>
-                    {label}
-                  </Badge>
-                </div>
-                <p className="text-sm text-white/70">{roleDescriptions[role as AppRole]}</p>
               </div>
             ))}
           </div>
