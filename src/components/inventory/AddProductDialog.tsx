@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 
 interface AddProductDialogProps {
@@ -29,7 +30,11 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
     unit_of_measure: 'each',
     minimum_stock: 0,
     reorder_point: 0,
-    unit_cost: 0
+    unit_cost: 0,
+    is_owner_supplied: false,
+    markup_percentage: 25.00,
+    sale_price: 0,
+    owner_cost_price: 0
   });
 
   const createProductMutation = useMutation({
@@ -61,7 +66,11 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
         unit_of_measure: 'each',
         minimum_stock: 0,
         reorder_point: 0,
-        unit_cost: 0
+        unit_cost: 0,
+        is_owner_supplied: false,
+        markup_percentage: 25.00,
+        sale_price: 0,
+        owner_cost_price: 0
       });
     },
     onError: (error) => {
@@ -78,14 +87,34 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
     createProductMutation.mutate(formData);
   };
 
+  // Calculate automatic sale price based on markup
+  const calculateSalePrice = () => {
+    if (formData.is_owner_supplied) {
+      return formData.owner_cost_price;
+    } else {
+      return formData.unit_cost * (1 + formData.markup_percentage / 100);
+    }
+  };
+
+  // Update sale price when relevant fields change
+  const handleCostOrMarkupChange = (field: string, value: number) => {
+    const newFormData = { ...formData, [field]: value };
+    if (!formData.is_owner_supplied && (field === 'unit_cost' || field === 'markup_percentage')) {
+      newFormData.sale_price = newFormData.unit_cost * (1 + newFormData.markup_percentage / 100);
+    } else if (formData.is_owner_supplied && field === 'owner_cost_price') {
+      newFormData.sale_price = value;
+    }
+    setFormData(newFormData);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-surface-dark border-white/20 text-white max-w-2xl">
+      <DialogContent className="bg-surface-dark border-white/20 text-white max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Product</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="part_number">Part Number *</Label>
@@ -180,17 +209,85 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="unit_cost">Unit Cost ($)</Label>
-            <Input
-              id="unit_cost"
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.unit_cost}
-              onChange={(e) => setFormData({ ...formData, unit_cost: parseFloat(e.target.value) || 0 })}
-              className="bg-white/5 border-white/10 text-white"
+          {/* Owner Supplied Toggle */}
+          <div className="flex items-center space-x-2 p-4 bg-white/5 rounded-lg">
+            <Switch
+              id="is_owner_supplied"
+              checked={formData.is_owner_supplied}
+              onCheckedChange={(checked) => setFormData({ ...formData, is_owner_supplied: checked })}
             />
+            <Label htmlFor="is_owner_supplied" className="text-white">
+              Owner Supplied Item
+            </Label>
+            <p className="text-sm text-white/60 ml-2">
+              (Owner supplied items are issued at cost price)
+            </p>
+          </div>
+
+          {/* Pricing Section */}
+          <div className="space-y-4 p-4 bg-white/5 rounded-lg">
+            <h3 className="text-lg font-medium text-white">Pricing</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="unit_cost">Unit Cost ($) *</Label>
+                <Input
+                  id="unit_cost"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.unit_cost}
+                  onChange={(e) => handleCostOrMarkupChange('unit_cost', parseFloat(e.target.value) || 0)}
+                  className="bg-white/5 border-white/10 text-white"
+                  required
+                />
+              </div>
+
+              {formData.is_owner_supplied ? (
+                <div>
+                  <Label htmlFor="owner_cost_price">Owner Cost Price ($)</Label>
+                  <Input
+                    id="owner_cost_price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.owner_cost_price}
+                    onChange={(e) => handleCostOrMarkupChange('owner_cost_price', parseFloat(e.target.value) || 0)}
+                    className="bg-white/5 border-white/10 text-white"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <Label htmlFor="markup_percentage">Markup Percentage (%)</Label>
+                  <Input
+                    id="markup_percentage"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.markup_percentage}
+                    onChange={(e) => handleCostOrMarkupChange('markup_percentage', parseFloat(e.target.value) || 0)}
+                    className="bg-white/5 border-white/10 text-white"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="sale_price">Sale Price ($)</Label>
+              <Input
+                id="sale_price"
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.sale_price}
+                onChange={(e) => setFormData({ ...formData, sale_price: parseFloat(e.target.value) || 0 })}
+                className="bg-white/5 border-white/10 text-white"
+                placeholder={`Auto-calculated: $${calculateSalePrice().toFixed(2)}`}
+              />
+              <p className="text-sm text-white/60 mt-1">
+                Leave blank to use auto-calculated price: ${calculateSalePrice().toFixed(2)}
+              </p>
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">

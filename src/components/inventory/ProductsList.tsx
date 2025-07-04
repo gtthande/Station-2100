@@ -7,7 +7,7 @@ import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/
 import { GradientButton } from '@/components/ui/gradient-button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Package, Plus, AlertTriangle, Edit, Trash2 } from 'lucide-react';
+import { Search, Package, Plus, AlertTriangle, DollarSign, Building2 } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
 
 type InventoryProduct = Tables<'inventory_products'>;
@@ -97,7 +97,14 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
               <GlassCardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <GlassCardTitle className="text-lg mb-1">{product.name}</GlassCardTitle>
+                    <GlassCardTitle className="text-lg mb-1 flex items-center gap-2">
+                      {product.name}
+                      {product.is_owner_supplied && (
+                        <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">
+                          Owner
+                        </Badge>
+                      )}
+                    </GlassCardTitle>
                     <p className="text-sm text-white/60 mb-2">Part: {product.part_number}</p>
                     {product.category && (
                       <Badge variant="secondary" className="bg-white/10 text-white/80">
@@ -131,6 +138,58 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
                     <span className="text-sm text-white/60">Min Stock:</span>
                     <span className="font-semibold text-white">{product.minimum_stock || 0}</span>
                   </div>
+                  
+                  {/* Pricing Information */}
+                  <div className="border-t border-white/10 pt-3 space-y-2">
+                    <div className="flex items-center gap-2 mb-2">
+                      <DollarSign className="w-4 h-4 text-green-400" />
+                      <span className="text-sm font-medium text-green-300">Pricing</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-white/60">Unit Cost:</span>
+                      <span className="text-sm text-white">${product.unit_cost?.toFixed(2) || '0.00'}</span>
+                    </div>
+                    
+                    {product.is_owner_supplied ? (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-white/60">Owner Price:</span>
+                        <span className="text-sm text-blue-300">${product.owner_cost_price?.toFixed(2) || '0.00'}</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-white/60">Markup:</span>
+                          <span className="text-sm text-white">{product.markup_percentage?.toFixed(1) || '0.0'}%</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-white/60">Sale Price:</span>
+                          <span className="text-sm text-green-300">
+                            ${product.sale_price?.toFixed(2) || product.calculated_sale_price?.toFixed(2) || '0.00'}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Warehouse Distribution */}
+                  {product.warehouse_distribution && product.warehouse_distribution.length > 0 && (
+                    <div className="border-t border-white/10 pt-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Building2 className="w-4 h-4 text-purple-400" />
+                        <span className="text-sm font-medium text-purple-300">Warehouses</span>
+                      </div>
+                      <div className="space-y-1">
+                        {product.warehouse_distribution.map((warehouse: any) => (
+                          <div key={warehouse.warehouse_id} className="flex justify-between items-center">
+                            <span className="text-xs text-white/60">{warehouse.warehouse_code}:</span>
+                            <span className="text-xs text-white">{warehouse.quantity}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
                   {product.manufacturer && (
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-white/60">Manufacturer:</span>

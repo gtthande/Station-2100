@@ -10,6 +10,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { Tables } from '@/integrations/supabase/types';
+
+type Warehouse = Tables<'warehouses'>;
+type Supplier = Tables<'suppliers'>;
 
 interface AddBatchDialogProps {
   open: boolean;
@@ -23,75 +27,74 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
   const queryClient = useQueryClient();
   
   const [formData, setFormData] = useState({
-    product_id: selectedProductId || '',
     batch_number: '',
-    quantity: 0,
-    location: '',
-    expiry_date: '',
-    received_date: new Date().toISOString().split('T')[0],
+    product_id: selectedProductId || '',
+    warehouse_id: '',
     supplier_id: '',
-    purchase_order: '',
+    quantity: 0,
     cost_per_unit: 0,
+    received_date: new Date().toISOString().split('T')[0],
+    expiry_date: '',
+    location: '',
+    purchase_order: '',
     notes: '',
-    status: 'active'
+    url: ''
   });
 
-  // Update form data when selectedProductId changes
+  // Fetch warehouses
+  const { data: warehouses } = useQuery({
+    queryKey: ['warehouses'],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from('warehouses')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+      
+      if (error) throw error;
+      return data as Warehouse[];
+    },
+    enabled: !!user,
+  });
+
+  // Fetch suppliers
+  const { data: suppliers } = useQuery({
+    queryKey: ['suppliers'],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from('suppliers')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      return data as Supplier[];
+    },
+    enabled: !!user,
+  });
+
   useEffect(() => {
     if (selectedProductId) {
       setFormData(prev => ({ ...prev, product_id: selectedProductId }));
     }
   }, [selectedProductId]);
 
-  const { data: products } = useQuery({
-    queryKey: ['inventory-products'],
-    queryFn: async () => {
-      if (!user) return [];
-      
-      const { data, error } = await supabase
-        .from('inventory_products')
-        .select('id, name, part_number')
-        .order('name');
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user,
-  });
-
-  const { data: suppliers } = useQuery({
-    queryKey: ['suppliers-list'],
-    queryFn: async () => {
-      if (!user) return [];
-      
-      const { data, error } = await supabase
-        .from('suppliers')
-        .select('id, name')
-        .order('name');
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user,
-  });
-
   const createBatchMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       if (!user) throw new Error('User not authenticated');
       
-      const batchData = {
-        ...data,
-        user_id: user.id,
-        expiry_date: data.expiry_date || null,
-        supplier_id: data.supplier_id || null,
-        purchase_order: data.purchase_order || null,
-        cost_per_unit: data.cost_per_unit || null,
-        notes: data.notes || null,
-      };
-      
       const { error } = await supabase
         .from('inventory_batches')
-        .insert(batchData);
+        .insert({
+          ...data,
+          user_id: user.id,
+          supplier_id: data.supplier_id || null,
+          warehouse_id: data.warehouse_id || null,
+          expiry_date: data.expiry_date || null,
+        });
       
       if (error) throw error;
     },
@@ -104,17 +107,18 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
       queryClient.invalidateQueries({ queryKey: ['inventory-summary'] });
       onOpenChange(false);
       setFormData({
-        product_id: selectedProductId || '',
         batch_number: '',
-        quantity: 0,
-        location: '',
-        expiry_date: '',
-        received_date: new Date().toISOString().split('T')[0],
+        product_id: selectedProductId || '',
+        warehouse_id: '',
         supplier_id: '',
-        purchase_order: '',
+        quantity: 0,
         cost_per_unit: 0,
+        received_date: new Date().toISOString().split('T')[0],
+        expiry_date: '',
+        location: '',
+        purchase_order: '',
         notes: '',
-        status: 'active'
+        url: ''
       });
     },
     onError: (error) => {
@@ -141,31 +145,12 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-surface-dark border-white/20 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-surface-dark border-white/20 text-white max-w-2xl">
         <DialogHeader>
           <DialogTitle>Add New Batch</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="product_id">Product *</Label>
-            <Select
-              value={formData.product_id}
-              onValueChange={(value) => setFormData({ ...formData, product_id: value })}
-            >
-              <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                <SelectValue placeholder="Select a product" />
-              </SelectTrigger>
-              <SelectContent className="bg-surface-dark border-white/20">
-                {products?.map((product) => (
-                  <SelectItem key={product.id} value={product.id}>
-                    {product.name} ({product.part_number})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="batch_number">Batch Number *</Label>
@@ -179,6 +164,27 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
             </div>
             
             <div>
+              <Label htmlFor="warehouse_id">Warehouse *</Label>
+              <Select
+                value={formData.warehouse_id}
+                onValueChange={(value) => setFormData({ ...formData, warehouse_id: value })}
+              >
+                <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                  <SelectValue placeholder="Select warehouse" />
+                </SelectTrigger>
+                <SelectContent className="bg-surface-dark border-white/20">
+                  {warehouses?.map((warehouse) => (
+                    <SelectItem key={warehouse.id} value={warehouse.id} className="text-white">
+                      {warehouse.name} ({warehouse.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
               <Label htmlFor="quantity">Quantity *</Label>
               <Input
                 id="quantity"
@@ -190,36 +196,18 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
                 required
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                className="bg-white/5 border-white/10 text-white"
-                placeholder="e.g., Warehouse A, Shelf 1"
-              />
-            </div>
             
             <div>
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => setFormData({ ...formData, status: value })}
-              >
-                <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-surface-dark border-white/20">
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="expired">Expired</SelectItem>
-                  <SelectItem value="quarantined">Quarantined</SelectItem>
-                  <SelectItem value="consumed">Consumed</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="cost_per_unit">Cost per Unit ($)</Label>
+              <Input
+                id="cost_per_unit"
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.cost_per_unit}
+                onChange={(e) => setFormData({ ...formData, cost_per_unit: parseFloat(e.target.value) || 0 })}
+                className="bg-white/5 border-white/10 text-white"
+              />
             </div>
           </div>
 
@@ -255,11 +243,11 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
                 onValueChange={(value) => setFormData({ ...formData, supplier_id: value })}
               >
                 <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                  <SelectValue placeholder="Select supplier (optional)" />
+                  <SelectValue placeholder="Select supplier" />
                 </SelectTrigger>
                 <SelectContent className="bg-surface-dark border-white/20">
                   {suppliers?.map((supplier) => (
-                    <SelectItem key={supplier.id} value={supplier.id}>
+                    <SelectItem key={supplier.id} value={supplier.id} className="text-white">
                       {supplier.name}
                     </SelectItem>
                   ))}
@@ -268,26 +256,36 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
             </div>
             
             <div>
-              <Label htmlFor="purchase_order">Purchase Order</Label>
+              <Label htmlFor="location">Location</Label>
               <Input
-                id="purchase_order"
-                value={formData.purchase_order}
-                onChange={(e) => setFormData({ ...formData, purchase_order: e.target.value })}
+                id="location"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 className="bg-white/5 border-white/10 text-white"
+                placeholder="Shelf, Bin, etc."
               />
             </div>
           </div>
 
           <div>
-            <Label htmlFor="cost_per_unit">Cost per Unit ($)</Label>
+            <Label htmlFor="purchase_order">Purchase Order</Label>
             <Input
-              id="cost_per_unit"
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.cost_per_unit}
-              onChange={(e) => setFormData({ ...formData, cost_per_unit: parseFloat(e.target.value) || 0 })}
+              id="purchase_order"
+              value={formData.purchase_order}
+              onChange={(e) => setFormData({ ...formData, purchase_order: e.target.value })}
               className="bg-white/5 border-white/10 text-white"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="url">Documentation URL</Label>
+            <Input
+              id="url"
+              type="url"
+              value={formData.url}
+              onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+              className="bg-white/5 border-white/10 text-white"
+              placeholder="Link to certificates, documentation, etc."
             />
           </div>
 
