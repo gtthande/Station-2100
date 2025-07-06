@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Tables } from '@/integrations/supabase/types';
 
 type UserRole = Tables<'user_roles'>;
-type AppRole = 'admin' | 'supervisor' | 'parts_approver' | 'job_allocator' | 'batch_manager';
+type AppRole = 'admin' | 'system_owner' | 'supervisor' | 'parts_approver' | 'job_allocator' | 'batch_manager';
 
 export const useUserRoles = () => {
   const { user } = useAuth();
@@ -33,10 +33,14 @@ export const useUserRoles = () => {
   };
 
   const isAdmin = (): boolean => hasRole('admin');
+  const isSystemOwner = (): boolean => hasRole('system_owner');
   const isSupervisor = (): boolean => hasRole('supervisor');
   const isPartsApprover = (): boolean => hasRole('parts_approver');
   const isJobAllocator = (): boolean => hasRole('job_allocator');
   const isBatchManager = (): boolean => hasRole('batch_manager');
+
+  // System owners and admins can manage the system
+  const canManageSystem = (): boolean => isAdmin() || isSystemOwner();
 
   const assignRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
@@ -73,10 +77,12 @@ export const useUserRoles = () => {
     isLoading,
     hasRole,
     isAdmin,
+    isSystemOwner,
     isSupervisor,
     isPartsApprover,
     isJobAllocator,
     isBatchManager,
+    canManageSystem,
     assignRole: assignRoleMutation.mutate,
     removeRole: removeRoleMutation.mutate,
     isAssigningRole: assignRoleMutation.isPending,

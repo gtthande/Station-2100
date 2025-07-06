@@ -9,13 +9,14 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Users, UserPlus, UserMinus, Shield, Settings, Search, CheckCircle, Package, ClipboardCheck } from 'lucide-react';
+import { Users, UserPlus, UserMinus, Shield, Settings, Search, CheckCircle, Package, ClipboardCheck, Crown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-type AppRole = 'admin' | 'supervisor' | 'parts_approver' | 'job_allocator' | 'batch_manager';
+type AppRole = 'admin' | 'system_owner' | 'supervisor' | 'parts_approver' | 'job_allocator' | 'batch_manager';
 
 const roleLabels: Record<AppRole, string> = {
   admin: 'System Administrator',
+  system_owner: 'System Owner',
   supervisor: 'Supervisor',
   parts_approver: 'Parts Batch Approver', 
   job_allocator: 'Parts Issue Approver',
@@ -24,6 +25,7 @@ const roleLabels: Record<AppRole, string> = {
 
 const roleDescriptions: Record<AppRole, string> = {
   admin: 'Full system access and user management',
+  system_owner: 'Business owner with full system access (no database access)',
   supervisor: 'Can supervise all warehouse operations and approve batches',
   parts_approver: 'Can approve parts batched into the system',
   job_allocator: 'Can approve parts issued out of the system',
@@ -32,6 +34,7 @@ const roleDescriptions: Record<AppRole, string> = {
 
 const roleColors: Record<AppRole, string> = {
   admin: 'bg-red-500/20 text-red-300 border-red-500/30',
+  system_owner: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
   supervisor: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
   parts_approver: 'bg-green-500/20 text-green-300 border-green-500/30',
   job_allocator: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
@@ -40,6 +43,7 @@ const roleColors: Record<AppRole, string> = {
 
 const roleIcons: Record<AppRole, React.ReactNode> = {
   admin: <Shield className="w-4 h-4" />,
+  system_owner: <Crown className="w-4 h-4" />,
   supervisor: <Users className="w-4 h-4" />,
   parts_approver: <CheckCircle className="w-4 h-4" />,
   job_allocator: <Package className="w-4 h-4" />,
@@ -50,7 +54,7 @@ const roleIcons: Record<AppRole, React.ReactNode> = {
 const mainWorkflowRoles: AppRole[] = ['parts_approver', 'job_allocator', 'batch_manager'];
 
 export const UserManagement = () => {
-  const { isAdmin, assignRole, removeRole, isAssigningRole, isRemovingRole } = useUserRoles();
+  const { canManageSystem, assignRole, removeRole, isAssigningRole, isRemovingRole } = useUserRoles();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedRole, setSelectedRole] = useState<AppRole>('parts_approver');
@@ -74,7 +78,7 @@ export const UserManagement = () => {
       if (error) throw error;
       return data;
     },
-    enabled: isAdmin(),
+    enabled: canManageSystem(),
   });
 
   const { data: profiles } = useQuery({
@@ -88,7 +92,7 @@ export const UserManagement = () => {
       if (error) throw error;
       return data;
     },
-    enabled: isAdmin(),
+    enabled: canManageSystem(),
   });
 
   const createUserMutation = useMutation({
@@ -197,13 +201,13 @@ export const UserManagement = () => {
     createUserMutation.mutate(newUserData);
   };
 
-  if (!isAdmin()) {
+  if (!canManageSystem()) {
     return (
       <GlassCard>
         <GlassCardContent className="p-8 text-center">
           <Shield className="w-16 h-16 text-white/20 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-white mb-2">Access Denied</h3>
-          <p className="text-white/60">You need administrator privileges to manage users.</p>
+          <p className="text-white/60">You need administrator or system owner privileges to manage users.</p>
         </GlassCardContent>
       </GlassCard>
     );

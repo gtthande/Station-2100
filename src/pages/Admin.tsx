@@ -3,12 +3,40 @@ import { useState } from 'react';
 import { UserRoleManagement } from '@/components/admin/UserRoleManagement';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { UserMenu } from '@/components/navigation/UserMenu';
+import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link } from 'react-router-dom';
 import { Shield, Users, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { GlassCard, GlassCardContent } from '@/components/ui/glass-card';
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState<'users' | 'roles'>('users');
+  const { canManageSystem, isLoading } = useUserRoles();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-surface-dark flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+      </div>
+    );
+  }
+
+  if (!canManageSystem()) {
+    return (
+      <div className="min-h-screen bg-surface-dark flex items-center justify-center">
+        <GlassCard>
+          <GlassCardContent className="p-8 text-center">
+            <Shield className="w-16 h-16 text-white/20 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-white mb-2">Access Denied</h3>
+            <p className="text-white/60">You need administrator or system owner privileges to access this page.</p>
+            <Link to="/" className="mt-4 inline-block text-blue-400 hover:text-blue-300">
+              ← Return to Dashboard
+            </Link>
+          </GlassCardContent>
+        </GlassCard>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-surface-dark">

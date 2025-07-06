@@ -11,28 +11,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Users, UserPlus, UserMinus, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-type AppRole = 'admin' | 'supervisor' | 'parts_approver' | 'job_allocator' | 'batch_manager';
+type AppRole = 'admin' | 'system_owner' | 'supervisor' | 'parts_approver' | 'job_allocator' | 'batch_manager';
 
 const roleLabels: Record<AppRole, string> = {
-  admin: 'Administrator',
+  admin: 'System Administrator',
+  system_owner: 'System Owner',
   supervisor: 'Supervisor',
-  parts_approver: 'Parts Approver',
-  job_allocator: 'Job Allocator',
-  batch_manager: 'Batch Manager'
+  parts_approver: 'Parts Batch Approver',
+  job_allocator: 'Parts Issue Approver',
+  batch_manager: 'Job Closer'
 };
 
 const roleColors: Record<AppRole, string> = {
   admin: 'bg-red-500/20 text-red-300 border-red-500/30',
+  system_owner: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
   supervisor: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
-  parts_approver: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-  job_allocator: 'bg-green-500/20 text-green-300 border-green-500/30',
+  parts_approver: 'bg-green-500/20 text-green-300 border-green-500/30',
+  job_allocator: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
   batch_manager: 'bg-purple-500/20 text-purple-300 border-purple-500/30'
 };
 
 export const UserRoleManagement = () => {
-  const { isAdmin, assignRole, removeRole, isAssigningRole, isRemovingRole } = useUserRoles();
+  const { canManageSystem, assignRole, removeRole, isAssigningRole, isRemovingRole } = useUserRoles();
   const { toast } = useToast();
-  const [selectedRole, setSelectedRole] = useState<AppRole>('batch_manager');
+  const [selectedRole, setSelectedRole] = useState<AppRole>('parts_approver');
   const [emailFilter, setEmailFilter] = useState('');
 
   const { data: allUserRoles, isLoading } = useQuery({
@@ -46,7 +48,7 @@ export const UserRoleManagement = () => {
       if (error) throw error;
       return data;
     },
-    enabled: isAdmin(),
+    enabled: canManageSystem(),
   });
 
   const { data: profiles } = useQuery({
@@ -60,7 +62,7 @@ export const UserRoleManagement = () => {
       if (error) throw error;
       return data;
     },
-    enabled: isAdmin(),
+    enabled: canManageSystem(),
   });
 
   const filteredUserRoles = allUserRoles?.filter(role =>
@@ -104,13 +106,13 @@ export const UserRoleManagement = () => {
     });
   };
 
-  if (!isAdmin()) {
+  if (!canManageSystem()) {
     return (
       <GlassCard>
         <GlassCardContent className="p-8 text-center">
           <Shield className="w-16 h-16 text-white/20 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-white mb-2">Access Denied</h3>
-          <p className="text-white/60">You need administrator privileges to manage user roles.</p>
+          <p className="text-white/60">You need administrator or system owner privileges to manage user roles.</p>
         </GlassCardContent>
       </GlassCard>
     );
