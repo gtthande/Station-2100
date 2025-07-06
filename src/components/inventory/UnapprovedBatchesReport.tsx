@@ -21,6 +21,8 @@ interface UnapprovedBatch {
   created_at: string;
   received_date: string | null;
   user_id: string;
+  entered_by: string | null;
+  supplier_invoice_number: string | null;
   location: string | null;
   inventory_products: {
     name: string;
@@ -63,6 +65,8 @@ export const UnapprovedBatchesReport = () => {
           created_at,
           received_date,
           user_id,
+          entered_by,
+          supplier_invoice_number,
           location,
           inventory_products!inner (
             name,
@@ -86,11 +90,11 @@ export const UnapprovedBatchesReport = () => {
   });
 
   const { data: profilesData } = useQuery({
-    queryKey: ['batch-profiles', unapprovedBatches?.map(b => b.user_id)],
+    queryKey: ['batch-profiles', unapprovedBatches?.map(b => b.entered_by || b.user_id)],
     queryFn: async () => {
       if (!unapprovedBatches || unapprovedBatches.length === 0) return {};
       
-      const userIds = [...new Set(unapprovedBatches.map(batch => batch.user_id))];
+      const userIds = [...new Set(unapprovedBatches.map(batch => batch.entered_by || batch.user_id).filter(Boolean))];
       
       const { data, error } = await supabase
         .from('profiles')
@@ -123,7 +127,7 @@ export const UnapprovedBatchesReport = () => {
         .from('inventory_batches')
         .update({
           approval_status: 'approved',
-          approved_by: user.id,
+          approved_by: user.id, // Save the approving user
           approved_at: new Date().toISOString(),
         })
         .eq('id', batchId);
@@ -170,7 +174,8 @@ export const UnapprovedBatchesReport = () => {
       batch.batch_number.toLowerCase().includes(searchLower) ||
       batch.inventory_products?.name.toLowerCase().includes(searchLower) ||
       batch.inventory_products?.part_number.toLowerCase().includes(searchLower) ||
-      batch.suppliers?.name?.toLowerCase().includes(searchLower);
+      batch.suppliers?.name?.toLowerCase().includes(searchLower) ||
+      batch.supplier_invoice_number?.toLowerCase().includes(searchLower);
 
     const matchesSupplier = selectedSupplier === 'all' || batch.suppliers?.name === selectedSupplier;
 
@@ -221,7 +226,7 @@ export const UnapprovedBatchesReport = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 w-4 h-4" />
                 <Input
-                  placeholder="Search batches, products, or suppliers..."
+                  placeholder="Search batches, products, suppliers, or invoice numbers..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 bg-white/5 border-white/10 text-white"
@@ -290,7 +295,7 @@ export const UnapprovedBatchesReport = () => {
         <div className="space-y-4">
           {filteredBatches.map((batch) => {
             const daysPending = calculateDaysPending(batch.created_at);
-            const userProfile = profilesData?.[batch.user_id];
+            const userProfile = profilesData?.[batch.entered_by || batch.user_id];
             
             return (
               <GlassCard 
@@ -340,7 +345,7 @@ export const UnapprovedBatchesReport = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                  <div className="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm">
                     <div>
                       <span className="text-white/60">Quantity:</span>
                       <span className="ml-2 text-white font-semibold">{batch.quantity}</span>
@@ -354,7 +359,11 @@ export const UnapprovedBatchesReport = () => {
                       <span className="ml-2 text-white">{batch.suppliers?.name || 'N/A'}</span>
                     </div>
                     <div>
-                      <span className="text-white/60">Submitted by:</span>
+                      <span className="text-white/60">Invoice #:</span>
+                      <span className="ml-2 text-white">{batch.supplier_invoice_number || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-white/60">Entered by:</span>
                       <span className="ml-2 text-white">{userProfile?.full_name || userProfile?.email || 'N/A'}</span>
                     </div>
                     <div>

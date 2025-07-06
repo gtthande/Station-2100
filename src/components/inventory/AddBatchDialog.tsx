@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,6 +42,7 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
     product_id: selectedProductId || '',
     warehouse_id: '',
     supplier_id: '',
+    supplier_invoice_number: '',
     quantity: 0,
     cost_per_unit: 0,
     received_date: new Date().toISOString().split('T')[0],
@@ -112,7 +114,9 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
         .insert({
           ...data,
           user_id: user.id,
+          entered_by: user.id, // Automatically set the logged-in user as entered_by
           supplier_id: data.supplier_id || null,
+          supplier_invoice_number: data.supplier_invoice_number || null,
           warehouse_id: data.warehouse_id || null,
           expiry_date: data.expiry_date || null,
         });
@@ -132,6 +136,7 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
         product_id: selectedProductId || '',
         warehouse_id: '',
         supplier_id: '',
+        supplier_invoice_number: '',
         quantity: 0,
         cost_per_unit: 0,
         received_date: new Date().toISOString().split('T')[0],
@@ -161,6 +166,14 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
       });
       return;
     }
+    if (!formData.supplier_id) {
+      toast({
+        title: "Error",
+        description: "Please select a supplier",
+        variant: "destructive",
+      });
+      return;
+    }
     createBatchMutation.mutate(formData);
   };
 
@@ -185,6 +198,27 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
             </div>
             
             <div>
+              <Label htmlFor="supplier_id">Supplier *</Label>
+              <Select
+                value={formData.supplier_id}
+                onValueChange={(value) => setFormData({ ...formData, supplier_id: value })}
+              >
+                <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                  <SelectValue placeholder="Select supplier" />
+                </SelectTrigger>
+                <SelectContent className="bg-surface-dark border-white/20">
+                  {suppliers?.map((supplier) => (
+                    <SelectItem key={supplier.id} value={supplier.id} className="text-white">
+                      {supplier.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
               <Label htmlFor="warehouse_id">Warehouse</Label>
               <Select
                 value={formData.warehouse_id}
@@ -201,6 +235,17 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="supplier_invoice_number">Supplier Invoice Number</Label>
+              <Input
+                id="supplier_invoice_number"
+                value={formData.supplier_invoice_number}
+                onChange={(e) => setFormData({ ...formData, supplier_invoice_number: e.target.value })}
+                className="bg-white/5 border-white/10 text-white"
+                placeholder="Invoice number from supplier"
+              />
             </div>
           </div>
 
@@ -258,25 +303,6 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="supplier_id">Supplier</Label>
-              <Select
-                value={formData.supplier_id}
-                onValueChange={(value) => setFormData({ ...formData, supplier_id: value })}
-              >
-                <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                  <SelectValue placeholder="Select supplier" />
-                </SelectTrigger>
-                <SelectContent className="bg-surface-dark border-white/20">
-                  {suppliers?.map((supplier) => (
-                    <SelectItem key={supplier.id} value={supplier.id} className="text-white">
-                      {supplier.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
               <Label htmlFor="location">Location</Label>
               <Input
                 id="location"
@@ -286,16 +312,16 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
                 placeholder="Shelf, Bin, etc."
               />
             </div>
-          </div>
-
-          <div>
-            <Label htmlFor="purchase_order">Purchase Order</Label>
-            <Input
-              id="purchase_order"
-              value={formData.purchase_order}
-              onChange={(e) => setFormData({ ...formData, purchase_order: e.target.value })}
-              className="bg-white/5 border-white/10 text-white"
-            />
+            
+            <div>
+              <Label htmlFor="purchase_order">Purchase Order</Label>
+              <Input
+                id="purchase_order"
+                value={formData.purchase_order}
+                onChange={(e) => setFormData({ ...formData, purchase_order: e.target.value })}
+                className="bg-white/5 border-white/10 text-white"
+              />
+            </div>
           </div>
 
           <div>

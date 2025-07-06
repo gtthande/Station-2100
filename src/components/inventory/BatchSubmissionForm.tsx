@@ -24,6 +24,7 @@ export const BatchSubmissionForm = () => {
     expiry_date: '',
     received_date: new Date().toISOString().split('T')[0],
     supplier_id: '',
+    supplier_invoice_number: '',
     purchase_order: '',
     cost_per_unit: 0,
     notes: '',
@@ -76,11 +77,13 @@ export const BatchSubmissionForm = () => {
       const batchData = {
         ...data,
         user_id: user.id,
+        entered_by: user.id, // Automatically set the logged-in user as entered_by
         batch_number: batchNumber,
         approval_status: 'pending',
         status: 'active',
         expiry_date: data.expiry_date || null,
         supplier_id: data.supplier_id || null,
+        supplier_invoice_number: data.supplier_invoice_number || null,
         purchase_order: data.purchase_order || null,
         cost_per_unit: data.cost_per_unit || null,
         notes: data.notes || null,
@@ -110,6 +113,7 @@ export const BatchSubmissionForm = () => {
         expiry_date: '',
         received_date: new Date().toISOString().split('T')[0],
         supplier_id: '',
+        supplier_invoice_number: '',
         purchase_order: '',
         cost_per_unit: 0,
         notes: '',
@@ -282,14 +286,27 @@ export const BatchSubmissionForm = () => {
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="purchase_order">Purchase Order</Label>
-            <Input
-              id="purchase_order"
-              value={formData.purchase_order}
-              onChange={(e) => setFormData({ ...formData, purchase_order: e.target.value })}
-              className="bg-white/5 border-white/10 text-white"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="purchase_order">Purchase Order</Label>
+              <Input
+                id="purchase_order"
+                value={formData.purchase_order}
+                onChange={(e) => setFormData({ ...formData, purchase_order: e.target.value })}
+                className="bg-white/5 border-white/10 text-white"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="supplier_invoice_number">Supplier Invoice Number</Label>
+              <Input
+                id="supplier_invoice_number"
+                value={formData.supplier_invoice_number}
+                onChange={(e) => setFormData({ ...formData, supplier_invoice_number: e.target.value })}
+                className="bg-white/5 border-white/10 text-white"
+                placeholder="Invoice number from supplier"
+              />
+            </div>
           </div>
 
           <div>

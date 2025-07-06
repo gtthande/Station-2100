@@ -74,6 +74,7 @@ export type Database = {
           batch_number: string
           cost_per_unit: number | null
           created_at: string
+          entered_by: string | null
           expiry_date: string | null
           id: string
           job_allocated_at: string | null
@@ -87,6 +88,7 @@ export type Database = {
           received_date: string | null
           status: string | null
           supplier_id: string | null
+          supplier_invoice_number: string | null
           updated_at: string
           url: string | null
           user_id: string
@@ -98,6 +100,7 @@ export type Database = {
           batch_number: string
           cost_per_unit?: number | null
           created_at?: string
+          entered_by?: string | null
           expiry_date?: string | null
           id?: string
           job_allocated_at?: string | null
@@ -111,6 +114,7 @@ export type Database = {
           received_date?: string | null
           status?: string | null
           supplier_id?: string | null
+          supplier_invoice_number?: string | null
           updated_at?: string
           url?: string | null
           user_id: string
@@ -122,6 +126,7 @@ export type Database = {
           batch_number?: string
           cost_per_unit?: number | null
           created_at?: string
+          entered_by?: string | null
           expiry_date?: string | null
           id?: string
           job_allocated_at?: string | null
@@ -135,6 +140,7 @@ export type Database = {
           received_date?: string | null
           status?: string | null
           supplier_id?: string | null
+          supplier_invoice_number?: string | null
           updated_at?: string
           url?: string | null
           user_id?: string
