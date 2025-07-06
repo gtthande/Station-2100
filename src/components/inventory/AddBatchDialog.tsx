@@ -51,36 +51,27 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
     url: ''
   });
 
-  // Fetch warehouses using raw query with proper error handling
+  // Fetch warehouses using direct query with proper error handling
   const { data: warehouses } = useQuery({
     queryKey: ['warehouses'],
     queryFn: async () => {
       if (!user) return [];
       
       try {
-        const { data, error } = await supabase
-          .rpc('get_warehouses') // We'll use a custom RPC function
-          .select('*');
+        // Direct table query to warehouses
+        const { data: warehouseData, error: warehouseError } = await (supabase as any)
+          .from('warehouses')
+          .select('id, name, code, user_id, address, city, state, is_active')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .order('name');
         
-        if (error) {
-          console.log('Warehouse query error, falling back to direct query');
-          // Fallback to direct table query
-          const { data: fallbackData, error: fallbackError } = await (supabase as any)
-            .from('warehouses')
-            .select('id, name, code, user_id, address, city, state, is_active')
-            .eq('user_id', user.id)
-            .eq('is_active', true)
-            .order('name');
-          
-          if (fallbackError) {
-            console.error('Warehouse fallback query failed:', fallbackError);
-            return [];
-          }
-          
-          return (fallbackData as unknown as Warehouse[]) || [];
+        if (warehouseError) {
+          console.error('Warehouse query failed:', warehouseError);
+          return [];
         }
         
-        return (data as unknown as Warehouse[]) || [];
+        return (warehouseData as unknown as Warehouse[]) || [];
       } catch (error) {
         console.error('Failed to fetch warehouses:', error);
         return [];

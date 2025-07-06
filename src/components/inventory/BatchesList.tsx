@@ -9,17 +9,22 @@ import { Search, Package2, MapPin, Calendar, Truck, Building2, DollarSign } from
 import { Tables } from '@/integrations/supabase/types';
 import { format } from 'date-fns';
 
-// Extend the inventory batch type to include warehouse_id
+// Extend the inventory batch type to include warehouse_id and relationships
 type ExtendedInventoryBatch = Tables<'inventory_batches'> & {
   warehouse_id?: string;
+  inventory_products?: {
+    name: string;
+    part_number: string;
+  };
+  suppliers?: {
+    name: string;
+  };
+  warehouses?: {
+    id: string;
+    name: string;
+    code: string;
+  };
 };
-
-// Define warehouse type since it's not in the generated types yet
-interface Warehouse {
-  id: string;
-  name: string;  
-  code: string;
-}
 
 interface BatchesListProps {
   selectedProductId?: string | null;
@@ -69,7 +74,7 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
               .single();
             
             if (!warehouseError && warehouse) {
-              return { ...batch, warehouses: warehouse as unknown as Warehouse };
+              return { ...batch, warehouses: warehouse };
             }
           } catch (warehouseError) {
             console.log('Failed to fetch warehouse for batch:', batch.id);
@@ -87,7 +92,7 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
     batch.batch_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     batch.inventory_products?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     batch.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (batch as any).warehouses?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    batch.warehouses?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   const getStatusColor = (status: string) => {
@@ -187,11 +192,11 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
                   <span className="font-semibold text-white">{batch.quantity}</span>
                 </div>
                 
-                {(batch as any).warehouses && (
+                {batch.warehouses && (
                   <div className="flex items-center gap-2">
                     <Building2 className="w-4 h-4 text-purple-400" />
                     <span className="text-sm text-purple-300">
-                      {(batch as any).warehouses.name} ({(batch as any).warehouses.code})
+                      {batch.warehouses.name} ({batch.warehouses.code})
                     </span>
                   </div>
                 )}
