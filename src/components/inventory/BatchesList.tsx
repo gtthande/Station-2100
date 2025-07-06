@@ -9,7 +9,10 @@ import { Search, Package2, MapPin, Calendar, Truck, Building2, DollarSign } from
 import { Tables } from '@/integrations/supabase/types';
 import { format } from 'date-fns';
 
-type InventoryBatch = Tables<'inventory_batches'>;
+// Extend the inventory batch type to include warehouse_id
+type ExtendedInventoryBatch = Tables<'inventory_batches'> & {
+  warehouse_id?: string;
+};
 
 // Define warehouse type since it's not in the generated types yet
 interface Warehouse {
@@ -53,17 +56,23 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
       
       if (error) throw error;
 
-      // Fetch warehouse data separately since the relationship isn't in types yet
-      const batchesWithWarehouses = await Promise.all((data || []).map(async (batch) => {
+      // Cast the data to our extended type and fetch warehouse data separately
+      const extendedBatches = (data as unknown as ExtendedInventoryBatch[]) || [];
+      
+      const batchesWithWarehouses = await Promise.all(extendedBatches.map(async (batch) => {
         if (batch.warehouse_id) {
-          const { data: warehouse, error: warehouseError } = await supabase
-            .from('warehouses' as any)
-            .select('id, name, code')
-            .eq('id', batch.warehouse_id)
-            .single();
-          
-          if (!warehouseError && warehouse) {
-            return { ...batch, warehouses: warehouse as Warehouse };
+          try {
+            const { data: warehouse, error: warehouseError } = await (supabase as any)
+              .from('warehouses')
+              .select('id, name, code')
+              .eq('id', batch.warehouse_id)
+              .single();
+            
+            if (!warehouseError && warehouse) {
+              return { ...batch, warehouses: warehouse as unknown as Warehouse };
+            }
+          } catch (warehouseError) {
+            console.log('Failed to fetch warehouse for batch:', batch.id);
           }
         }
         return batch;

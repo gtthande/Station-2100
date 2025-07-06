@@ -51,20 +51,40 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
     url: ''
   });
 
-  // Fetch warehouses using raw query since types aren't updated yet
+  // Fetch warehouses using raw query with proper error handling
   const { data: warehouses } = useQuery({
     queryKey: ['warehouses'],
     queryFn: async () => {
       if (!user) return [];
       
-      const { data, error } = await supabase
-        .from('warehouses' as any)
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
-      
-      if (error) throw error;
-      return data as Warehouse[];
+      try {
+        const { data, error } = await supabase
+          .rpc('get_warehouses') // We'll use a custom RPC function
+          .select('*');
+        
+        if (error) {
+          console.log('Warehouse query error, falling back to direct query');
+          // Fallback to direct table query
+          const { data: fallbackData, error: fallbackError } = await (supabase as any)
+            .from('warehouses')
+            .select('id, name, code, user_id, address, city, state, is_active')
+            .eq('user_id', user.id)
+            .eq('is_active', true)
+            .order('name');
+          
+          if (fallbackError) {
+            console.error('Warehouse fallback query failed:', fallbackError);
+            return [];
+          }
+          
+          return (fallbackData as unknown as Warehouse[]) || [];
+        }
+        
+        return (data as unknown as Warehouse[]) || [];
+      } catch (error) {
+        console.error('Failed to fetch warehouses:', error);
+        return [];
+      }
     },
     enabled: !!user,
   });
@@ -174,7 +194,7 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
             </div>
             
             <div>
-              <Label htmlFor="warehouse_id">Warehouse *</Label>
+              <Label htmlFor="warehouse_id">Warehouse</Label>
               <Select
                 value={formData.warehouse_id}
                 onValueChange={(value) => setFormData({ ...formData, warehouse_id: value })}
