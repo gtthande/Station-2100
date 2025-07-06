@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,6 +10,13 @@ import { Tables } from '@/integrations/supabase/types';
 import { format } from 'date-fns';
 
 type InventoryBatch = Tables<'inventory_batches'>;
+
+// Define warehouse type since it's not in the generated types yet
+interface Warehouse {
+  id: string;
+  name: string;  
+  code: string;
+}
 
 interface BatchesListProps {
   selectedProductId?: string | null;
@@ -35,10 +41,6 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
           ),
           suppliers (
             name
-          ),
-          warehouses (
-            name,
-            code
           )
         `)
         .order('created_at', { ascending: false });
@@ -50,7 +52,24 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
       const { data, error } = await query;
       
       if (error) throw error;
-      return data;
+
+      // Fetch warehouse data separately since the relationship isn't in types yet
+      const batchesWithWarehouses = await Promise.all((data || []).map(async (batch) => {
+        if (batch.warehouse_id) {
+          const { data: warehouse, error: warehouseError } = await supabase
+            .from('warehouses' as any)
+            .select('id, name, code')
+            .eq('id', batch.warehouse_id)
+            .single();
+          
+          if (!warehouseError && warehouse) {
+            return { ...batch, warehouses: warehouse as Warehouse };
+          }
+        }
+        return batch;
+      }));
+
+      return batchesWithWarehouses;
     },
     enabled: !!user,
   });
@@ -59,7 +78,7 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
     batch.batch_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     batch.inventory_products?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     batch.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    batch.warehouses?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    (batch as any).warehouses?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   const getStatusColor = (status: string) => {
@@ -159,11 +178,11 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
                   <span className="font-semibold text-white">{batch.quantity}</span>
                 </div>
                 
-                {batch.warehouses && (
+                {(batch as any).warehouses && (
                   <div className="flex items-center gap-2">
                     <Building2 className="w-4 h-4 text-purple-400" />
                     <span className="text-sm text-purple-300">
-                      {batch.warehouses.name} ({batch.warehouses.code})
+                      {(batch as any).warehouses.name} ({(batch as any).warehouses.code})
                     </span>
                   </div>
                 )}

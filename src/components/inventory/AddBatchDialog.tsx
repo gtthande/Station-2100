@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,8 +11,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Tables } from '@/integrations/supabase/types';
 
-type Warehouse = Tables<'warehouses'>;
 type Supplier = Tables<'suppliers'>;
+
+// Define warehouse type since it's not in the generated types yet
+interface Warehouse {
+  id: string;
+  name: string;
+  code: string;
+  user_id: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  is_active: boolean;
+}
 
 interface AddBatchDialogProps {
   open: boolean;
@@ -41,14 +51,14 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
     url: ''
   });
 
-  // Fetch warehouses
+  // Fetch warehouses using raw query since types aren't updated yet
   const { data: warehouses } = useQuery({
     queryKey: ['warehouses'],
     queryFn: async () => {
       if (!user) return [];
       
       const { data, error } = await supabase
-        .from('warehouses')
+        .from('warehouses' as any)
         .select('*')
         .eq('is_active', true)
         .order('name');

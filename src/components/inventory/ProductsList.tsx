@@ -8,10 +8,37 @@ import { GradientButton } from '@/components/ui/gradient-button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, Package, Plus, AlertTriangle, DollarSign, Building2 } from 'lucide-react';
-import { Tables } from '@/integrations/supabase/types';
 
-type InventoryProduct = Tables<'inventory_products'>;
-type InventorySummary = Tables<'inventory_summary'>;
+// Define extended inventory summary type with new fields
+interface ExtendedInventorySummary {
+  id: string;
+  user_id: string;
+  part_number: string;
+  name: string;
+  description?: string;
+  category?: string;
+  manufacturer?: string;
+  unit_of_measure?: string;
+  minimum_stock?: number;
+  reorder_point?: number;
+  unit_cost?: number;
+  is_owner_supplied?: boolean;
+  markup_percentage?: number;
+  sale_price?: number;
+  owner_cost_price?: number;
+  calculated_sale_price?: number;
+  total_quantity?: number;
+  batch_count?: number;
+  pending_quantity?: number;
+  warehouse_distribution?: Array<{
+    warehouse_id: string;
+    warehouse_name: string;
+    warehouse_code: string;
+    quantity: number;
+  }>;
+  created_at?: string;
+  updated_at?: string;
+}
 
 interface ProductsListProps {
   onSelectProduct: (productId: string) => void;
@@ -33,7 +60,7 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
         .order('name');
       
       if (error) throw error;
-      return data as InventorySummary[];
+      return data as ExtendedInventorySummary[];
     },
     enabled: !!user,
   });
