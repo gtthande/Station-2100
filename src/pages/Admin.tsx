@@ -2,15 +2,17 @@
 import { useState } from 'react';
 import { UserRoleManagement } from '@/components/admin/UserRoleManagement';
 import { UserManagement } from '@/components/admin/UserManagement';
+import { CustomRoleManagement } from '@/components/admin/CustomRoleManagement';
+import { UserRoleAssignment } from '@/components/admin/UserRoleAssignment';
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link } from 'react-router-dom';
-import { Shield, Users, Settings } from 'lucide-react';
+import { Shield, Users, Settings, UserCheck, Cog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GlassCard, GlassCardContent } from '@/components/ui/glass-card';
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState<'users' | 'roles'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'custom-roles' | 'advanced-assignment'>('users');
   const { canManageSystem, isLoading } = useUserRoles();
 
   if (isLoading) {
@@ -63,7 +65,7 @@ const Admin = () => {
 
       {/* Navigation Tabs */}
       <div className="max-w-7xl mx-auto px-6 py-4">
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-6 flex-wrap">
           <Button
             variant={activeTab === 'users' ? 'default' : 'outline'}
             onClick={() => setActiveTab('users')}
@@ -88,9 +90,36 @@ const Admin = () => {
             <Settings className="w-4 h-4 mr-2" />
             Role Management
           </Button>
+          <Button
+            variant={activeTab === 'custom-roles' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('custom-roles')}
+            className={
+              activeTab === 'custom-roles'
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700'
+                : 'border-white/20 text-white hover:bg-white/10'
+            }
+          >
+            <Cog className="w-4 h-4 mr-2" />
+            Custom Roles
+          </Button>
+          <Button
+            variant={activeTab === 'advanced-assignment' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('advanced-assignment')}
+            className={
+              activeTab === 'advanced-assignment'
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700'
+                : 'border-white/20 text-white hover:bg-white/10'
+            }
+          >
+            <UserCheck className="w-4 h-4 mr-2" />
+            Advanced Assignment
+          </Button>
         </div>
 
-        {activeTab === 'users' ? <UserManagement /> : <UserRoleManagement />}
+        {activeTab === 'users' && <UserManagement />}
+        {activeTab === 'roles' && <UserRoleManagement />}
+        {activeTab === 'custom-roles' && <CustomRoleManagement />}
+        {activeTab === 'advanced-assignment' && <UserRoleAssignment />}
       </div>
     </div>
   );
