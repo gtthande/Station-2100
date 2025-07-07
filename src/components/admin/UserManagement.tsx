@@ -113,7 +113,7 @@ export const UserManagement = () => {
           .from('user_roles')
           .insert({
             user_id: authData.user.id,
-            role: userData.role
+            role: userData.role as any
           });
 
         if (roleError) throw roleError;
