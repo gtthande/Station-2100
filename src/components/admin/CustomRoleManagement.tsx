@@ -23,6 +23,15 @@ const customRoleSchema = z.object({
 
 type CustomRoleForm = z.infer<typeof customRoleSchema>;
 
+interface CustomRole {
+  id: string;
+  name: string;
+  label: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export const CustomRoleManagement = () => {
   const { canManageSystem } = useUserRoles();
   const { toast } = useToast();
@@ -42,12 +51,19 @@ export const CustomRoleManagement = () => {
     queryKey: ['custom-roles'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('custom_roles')
-        .select('*')
-        .order('label');
+        .rpc('get_custom_roles') as { data: CustomRole[] | null, error: any };
       
-      if (error) throw error;
-      return data;
+      if (error) {
+        // Fallback to direct query if RPC doesn't exist
+        const { data: directData, error: directError } = await supabase
+          .from('custom_roles' as any)
+          .select('*')
+          .order('label');
+        
+        if (directError) throw directError;
+        return directData as CustomRole[];
+      }
+      return data || [];
     },
     enabled: canManageSystem(),
   });
@@ -55,7 +71,7 @@ export const CustomRoleManagement = () => {
   const createRoleMutation = useMutation({
     mutationFn: async (roleData: CustomRoleForm) => {
       const { data, error } = await supabase
-        .from('custom_roles')
+        .from('custom_roles' as any)
         .insert(roleData)
         .select()
         .single();
@@ -72,7 +88,7 @@ export const CustomRoleManagement = () => {
       setIsCreateDialogOpen(false);
       form.reset();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message,
@@ -84,7 +100,7 @@ export const CustomRoleManagement = () => {
   const deleteRoleMutation = useMutation({
     mutationFn: async (roleId: string) => {
       const { error } = await supabase
-        .from('custom_roles')
+        .from('custom_roles' as any)
         .delete()
         .eq('id', roleId);
       
@@ -97,7 +113,7 @@ export const CustomRoleManagement = () => {
       });
       queryClient.invalidateQueries({ queryKey: ['custom-roles'] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message,

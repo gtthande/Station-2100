@@ -3,6 +3,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRoles } from '@/hooks/useUserRoles';
 
+interface CustomRole {
+  id: string;
+  name: string;
+  label: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export const useCustomRoles = () => {
   const { canManageSystem } = useUserRoles();
   const queryClient = useQueryClient();
@@ -11,12 +20,12 @@ export const useCustomRoles = () => {
     queryKey: ['custom-roles'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('custom_roles')
+        .from('custom_roles' as any)
         .select('*')
         .order('label');
       
       if (error) throw error;
-      return data;
+      return data as CustomRole[];
     },
     enabled: canManageSystem(),
   });

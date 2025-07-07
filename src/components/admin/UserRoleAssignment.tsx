@@ -33,6 +33,20 @@ const systemRoleColors: Record<AppRole, string> = {
   batch_manager: 'bg-purple-500/20 text-purple-300 border-purple-500/30'
 };
 
+interface UserRoleCombined {
+  id: string;
+  user_id: string;
+  email: string;
+  full_name: string;
+  role_name: string;
+  role_label: string;
+  role_description: string;
+  is_system_role: boolean;
+  custom_role_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export const UserRoleAssignment = () => {
   const { canManageSystem, assignRole, removeRole, isAssigningRole, isRemovingRole } = useUserRoles();
   const { customRoles, assignCustomRole, removeCustomRole, isAssigningCustomRole, isRemovingCustomRole } = useCustomRoles();
@@ -45,12 +59,31 @@ export const UserRoleAssignment = () => {
     queryKey: ['user-roles-combined'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('user_roles_combined_view')
+        .from('user_roles_combined_view' as any)
         .select('*')
         .order('email');
       
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.log('View not available, using fallback query');
+        // Fallback to manual join
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('user_roles')
+          .select(`
+            *,
+            profiles:user_id (email, full_name)
+          `);
+        
+        if (fallbackError) throw fallbackError;
+        return fallbackData?.map(role => ({
+          ...role,
+          email: role.profiles?.email,
+          full_name: role.profiles?.full_name,
+          role_name: role.role,
+          role_label: systemRoleLabels[role.role as AppRole] || role.role,
+          is_system_role: !!role.role
+        })) as UserRoleCombined[];
+      }
+      return data as UserRoleCombined[];
     },
     enabled: canManageSystem(),
   });
@@ -95,7 +128,7 @@ export const UserRoleAssignment = () => {
             description: `Successfully assigned ${systemRoleLabels[role]} role`,
           });
         },
-        onError: (error) => {
+        onError: (error: any) => {
           toast({
             title: "Error",
             description: error.message,
@@ -111,7 +144,7 @@ export const UserRoleAssignment = () => {
             description: `Successfully removed ${systemRoleLabels[role]} role`,
           });
         },
-        onError: (error) => {
+        onError: (error: any) => {
           toast({
             title: "Error",
             description: error.message,
@@ -131,7 +164,7 @@ export const UserRoleAssignment = () => {
             description: "Successfully assigned custom role",
           });
         },
-        onError: (error) => {
+        onError: (error: any) => {
           toast({
             title: "Error",
             description: error.message,
@@ -147,7 +180,7 @@ export const UserRoleAssignment = () => {
             description: "Successfully removed custom role",
           });
         },
-        onError: (error) => {
+        onError: (error: any) => {
           toast({
             title: "Error",
             description: error.message,
