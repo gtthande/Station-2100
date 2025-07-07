@@ -9,8 +9,14 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Users, UserPlus, UserMinus, Shield, Settings, Search, CheckCircle, Package, ClipboardCheck, Crown } from 'lucide-react';
+import { Users, UserPlus, UserMinus, Shield, Settings, Search, CheckCircle, Package, ClipboardCheck, Crown, Plus, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
 
 type AppRole = 'admin' | 'system_owner' | 'supervisor' | 'parts_approver' | 'job_allocator' | 'batch_manager';
 
@@ -57,7 +63,6 @@ export const UserManagement = () => {
   const { canManageSystem, assignRole, removeRole, isAssigningRole, isRemovingRole } = useUserRoles();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedRole, setSelectedRole] = useState<AppRole>('parts_approver');
   const [emailFilter, setEmailFilter] = useState('');
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [newUserData, setNewUserData] = useState({
@@ -264,13 +269,13 @@ export const UserManagement = () => {
         </GlassCardContent>
       </GlassCard>
 
-      {/* User Management */}
+      {/* User Management with Master-Detail */}
       <GlassCard>
         <GlassCardHeader>
           <div className="flex items-center justify-between">
             <GlassCardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5" />
-              User Role Assignment
+              User Role Management
             </GlassCardTitle>
             <Dialog open={isCreateUserOpen} onOpenChange={setIsCreateUserOpen}>
               <DialogTrigger asChild>
@@ -374,68 +379,103 @@ export const UserManagement = () => {
             </div>
           </div>
 
-          <div className="grid gap-4">
-            {userGroups.map((user) => (
-              <div key={user.id} className="p-4 bg-white/5 rounded-lg border border-white/10">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h4 className="font-semibold text-white">{user.full_name || user.email}</h4>
-                    <p className="text-sm text-white/60">{user.email}</p>
+          <div className="grid gap-6">
+            {userGroups.map((user) => {
+              const availableRoles = Object.keys(roleLabels).filter(
+                role => !user.roles.some(r => r.role === role)
+              ) as AppRole[];
+
+              return (
+                <div key={user.id} className="p-6 bg-white/5 rounded-lg border border-white/10">
+                  {/* Master - User Information */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h4 className="text-lg font-semibold text-white">{user.full_name || user.email}</h4>
+                      <p className="text-sm text-white/60">{user.email}</p>
+                    </div>
+                    
+                    {/* Quick Add Role Dropdown */}
+                    {availableRoles.length > 0 && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700"
+                            disabled={isAssigningRole}
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add Role
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="bg-surface-dark border-white/20 w-64">
+                          {availableRoles.map((role) => (
+                            <DropdownMenuItem
+                              key={role}
+                              onClick={() => handleAssignRole(user.id, role)}
+                              className="text-white hover:bg-white/10 cursor-pointer p-3"
+                            >
+                              <div className="flex items-center gap-3 w-full">
+                                <div className={`p-1 rounded ${roleColors[role]}`}>
+                                  {roleIcons[role]}
+                                </div>
+                                <div className="flex-1">
+                                  <div className="font-medium">{roleLabels[role]}</div>
+                                  <div className="text-xs text-white/60">{roleDescriptions[role]}</div>
+                                </div>
+                              </div>
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </div>
-                  <div className="flex gap-2">
-                    <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as AppRole)}>
-                      <SelectTrigger className="w-48 bg-white/5 border-white/10 text-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-surface-dark border-white/20">
-                        {Object.entries(roleLabels).map(([role, label]) => (
-                          <SelectItem key={role} value={role} className="text-white">
-                            <div className="flex items-center gap-2">
-                              {roleIcons[role as AppRole]}
+                  
+                  {/* Detail - Current Roles */}
+                  <div className="space-y-3">
+                    <h5 className="text-sm font-medium text-white/80">Current Roles ({user.roles.length})</h5>
+                    
+                    {user.roles.length === 0 ? (
+                      <div className="p-4 bg-white/5 rounded-lg border border-white/10 text-center">
+                        <span className="text-white/40 text-sm">No roles assigned</span>
+                      </div>
+                    ) : (
+                      <div className="grid gap-3">
+                        {user.roles.map((userRole) => (
+                          <div 
+                            key={userRole.id} 
+                            className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`p-2 rounded-lg ${roleColors[userRole.role as AppRole]}`}>
+                                {roleIcons[userRole.role as AppRole]}
+                              </div>
                               <div>
-                                <div className="font-medium">{label}</div>
-                                <div className="text-xs text-white/60">{roleDescriptions[role as AppRole]}</div>
+                                <div className="font-medium text-white">
+                                  {roleLabels[userRole.role as AppRole]}
+                                </div>
+                                <div className="text-sm text-white/60">
+                                  {roleDescriptions[userRole.role as AppRole]}
+                                </div>
                               </div>
                             </div>
-                          </SelectItem>
+                            
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRemoveRole(user.id, userRole.role as AppRole)}
+                              disabled={isRemovingRole}
+                              className="h-8 w-8 p-0 border-red-500/30 hover:bg-red-500/20"
+                            >
+                              <X className="w-4 h-4 text-red-400" />
+                            </Button>
+                          </div>
                         ))}
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      size="sm"
-                      onClick={() => handleAssignRole(user.id, selectedRole)}
-                      disabled={isAssigningRole || user.roles.some(r => r.role === selectedRole)}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <UserPlus className="w-4 h-4" />
-                    </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
-                
-                <div className="flex flex-wrap gap-2">
-                  {user.roles.map((userRole) => (
-                    <div key={userRole.id} className="flex items-center gap-1">
-                      <Badge className={`${roleColors[userRole.role as AppRole]} border flex items-center gap-1`}>
-                        {roleIcons[userRole.role as AppRole]}
-                        {roleLabels[userRole.role as AppRole]}
-                      </Badge>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleRemoveRole(user.id, userRole.role as AppRole)}
-                        disabled={isRemovingRole}
-                        className="h-6 w-6 p-0 border-red-500/30 hover:bg-red-500/20"
-                      >
-                        <UserMinus className="w-3 h-3 text-red-400" />
-                      </Button>
-                    </div>
-                  ))}
-                  {user.roles.length === 0 && (
-                    <span className="text-white/40 text-sm">No roles assigned</span>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </GlassCardContent>
       </GlassCard>
