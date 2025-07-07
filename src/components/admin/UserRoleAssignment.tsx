@@ -10,7 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Users, Search, UserCheck, Settings } from 'lucide-react';
+import { Search, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 type AppRole = 'admin' | 'system_owner' | 'supervisor' | 'parts_approver' | 'job_allocator' | 'batch_manager';
@@ -58,30 +58,83 @@ export const UserRoleAssignment = () => {
   const { data: allUserRoles } = useQuery({
     queryKey: ['user-roles-combined'],
     queryFn: async () => {
+      // Try to use the view first, fallback to manual join if it doesn't exist
       const { data, error } = await supabase
-        .from('user_roles_combined_view' as any)
+        .from('user_roles_combined_view')
         .select('*')
         .order('email');
       
       if (error) {
         console.log('View not available, using fallback query');
-        // Fallback to manual join
-        const { data: fallbackData, error: fallbackError } = await supabase
+        // Fallback to manual join query
+        const { data: systemRoles, error: systemError } = await supabase
           .from('user_roles')
           .select(`
-            *,
+            id,
+            user_id,
+            role,
+            created_at,
+            updated_at,
             profiles:user_id (email, full_name)
-          `);
+          `)
+          .not('role', 'is', null);
         
-        if (fallbackError) throw fallbackError;
-        return fallbackData?.map(role => ({
-          ...role,
-          email: role.profiles?.email,
-          full_name: role.profiles?.full_name,
-          role_name: role.role,
-          role_label: systemRoleLabels[role.role as AppRole] || role.role,
-          is_system_role: !!role.role
-        })) as UserRoleCombined[];
+        const { data: customRoleData, error: customError } = await supabase
+          .from('user_roles')
+          .select(`
+            id,
+            user_id,
+            custom_role_id,
+            created_at,
+            updated_at,
+            profiles:user_id (email, full_name),
+            custom_roles:custom_role_id (name, label, description)
+          `)
+          .not('custom_role_id', 'is', null);
+        
+        if (systemError && customError) throw systemError;
+        
+        const combinedData: UserRoleCombined[] = [];
+        
+        // Process system roles
+        systemRoles?.forEach(role => {
+          if (role.profiles && typeof role.profiles === 'object' && 'email' in role.profiles) {
+            combinedData.push({
+              id: role.id,
+              user_id: role.user_id,
+              email: role.profiles.email || '',
+              full_name: role.profiles.full_name || '',
+              role_name: role.role,
+              role_label: systemRoleLabels[role.role as AppRole] || role.role,
+              role_description: `System role: ${role.role}`,
+              is_system_role: true,
+              created_at: role.created_at || '',
+              updated_at: role.updated_at || ''
+            });
+          }
+        });
+        
+        // Process custom roles
+        customRoleData?.forEach(role => {
+          if (role.profiles && typeof role.profiles === 'object' && 'email' in role.profiles &&
+              role.custom_roles && typeof role.custom_roles === 'object' && 'name' in role.custom_roles) {
+            combinedData.push({
+              id: role.id,
+              user_id: role.user_id,
+              email: role.profiles.email || '',
+              full_name: role.profiles.full_name || '',
+              role_name: role.custom_roles.name || '',
+              role_label: role.custom_roles.label || '',
+              role_description: role.custom_roles.description || '',
+              is_system_role: false,
+              custom_role_id: role.custom_role_id || '',
+              created_at: role.created_at || '',
+              updated_at: role.updated_at || ''
+            });
+          }
+        });
+        
+        return combinedData;
       }
       return data as UserRoleCombined[];
     },
@@ -199,7 +252,7 @@ export const UserRoleAssignment = () => {
     <GlassCard>
       <GlassCardHeader>
         <GlassCardTitle className="flex items-center gap-2">
-          <UserCheck className="w-5 h-5" />
+          <Settings className="w-5 h-5" />
           Advanced Role Assignment
         </GlassCardTitle>
       </GlassCardHeader>

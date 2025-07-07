@@ -6,13 +6,12 @@ import { useUserRoles } from '@/hooks/useUserRoles';
 import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/components/ui/glass-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Settings, Plus, Edit, Trash2 } from 'lucide-react';
+import { Settings, Plus, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const customRoleSchema = z.object({
@@ -51,19 +50,12 @@ export const CustomRoleManagement = () => {
     queryKey: ['custom-roles'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .rpc('get_custom_roles') as { data: CustomRole[] | null, error: any };
+        .from('custom_roles')
+        .select('*')
+        .order('label');
       
-      if (error) {
-        // Fallback to direct query if RPC doesn't exist
-        const { data: directData, error: directError } = await supabase
-          .from('custom_roles' as any)
-          .select('*')
-          .order('label');
-        
-        if (directError) throw directError;
-        return directData as CustomRole[];
-      }
-      return data || [];
+      if (error) throw error;
+      return data as CustomRole[];
     },
     enabled: canManageSystem(),
   });
@@ -71,7 +63,7 @@ export const CustomRoleManagement = () => {
   const createRoleMutation = useMutation({
     mutationFn: async (roleData: CustomRoleForm) => {
       const { data, error } = await supabase
-        .from('custom_roles' as any)
+        .from('custom_roles')
         .insert(roleData)
         .select()
         .single();
@@ -100,7 +92,7 @@ export const CustomRoleManagement = () => {
   const deleteRoleMutation = useMutation({
     mutationFn: async (roleId: string) => {
       const { error } = await supabase
-        .from('custom_roles' as any)
+        .from('custom_roles')
         .delete()
         .eq('id', roleId);
       

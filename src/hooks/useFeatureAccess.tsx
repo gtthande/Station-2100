@@ -2,59 +2,47 @@
 import { useUserRoles } from '@/hooks/useUserRoles';
 
 export const useFeatureAccess = () => {
-  const { 
-    canManageSystem, 
-    canViewReports, 
-    canManageCustomers, 
-    canManageSuppliers, 
-    canViewAnalytics,
-    hasCustomRole,
-    hasRole,
-    hasAnyRole
-  } = useUserRoles();
+  const userRoles = useUserRoles();
+  
+  // Helper function to safely call role checking functions
+  const checkRole = (roleChecker: (() => boolean) | boolean) => {
+    if (typeof roleChecker === 'function') {
+      return roleChecker();
+    }
+    return roleChecker;
+  };
 
-  // Define feature access rules
-  const features = {
-    // Admin features
-    userManagement: canManageSystem,
-    roleManagement: canManageSystem,
-    systemSettings: canManageSystem,
+  const hasAccess = (requiredRoles: string[], requireAll = false) => {
+    if (requiredRoles.length === 0) return true;
     
-    // Business features
-    reports: canViewReports,
-    customers: canManageCustomers,
-    suppliers: canManageSuppliers,
-    analytics: canViewAnalytics,
-    
-    // Inventory features
-    inventory: hasAnyRole(['admin', 'system_owner', 'supervisor', 'parts_approver', 'job_allocator', 'batch_manager']),
-    batchApproval: hasAnyRole(['admin', 'system_owner', 'supervisor', 'parts_approver']),
-    jobAllocation: hasAnyRole(['admin', 'system_owner', 'supervisor', 'job_allocator']),
-    batchManagement: hasAnyRole(['admin', 'system_owner', 'supervisor', 'batch_manager']),
-  };
+    const accessChecks = requiredRoles.map(role => {
+      // Check system roles first
+      switch (role) {
+        case 'admin':
+          return checkRole(userRoles.isAdmin);
+        case 'system_owner':
+          return checkRole(userRoles.isSystemOwner);
+        case 'supervisor':
+          return checkRole(userRoles.isSupervisor);
+        case 'parts_approver':
+          return checkRole(userRoles.isPartsApprover);
+        case 'job_allocator':
+          return checkRole(userRoles.isJobAllocator);
+        case 'batch_manager':
+          return checkRole(userRoles.isBatchManager);
+        default:
+          // Check custom roles
+          return userRoles.hasCustomRole(role);
+      }
+    });
 
-  // Generic feature checker
-  const hasFeatureAccess = (featureName: keyof typeof features): boolean => {
-    return features[featureName]();
-  };
-
-  // Check multiple features
-  const hasAnyFeatureAccess = (featureNames: Array<keyof typeof features>): boolean => {
-    return featureNames.some(feature => features[feature]());
-  };
-
-  const hasAllFeatureAccess = (featureNames: Array<keyof typeof features>): boolean => {
-    return featureNames.every(feature => features[feature]());
+    return requireAll 
+      ? accessChecks.every(check => check)
+      : accessChecks.some(check => check);
   };
 
   return {
-    features,
-    hasFeatureAccess,
-    hasAnyFeatureAccess,
-    hasAllFeatureAccess,
-    // Direct access to role checking functions
-    hasCustomRole,
-    hasRole,
-    hasAnyRole,
+    hasAccess,
+    ...userRoles
   };
 };

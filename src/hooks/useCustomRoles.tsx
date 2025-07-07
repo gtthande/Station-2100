@@ -20,7 +20,7 @@ export const useCustomRoles = () => {
     queryKey: ['custom-roles'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('custom_roles' as any)
+        .from('custom_roles')
         .select('*')
         .order('label');
       
@@ -34,7 +34,11 @@ export const useCustomRoles = () => {
     mutationFn: async ({ userId, customRoleId }: { userId: string; customRoleId: string }) => {
       const { error } = await supabase
         .from('user_roles')
-        .insert({ user_id: userId, custom_role_id: customRoleId });
+        .insert({ 
+          user_id: userId, 
+          custom_role_id: customRoleId,
+          role: null 
+        });
       
       if (error) throw error;
     },

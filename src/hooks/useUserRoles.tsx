@@ -1,5 +1,4 @@
 
-import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -59,7 +58,8 @@ export const useUserRoles = () => {
 
   const hasCustomRole = (roleName: string): boolean => {
     return allUserRoles?.some(ur => 
-      ur.custom_roles && ur.custom_roles.name === roleName
+      ur.custom_roles && typeof ur.custom_roles === 'object' && 
+      'name' in ur.custom_roles && ur.custom_roles.name === roleName
     ) || false;
   };
 
