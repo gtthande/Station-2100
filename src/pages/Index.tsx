@@ -112,7 +112,26 @@ const Index = () => {
         </div>
 
         {/* Main Navigation */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <Link to="/job-cards">
+            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
+              <GlassCardHeader>
+                <GlassCardTitle className="flex items-center gap-3">
+                  <Wrench className="w-6 h-6" />
+                  Job Cards
+                </GlassCardTitle>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <p className="text-white/70 mb-4">
+                  Manage aircraft maintenance job cards and work orders.
+                </p>
+                <div className="flex items-center text-blue-400 font-medium">
+                  View Job Cards
+                  <FileText className="w-4 h-4 ml-2" />
+                </div>
+              </GlassCardContent>
+            </GlassCard>
+          </Link>
           <Link to="/customers">
             <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
               <GlassCardHeader>

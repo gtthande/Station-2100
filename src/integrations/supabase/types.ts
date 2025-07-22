@@ -222,6 +222,196 @@ export type Database = {
         }
         Relationships: []
       }
+      job_authorisations: {
+        Row: {
+          ac_approved: boolean | null
+          auth_id: number
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string | null
+          dss_approved: boolean | null
+          invoice_no: string
+          job_id: number
+          updated_at: string | null
+          user_id: string
+          wb_bc_approved: boolean | null
+        }
+        Insert: {
+          ac_approved?: boolean | null
+          auth_id?: number
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string | null
+          dss_approved?: boolean | null
+          invoice_no: string
+          job_id: number
+          updated_at?: string | null
+          user_id: string
+          wb_bc_approved?: boolean | null
+        }
+        Update: {
+          ac_approved?: boolean | null
+          auth_id?: number
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string | null
+          dss_approved?: boolean | null
+          invoice_no?: string
+          job_id?: number
+          updated_at?: string | null
+          user_id?: string
+          wb_bc_approved?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_authorisations_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
+          },
+        ]
+      }
+      job_items: {
+        Row: {
+          batch_no: number | null
+          category: Database["public"]["Enums"]["item_category"] | null
+          created_at: string | null
+          description: string | null
+          fitting_price: number | null
+          issued_by_code: string | null
+          item_date: string | null
+          item_id: number
+          job_id: number
+          prepaid: boolean | null
+          qty: number
+          received_by: string | null
+          stock_card_no: string | null
+          total_cost: number | null
+          unit_cost: number | null
+          uom: string | null
+          updated_at: string | null
+          user_id: string
+          verified_by: string | null
+          warehouse: string | null
+        }
+        Insert: {
+          batch_no?: number | null
+          category?: Database["public"]["Enums"]["item_category"] | null
+          created_at?: string | null
+          description?: string | null
+          fitting_price?: number | null
+          issued_by_code?: string | null
+          item_date?: string | null
+          item_id?: number
+          job_id: number
+          prepaid?: boolean | null
+          qty: number
+          received_by?: string | null
+          stock_card_no?: string | null
+          total_cost?: number | null
+          unit_cost?: number | null
+          uom?: string | null
+          updated_at?: string | null
+          user_id: string
+          verified_by?: string | null
+          warehouse?: string | null
+        }
+        Update: {
+          batch_no?: number | null
+          category?: Database["public"]["Enums"]["item_category"] | null
+          created_at?: string | null
+          description?: string | null
+          fitting_price?: number | null
+          issued_by_code?: string | null
+          item_date?: string | null
+          item_id?: number
+          job_id?: number
+          prepaid?: boolean | null
+          qty?: number
+          received_by?: string | null
+          stock_card_no?: string | null
+          total_cost?: number | null
+          unit_cost?: number | null
+          uom?: string | null
+          updated_at?: string | null
+          user_id?: string
+          verified_by?: string | null
+          warehouse?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_items_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          aircraft_reg: string
+          created_at: string | null
+          customer_id: string | null
+          date_opened: string
+          invoice_date: string | null
+          job_id: number
+          job_no: string
+          status: Database["public"]["Enums"]["job_status"] | null
+          sub_job_card_of: number | null
+          total_cost_price: number | null
+          total_fitting_cost: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          aircraft_reg: string
+          created_at?: string | null
+          customer_id?: string | null
+          date_opened: string
+          invoice_date?: string | null
+          job_id?: number
+          job_no: string
+          status?: Database["public"]["Enums"]["job_status"] | null
+          sub_job_card_of?: number | null
+          total_cost_price?: number | null
+          total_fitting_cost?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          aircraft_reg?: string
+          created_at?: string | null
+          customer_id?: string | null
+          date_opened?: string
+          invoice_date?: string | null
+          job_id?: number
+          job_no?: string
+          status?: Database["public"]["Enums"]["job_status"] | null
+          sub_job_card_of?: number | null
+          total_cost_price?: number | null
+          total_fitting_cost?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_sub_job_card_of_fkey"
+            columns: ["sub_job_card_of"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -388,6 +578,8 @@ export type Database = {
         | "job_allocator"
         | "batch_manager"
         | "supervisor"
+      item_category: "spare" | "consumable" | "owner_supplied"
+      job_status: "open" | "awaiting_auth" | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -522,6 +714,8 @@ export const Constants = {
         "batch_manager",
         "supervisor",
       ],
+      item_category: ["spare", "consumable", "owner_supplied"],
+      job_status: ["open", "awaiting_auth", "closed"],
     },
   },
 } as const
