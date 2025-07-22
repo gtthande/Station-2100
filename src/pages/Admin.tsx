@@ -4,15 +4,16 @@ import { UserRoleManagement } from '@/components/admin/UserRoleManagement';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { CustomRoleManagement } from '@/components/admin/CustomRoleManagement';
 import { UserRoleAssignment } from '@/components/admin/UserRoleAssignment';
+import { ExcelImport } from '@/components/admin/ExcelImport';
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link } from 'react-router-dom';
-import { Shield, Users, Settings, UserCheck, Cog } from 'lucide-react';
+import { Shield, Users, Settings, UserCheck, Cog, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GlassCard, GlassCardContent } from '@/components/ui/glass-card';
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'custom-roles' | 'advanced-assignment'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'custom-roles' | 'advanced-assignment' | 'import'>('users');
   const { canManageSystem, isLoading } = useUserRoles();
 
   if (isLoading) {
@@ -114,12 +115,25 @@ const Admin = () => {
             <UserCheck className="w-4 h-4 mr-2" />
             Advanced Assignment
           </Button>
+          <Button
+            variant={activeTab === 'import' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('import')}
+            className={
+              activeTab === 'import'
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700'
+                : 'border-white/20 text-white hover:bg-white/10'
+            }
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Excel Import
+          </Button>
         </div>
 
         {activeTab === 'users' && <UserManagement />}
         {activeTab === 'roles' && <UserRoleManagement />}
         {activeTab === 'custom-roles' && <CustomRoleManagement />}
         {activeTab === 'advanced-assignment' && <UserRoleAssignment />}
+        {activeTab === 'import' && <ExcelImport />}
       </div>
     </div>
   );
