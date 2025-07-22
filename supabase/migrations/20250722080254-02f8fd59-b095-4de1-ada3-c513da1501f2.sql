@@ -1,0 +1,93 @@
+-- Add new columns to inventory_products table to match the previous system
+ALTER TABLE public.inventory_products 
+ADD COLUMN IF NOT EXISTS bin_no text,
+ADD COLUMN IF NOT EXISTS stock_qty integer DEFAULT 0,
+ADD COLUMN IF NOT EXISTS reorder_qty integer DEFAULT 0,
+ADD COLUMN IF NOT EXISTS purchase_price numeric,
+ADD COLUMN IF NOT EXISTS sale_markup numeric,
+ADD COLUMN IF NOT EXISTS sale_price numeric,
+ADD COLUMN IF NOT EXISTS stock_category text,
+ADD COLUMN IF NOT EXISTS open_balance numeric,
+ADD COLUMN IF NOT EXISTS open_bal_date date,
+ADD COLUMN IF NOT EXISTS notes text,
+ADD COLUMN IF NOT EXISTS original_part_no text,
+ADD COLUMN IF NOT EXISTS active boolean DEFAULT true,
+ADD COLUMN IF NOT EXISTS department_id text,
+ADD COLUMN IF NOT EXISTS superseding_no text,
+ADD COLUMN IF NOT EXISTS alternate_department text,
+ADD COLUMN IF NOT EXISTS rack text,
+ADD COLUMN IF NOT EXISTS row_position text;
+
+-- Add new columns to inventory_batches table to match the previous system
+ALTER TABLE public.inventory_batches 
+ADD COLUMN IF NOT EXISTS receipt_id text,
+ADD COLUMN IF NOT EXISTS department_id text,
+ADD COLUMN IF NOT EXISTS buying_price numeric,
+ADD COLUMN IF NOT EXISTS sale_markup_percent numeric,
+ADD COLUMN IF NOT EXISTS sale_markup_value numeric,
+ADD COLUMN IF NOT EXISTS selling_price numeric,
+ADD COLUMN IF NOT EXISTS lpo text,
+ADD COLUMN IF NOT EXISTS reference_no text,
+ADD COLUMN IF NOT EXISTS batch_date date,
+ADD COLUMN IF NOT EXISTS bin_no text,
+ADD COLUMN IF NOT EXISTS the_size text,
+ADD COLUMN IF NOT EXISTS dollar_rate numeric,
+ADD COLUMN IF NOT EXISTS freight_rate numeric,
+ADD COLUMN IF NOT EXISTS total_rate numeric,
+ADD COLUMN IF NOT EXISTS dollar_amount numeric,
+ADD COLUMN IF NOT EXISTS core_value numeric,
+ADD COLUMN IF NOT EXISTS aircraft_reg_no text,
+ADD COLUMN IF NOT EXISTS batch_id_a text,
+ADD COLUMN IF NOT EXISTS batch_id_b text,
+ADD COLUMN IF NOT EXISTS received_by text,
+ADD COLUMN IF NOT EXISTS receive_code text,
+ADD COLUMN IF NOT EXISTS verified_by text,
+ADD COLUMN IF NOT EXISTS verification_code text,
+ADD COLUMN IF NOT EXISTS core_id text,
+ADD COLUMN IF NOT EXISTS serial_no text,
+ADD COLUMN IF NOT EXISTS alternate_department_id text;
+
+-- Update the inventory_summary view to include new fields
+DROP VIEW IF EXISTS public.inventory_summary;
+
+CREATE VIEW public.inventory_summary AS
+SELECT 
+  p.id,
+  p.user_id,
+  p.part_number,
+  p.name,
+  p.description,
+  p.category,
+  p.manufacturer,
+  p.unit_of_measure,
+  p.minimum_stock,
+  p.reorder_point,
+  p.unit_cost,
+  p.bin_no,
+  p.stock_qty,
+  p.reorder_qty,
+  p.purchase_price,
+  p.sale_markup,
+  p.sale_price,
+  p.stock_category,
+  p.open_balance,
+  p.open_bal_date,
+  p.notes,
+  p.original_part_no,
+  p.active,
+  p.department_id,
+  p.superseding_no,
+  p.alternate_department,
+  p.rack,
+  p.row_position,
+  COALESCE(SUM(b.quantity), 0) as total_quantity,
+  COUNT(b.id) as batch_count,
+  p.created_at,
+  p.updated_at
+FROM public.inventory_products p
+LEFT JOIN public.inventory_batches b ON p.id = b.product_id AND b.status = 'active'
+GROUP BY p.id, p.user_id, p.part_number, p.name, p.description, p.category, p.manufacturer, 
+         p.unit_of_measure, p.minimum_stock, p.reorder_point, p.unit_cost, p.bin_no, p.stock_qty, 
+         p.reorder_qty, p.purchase_price, p.sale_markup, p.sale_price, p.stock_category, 
+         p.open_balance, p.open_bal_date, p.notes, p.original_part_no, p.active, p.department_id, 
+         p.superseding_no, p.alternate_department, p.rack, p.row_position, p.created_at, p.updated_at;

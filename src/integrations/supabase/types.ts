@@ -73,82 +73,160 @@ export type Database = {
       }
       inventory_batches: {
         Row: {
+          aircraft_reg_no: string | null
+          alternate_department_id: string | null
           approval_status: string | null
           approved_at: string | null
           approved_by: string | null
+          batch_date: string | null
+          batch_id_a: string | null
+          batch_id_b: string | null
           batch_number: string
+          bin_no: string | null
+          buying_price: number | null
+          core_id: string | null
+          core_value: number | null
           cost_per_unit: number | null
           created_at: string
+          department_id: string | null
+          dollar_amount: number | null
+          dollar_rate: number | null
           entered_by: string | null
           expiry_date: string | null
+          freight_rate: number | null
           id: string
           job_allocated_at: string | null
           job_allocated_by: string | null
           job_allocated_to: string | null
           location: string | null
+          lpo: string | null
           notes: string | null
           product_id: string
           purchase_order: string | null
           quantity: number
+          receipt_id: string | null
+          receive_code: string | null
+          received_by: string | null
           received_date: string | null
+          reference_no: string | null
+          sale_markup_percent: number | null
+          sale_markup_value: number | null
+          selling_price: number | null
+          serial_no: string | null
           status: string | null
           supplier_id: string | null
           supplier_invoice_number: string | null
+          the_size: string | null
+          total_rate: number | null
           updated_at: string
           url: string | null
           user_id: string
+          verification_code: string | null
+          verified_by: string | null
         }
         Insert: {
+          aircraft_reg_no?: string | null
+          alternate_department_id?: string | null
           approval_status?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          batch_date?: string | null
+          batch_id_a?: string | null
+          batch_id_b?: string | null
           batch_number: string
+          bin_no?: string | null
+          buying_price?: number | null
+          core_id?: string | null
+          core_value?: number | null
           cost_per_unit?: number | null
           created_at?: string
+          department_id?: string | null
+          dollar_amount?: number | null
+          dollar_rate?: number | null
           entered_by?: string | null
           expiry_date?: string | null
+          freight_rate?: number | null
           id?: string
           job_allocated_at?: string | null
           job_allocated_by?: string | null
           job_allocated_to?: string | null
           location?: string | null
+          lpo?: string | null
           notes?: string | null
           product_id: string
           purchase_order?: string | null
           quantity?: number
+          receipt_id?: string | null
+          receive_code?: string | null
+          received_by?: string | null
           received_date?: string | null
+          reference_no?: string | null
+          sale_markup_percent?: number | null
+          sale_markup_value?: number | null
+          selling_price?: number | null
+          serial_no?: string | null
           status?: string | null
           supplier_id?: string | null
           supplier_invoice_number?: string | null
+          the_size?: string | null
+          total_rate?: number | null
           updated_at?: string
           url?: string | null
           user_id: string
+          verification_code?: string | null
+          verified_by?: string | null
         }
         Update: {
+          aircraft_reg_no?: string | null
+          alternate_department_id?: string | null
           approval_status?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          batch_date?: string | null
+          batch_id_a?: string | null
+          batch_id_b?: string | null
           batch_number?: string
+          bin_no?: string | null
+          buying_price?: number | null
+          core_id?: string | null
+          core_value?: number | null
           cost_per_unit?: number | null
           created_at?: string
+          department_id?: string | null
+          dollar_amount?: number | null
+          dollar_rate?: number | null
           entered_by?: string | null
           expiry_date?: string | null
+          freight_rate?: number | null
           id?: string
           job_allocated_at?: string | null
           job_allocated_by?: string | null
           job_allocated_to?: string | null
           location?: string | null
+          lpo?: string | null
           notes?: string | null
           product_id?: string
           purchase_order?: string | null
           quantity?: number
+          receipt_id?: string | null
+          receive_code?: string | null
+          received_by?: string | null
           received_date?: string | null
+          reference_no?: string | null
+          sale_markup_percent?: number | null
+          sale_markup_value?: number | null
+          selling_price?: number | null
+          serial_no?: string | null
           status?: string | null
           supplier_id?: string | null
           supplier_invoice_number?: string | null
+          the_size?: string | null
+          total_rate?: number | null
           updated_at?: string
           url?: string | null
           user_id?: string
+          verification_code?: string | null
+          verified_by?: string | null
         }
         Relationships: [
           {
@@ -176,45 +254,96 @@ export type Database = {
       }
       inventory_products: {
         Row: {
+          active: boolean | null
+          alternate_department: string | null
+          bin_no: string | null
           category: string | null
           created_at: string
+          department_id: string | null
           description: string | null
           id: string
           manufacturer: string | null
           minimum_stock: number | null
           name: string
+          notes: string | null
+          open_bal_date: string | null
+          open_balance: number | null
+          original_part_no: string | null
           part_number: string
+          purchase_price: number | null
+          rack: string | null
           reorder_point: number | null
+          reorder_qty: number | null
+          row_position: string | null
+          sale_markup: number | null
+          sale_price: number | null
+          stock_category: string | null
+          stock_qty: number | null
+          superseding_no: string | null
           unit_cost: number | null
           unit_of_measure: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          active?: boolean | null
+          alternate_department?: string | null
+          bin_no?: string | null
           category?: string | null
           created_at?: string
+          department_id?: string | null
           description?: string | null
           id?: string
           manufacturer?: string | null
           minimum_stock?: number | null
           name: string
+          notes?: string | null
+          open_bal_date?: string | null
+          open_balance?: number | null
+          original_part_no?: string | null
           part_number: string
+          purchase_price?: number | null
+          rack?: string | null
           reorder_point?: number | null
+          reorder_qty?: number | null
+          row_position?: string | null
+          sale_markup?: number | null
+          sale_price?: number | null
+          stock_category?: string | null
+          stock_qty?: number | null
+          superseding_no?: string | null
           unit_cost?: number | null
           unit_of_measure?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          active?: boolean | null
+          alternate_department?: string | null
+          bin_no?: string | null
           category?: string | null
           created_at?: string
+          department_id?: string | null
           description?: string | null
           id?: string
           manufacturer?: string | null
           minimum_stock?: number | null
           name?: string
+          notes?: string | null
+          open_bal_date?: string | null
+          open_balance?: number | null
+          original_part_no?: string | null
           part_number?: string
+          purchase_price?: number | null
+          rack?: string | null
           reorder_point?: number | null
+          reorder_qty?: number | null
+          row_position?: string | null
+          sale_markup?: number | null
+          sale_price?: number | null
+          stock_category?: string | null
+          stock_qty?: number | null
+          superseding_no?: string | null
           unit_cost?: number | null
           unit_of_measure?: string | null
           updated_at?: string
@@ -527,16 +656,33 @@ export type Database = {
     Views: {
       inventory_summary: {
         Row: {
+          active: boolean | null
+          alternate_department: string | null
           batch_count: number | null
+          bin_no: string | null
           category: string | null
           created_at: string | null
+          department_id: string | null
           description: string | null
           id: string | null
           manufacturer: string | null
           minimum_stock: number | null
           name: string | null
+          notes: string | null
+          open_bal_date: string | null
+          open_balance: number | null
+          original_part_no: string | null
           part_number: string | null
+          purchase_price: number | null
+          rack: string | null
           reorder_point: number | null
+          reorder_qty: number | null
+          row_position: string | null
+          sale_markup: number | null
+          sale_price: number | null
+          stock_category: string | null
+          stock_qty: number | null
+          superseding_no: string | null
           total_quantity: number | null
           unit_cost: number | null
           unit_of_measure: string | null

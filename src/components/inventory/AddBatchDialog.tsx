@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,18 +13,6 @@ import { Tables } from '@/integrations/supabase/types';
 
 type Supplier = Tables<'suppliers'>;
 
-// Define warehouse type since it's not in the generated types yet
-interface Warehouse {
-  id: string;
-  name: string;
-  code: string;
-  user_id: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  is_active: boolean;
-}
-
 interface AddBatchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -40,7 +27,6 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
   const [formData, setFormData] = useState({
     batch_number: '',
     product_id: selectedProductId || '',
-    warehouse_id: '',
     supplier_id: '',
     supplier_invoice_number: '',
     quantity: 0,
@@ -50,36 +36,34 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
     location: '',
     purchase_order: '',
     notes: '',
-    url: ''
-  });
-
-  // Fetch warehouses using direct query with proper error handling
-  const { data: warehouses } = useQuery({
-    queryKey: ['warehouses'],
-    queryFn: async () => {
-      if (!user) return [];
-      
-      try {
-        // Direct table query to warehouses
-        const { data: warehouseData, error: warehouseError } = await (supabase as any)
-          .from('warehouses')
-          .select('id, name, code, user_id, address, city, state, is_active')
-          .eq('user_id', user.id)
-          .eq('is_active', true)
-          .order('name');
-        
-        if (warehouseError) {
-          console.error('Warehouse query failed:', warehouseError);
-          return [];
-        }
-        
-        return (warehouseData as unknown as Warehouse[]) || [];
-      } catch (error) {
-        console.error('Failed to fetch warehouses:', error);
-        return [];
-      }
-    },
-    enabled: !!user,
+    url: '',
+    // New fields from previous system
+    receipt_id: '',
+    department_id: '',
+    buying_price: 0,
+    sale_markup_percent: 0,
+    sale_markup_value: 0,
+    selling_price: 0,
+    lpo: '',
+    reference_no: '',
+    batch_date: '',
+    bin_no: '',
+    the_size: '',
+    dollar_rate: 0,
+    freight_rate: 0,
+    total_rate: 0,
+    dollar_amount: 0,
+    core_value: 0,
+    aircraft_reg_no: '',
+    batch_id_a: '',
+    batch_id_b: '',
+    received_by: '',
+    receive_code: '',
+    verified_by: '',
+    verification_code: '',
+    core_id: '',
+    serial_no: '',
+    alternate_department_id: ''
   });
 
   // Fetch suppliers
@@ -109,17 +93,19 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
     mutationFn: async (data: typeof formData) => {
       if (!user) throw new Error('User not authenticated');
       
+      const batchData = {
+        ...data,
+        user_id: user.id,
+        entered_by: user.id,
+        supplier_id: data.supplier_id || null,
+        supplier_invoice_number: data.supplier_invoice_number || null,
+        expiry_date: data.expiry_date || null,
+        batch_date: data.batch_date || null,
+      };
+
       const { error } = await supabase
         .from('inventory_batches')
-        .insert({
-          ...data,
-          user_id: user.id,
-          entered_by: user.id, // Automatically set the logged-in user as entered_by
-          supplier_id: data.supplier_id || null,
-          supplier_invoice_number: data.supplier_invoice_number || null,
-          warehouse_id: data.warehouse_id || null,
-          expiry_date: data.expiry_date || null,
-        });
+        .insert(batchData);
       
       if (error) throw error;
     },
@@ -134,7 +120,6 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
       setFormData({
         batch_number: '',
         product_id: selectedProductId || '',
-        warehouse_id: '',
         supplier_id: '',
         supplier_invoice_number: '',
         quantity: 0,
@@ -144,7 +129,33 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
         location: '',
         purchase_order: '',
         notes: '',
-        url: ''
+        url: '',
+        receipt_id: '',
+        department_id: '',
+        buying_price: 0,
+        sale_markup_percent: 0,
+        sale_markup_value: 0,
+        selling_price: 0,
+        lpo: '',
+        reference_no: '',
+        batch_date: '',
+        bin_no: '',
+        the_size: '',
+        dollar_rate: 0,
+        freight_rate: 0,
+        total_rate: 0,
+        dollar_amount: 0,
+        core_value: 0,
+        aircraft_reg_no: '',
+        batch_id_a: '',
+        batch_id_b: '',
+        received_by: '',
+        receive_code: '',
+        verified_by: '',
+        verification_code: '',
+        core_id: '',
+        serial_no: '',
+        alternate_department_id: ''
       });
     },
     onError: (error) => {
@@ -166,185 +177,439 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
       });
       return;
     }
-    if (!formData.supplier_id) {
-      toast({
-        title: "Error",
-        description: "Please select a supplier",
-        variant: "destructive",
-      });
-      return;
-    }
     createBatchMutation.mutate(formData);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-surface-dark border-white/20 text-white max-w-2xl">
+      <DialogContent className="bg-surface-dark border-white/20 text-white max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Batch</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="batch_number">Batch Number *</Label>
-              <Input
-                id="batch_number"
-                value={formData.batch_number}
-                onChange={(e) => setFormData({ ...formData, batch_number: e.target.value })}
-                className="bg-white/5 border-white/10 text-white"
-                required
-              />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Basic Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="batch_number">Batch Number *</Label>
+                <Input
+                  id="batch_number"
+                  value={formData.batch_number}
+                  onChange={(e) => setFormData({ ...formData, batch_number: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="receipt_id">Receipt ID</Label>
+                <Input
+                  id="receipt_id"
+                  value={formData.receipt_id}
+                  onChange={(e) => setFormData({ ...formData, receipt_id: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="department_id">Department ID</Label>
+                <Input
+                  id="department_id"
+                  value={formData.department_id}
+                  onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="supplier_id">Supplier</Label>
+                <Select
+                  value={formData.supplier_id}
+                  onValueChange={(value) => setFormData({ ...formData, supplier_id: value })}
+                >
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                    <SelectValue placeholder="Select supplier" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-surface-dark border-white/20">
+                    {suppliers?.map((supplier) => (
+                      <SelectItem key={supplier.id} value={supplier.id} className="text-white">
+                        {supplier.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="quantity">Quantity *</Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  min="0"
+                  value={formData.quantity}
+                  onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
+                  className="bg-white/5 border-white/10 text-white"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Pricing Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Pricing Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="cost_per_unit">Cost per Unit</Label>
+                <Input
+                  id="cost_per_unit"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.cost_per_unit}
+                  onChange={(e) => setFormData({ ...formData, cost_per_unit: parseFloat(e.target.value) || 0 })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="buying_price">Buying Price</Label>
+                <Input
+                  id="buying_price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.buying_price}
+                  onChange={(e) => setFormData({ ...formData, buying_price: parseFloat(e.target.value) || 0 })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="selling_price">Selling Price</Label>
+                <Input
+                  id="selling_price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.selling_price}
+                  onChange={(e) => setFormData({ ...formData, selling_price: parseFloat(e.target.value) || 0 })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="sale_markup_percent">Sale Markup %</Label>
+                <Input
+                  id="sale_markup_percent"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.sale_markup_percent}
+                  onChange={(e) => setFormData({ ...formData, sale_markup_percent: parseFloat(e.target.value) || 0 })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="sale_markup_value">Sale Markup Value</Label>
+                <Input
+                  id="sale_markup_value"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.sale_markup_value}
+                  onChange={(e) => setFormData({ ...formData, sale_markup_value: parseFloat(e.target.value) || 0 })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Location & Storage */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Location & Storage</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  id="location"
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="bin_no">Bin Number</Label>
+                <Input
+                  id="bin_no"
+                  value={formData.bin_no}
+                  onChange={(e) => setFormData({ ...formData, bin_no: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="the_size">Size</Label>
+                <Input
+                  id="the_size"
+                  value={formData.the_size}
+                  onChange={(e) => setFormData({ ...formData, the_size: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Dates */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Dates</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="received_date">Received Date</Label>
+                <Input
+                  id="received_date"
+                  type="date"
+                  value={formData.received_date}
+                  onChange={(e) => setFormData({ ...formData, received_date: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="batch_date">Batch Date</Label>
+                <Input
+                  id="batch_date"
+                  type="date"
+                  value={formData.batch_date}
+                  onChange={(e) => setFormData({ ...formData, batch_date: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="expiry_date">Expiry Date</Label>
+                <Input
+                  id="expiry_date"
+                  type="date"
+                  value={formData.expiry_date}
+                  onChange={(e) => setFormData({ ...formData, expiry_date: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Purchasing & Reference */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Purchasing & Reference</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="lpo">LPO</Label>
+                <Input
+                  id="lpo"
+                  value={formData.lpo}
+                  onChange={(e) => setFormData({ ...formData, lpo: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="purchase_order">Purchase Order</Label>
+                <Input
+                  id="purchase_order"
+                  value={formData.purchase_order}
+                  onChange={(e) => setFormData({ ...formData, purchase_order: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="reference_no">Reference Number</Label>
+                <Input
+                  id="reference_no"
+                  value={formData.reference_no}
+                  onChange={(e) => setFormData({ ...formData, reference_no: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="supplier_invoice_number">Supplier Invoice Number</Label>
+                <Input
+                  id="supplier_invoice_number"
+                  value={formData.supplier_invoice_number}
+                  onChange={(e) => setFormData({ ...formData, supplier_invoice_number: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="aircraft_reg_no">Aircraft Registration</Label>
+                <Input
+                  id="aircraft_reg_no"
+                  value={formData.aircraft_reg_no}
+                  onChange={(e) => setFormData({ ...formData, aircraft_reg_no: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Identifiers & Codes */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Identifiers & Codes</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="batch_id_a">Batch ID A</Label>
+                <Input
+                  id="batch_id_a"
+                  value={formData.batch_id_a}
+                  onChange={(e) => setFormData({ ...formData, batch_id_a: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="batch_id_b">Batch ID B</Label>
+                <Input
+                  id="batch_id_b"
+                  value={formData.batch_id_b}
+                  onChange={(e) => setFormData({ ...formData, batch_id_b: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="serial_no">Serial Number</Label>
+                <Input
+                  id="serial_no"
+                  value={formData.serial_no}
+                  onChange={(e) => setFormData({ ...formData, serial_no: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="core_id">Core ID</Label>
+                <Input
+                  id="core_id"
+                  value={formData.core_id}
+                  onChange={(e) => setFormData({ ...formData, core_id: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="core_value">Core Value</Label>
+                <Input
+                  id="core_value"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.core_value}
+                  onChange={(e) => setFormData({ ...formData, core_value: parseFloat(e.target.value) || 0 })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Personnel & Verification */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Personnel & Verification</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="received_by">Received By</Label>
+                <Input
+                  id="received_by"
+                  value={formData.received_by}
+                  onChange={(e) => setFormData({ ...formData, received_by: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="receive_code">Receive Code</Label>
+                <Input
+                  id="receive_code"
+                  value={formData.receive_code}
+                  onChange={(e) => setFormData({ ...formData, receive_code: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="verified_by">Verified By</Label>
+                <Input
+                  id="verified_by"
+                  value={formData.verified_by}
+                  onChange={(e) => setFormData({ ...formData, verified_by: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="verification_code">Verification Code</Label>
+                <Input
+                  id="verification_code"
+                  value={formData.verification_code}
+                  onChange={(e) => setFormData({ ...formData, verification_code: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Fields */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Additional Information</h3>
             
             <div>
-              <Label htmlFor="supplier_id">Supplier *</Label>
-              <Select
-                value={formData.supplier_id}
-                onValueChange={(value) => setFormData({ ...formData, supplier_id: value })}
-              >
-                <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                  <SelectValue placeholder="Select supplier" />
-                </SelectTrigger>
-                <SelectContent className="bg-surface-dark border-white/20">
-                  {suppliers?.map((supplier) => (
-                    <SelectItem key={supplier.id} value={supplier.id} className="text-white">
-                      {supplier.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="warehouse_id">Warehouse</Label>
-              <Select
-                value={formData.warehouse_id}
-                onValueChange={(value) => setFormData({ ...formData, warehouse_id: value })}
-              >
-                <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                  <SelectValue placeholder="Select warehouse" />
-                </SelectTrigger>
-                <SelectContent className="bg-surface-dark border-white/20">
-                  {warehouses?.map((warehouse) => (
-                    <SelectItem key={warehouse.id} value={warehouse.id} className="text-white">
-                      {warehouse.name} ({warehouse.code})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="supplier_invoice_number">Supplier Invoice Number</Label>
+              <Label htmlFor="alternate_department_id">Alternate Department ID</Label>
               <Input
-                id="supplier_invoice_number"
-                value={formData.supplier_invoice_number}
-                onChange={(e) => setFormData({ ...formData, supplier_invoice_number: e.target.value })}
-                className="bg-white/5 border-white/10 text-white"
-                placeholder="Invoice number from supplier"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="quantity">Quantity *</Label>
-              <Input
-                id="quantity"
-                type="number"
-                min="0"
-                value={formData.quantity}
-                onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
-                className="bg-white/5 border-white/10 text-white"
-                required
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="cost_per_unit">Cost per Unit ($)</Label>
-              <Input
-                id="cost_per_unit"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.cost_per_unit}
-                onChange={(e) => setFormData({ ...formData, cost_per_unit: parseFloat(e.target.value) || 0 })}
+                id="alternate_department_id"
+                value={formData.alternate_department_id}
+                onChange={(e) => setFormData({ ...formData, alternate_department_id: e.target.value })}
                 className="bg-white/5 border-white/10 text-white"
               />
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="received_date">Received Date</Label>
+              <Label htmlFor="url">Documentation URL</Label>
               <Input
-                id="received_date"
-                type="date"
-                value={formData.received_date}
-                onChange={(e) => setFormData({ ...formData, received_date: e.target.value })}
+                id="url"
+                type="url"
+                value={formData.url}
+                onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                 className="bg-white/5 border-white/10 text-white"
+                placeholder="Link to certificates, documentation, etc."
               />
             </div>
-            
+
             <div>
-              <Label htmlFor="expiry_date">Expiry Date</Label>
-              <Input
-                id="expiry_date"
-                type="date"
-                value={formData.expiry_date}
-                onChange={(e) => setFormData({ ...formData, expiry_date: e.target.value })}
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 className="bg-white/5 border-white/10 text-white"
+                rows={3}
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                className="bg-white/5 border-white/10 text-white"
-                placeholder="Shelf, Bin, etc."
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="purchase_order">Purchase Order</Label>
-              <Input
-                id="purchase_order"
-                value={formData.purchase_order}
-                onChange={(e) => setFormData({ ...formData, purchase_order: e.target.value })}
-                className="bg-white/5 border-white/10 text-white"
-              />
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="url">Documentation URL</Label>
-            <Input
-              id="url"
-              type="url"
-              value={formData.url}
-              onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-              className="bg-white/5 border-white/10 text-white"
-              placeholder="Link to certificates, documentation, etc."
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              className="bg-white/5 border-white/10 text-white"
-              rows={3}
-            />
           </div>
 
           <div className="flex justify-end gap-3 pt-4">

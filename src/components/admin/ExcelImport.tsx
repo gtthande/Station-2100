@@ -19,25 +19,67 @@ interface ColumnMapping {
 }
 
 const INVENTORY_PRODUCT_FIELDS = {
-  part_number: 'Part Number',
-  name: 'Product Name',
+  part_number: 'Part Number (PARTNO)',
+  name: 'Description',
+  bin_no: 'Bin Number (BINNO)',
+  stock_qty: 'Stock Quantity (STOCKQTY)',
+  reorder_qty: 'Reorder Quantity (REORDERQTY)',
+  purchase_price: 'Purchase Price (PURCHPRICE)',
+  sale_markup: 'Sale Markup (SALEMARKUP)',
+  sale_price: 'Sale Price (SALEPRICE)',
+  stock_category: 'Stock Category (STOCKCATEGORY)',
+  open_balance: 'Open Balance (OPENBALANCE)',
+  open_bal_date: 'Open Balance Date (OPENBALDATE)',
+  notes: 'Notes (NOTES)',
+  original_part_no: 'Original Part No (ORIGINALPARTNO)',
+  active: 'Active',
+  unit_of_measure: 'Unit of Measure (UNIT_OF_MEASURE)',
+  department_id: 'Department ID (DEPARTMENT_ID)',
+  superseding_no: 'Superseding No (SUPERSEDING_NO)',
+  alternate_department: 'Alternate Department (ALTERNATE_DEPARTMENT)',
+  rack: 'Rack (RACK)',
+  row_position: 'Row (ROW)',
   description: 'Description',
   category: 'Category',
   manufacturer: 'Manufacturer',
-  unit_of_measure: 'Unit of Measure',
   minimum_stock: 'Minimum Stock',
   reorder_point: 'Reorder Point',
   unit_cost: 'Unit Cost'
 };
 
 const INVENTORY_BATCH_FIELDS = {
-  part_number: 'Part Number (Reference)',
-  batch_number: 'Batch Number',
-  quantity: 'Quantity',
+  receipt_id: 'Receipt ID (RECEIPTID)',
+  part_number: 'Part Number (PARTNO) - Reference',
+  batch_number: 'Batch Number (BATCH_NO)',
+  department_id: 'Department ID (DEPARTMENT_ID)',
+  quantity: 'Quantity (QUANTITY)',
+  buying_price: 'Buying Price (BUYING_PRICE)',
+  sale_markup_percent: 'Sale Markup % (SALE_MARKUP_PERCENT)',
+  sale_markup_value: 'Sale Markup Value (SALE_MARKUP_VALUE)',
+  selling_price: 'Selling Price (SELLING_PRICE)',
+  lpo: 'LPO',
+  reference_no: 'Reference No (REFERENCE_NO)',
+  batch_date: 'Batch Date (BATCH_DATE)',
+  expiry_date: 'Expiry Date (EXPIRY_DATE)',
+  bin_no: 'Bin No (BIN_NO)',
+  the_size: 'Size (THESIZE)',
+  dollar_rate: 'Dollar Rate (DOLLAR_RATE)',
+  freight_rate: 'Freight Rate (FREIGHT_RATE)',
+  total_rate: 'Total Rate (TOTAL_RATE)',
+  dollar_amount: 'Dollar Amount (DOLLAR_AMOUNT)',
+  core_value: 'Core Value (CORE_VALUE)',
+  aircraft_reg_no: 'Aircraft Reg No (AIRCRAFTREGNO)',
+  batch_id_a: 'Batch ID A (BATCH_ID_A)',
+  batch_id_b: 'Batch ID B (BATCH_ID_B)',
+  received_by: 'Received By (RECEIVEDBY)',
+  receive_code: 'Receive Code (RECEIVECODE)',
+  verified_by: 'Verified By (VERIFIEDBY)',
+  verification_code: 'Verification Code (VERIFICATIONCODE)',
+  core_id: 'Core ID (CORE_ID)',
+  serial_no: 'Serial No (SERIAL_NO)',
+  alternate_department_id: 'Alternate Department ID (ALTERNATE_DEPARTMENT_ID)',
   cost_per_unit: 'Cost Per Unit',
   received_date: 'Received Date',
-  expiry_date: 'Expiry Date',
-  supplier_name: 'Supplier Name',
   location: 'Location',
   purchase_order: 'Purchase Order',
   supplier_invoice_number: 'Supplier Invoice Number',
@@ -161,21 +203,38 @@ export const ExcelImport = () => {
       }
 
       if (importType === 'products') {
-        // Import products
+        // Import products with all new fields
         for (let i = 0; i < excelData.length; i++) {
           const row = excelData[i];
           try {
             const productData: any = {
               user_id: userData.user.id,
-              part_number: row[columnMapping.part_number] || '',
-              name: row[columnMapping.name] || '',
-              description: row[columnMapping.description] || null,
-              category: row[columnMapping.category] || null,
-              manufacturer: row[columnMapping.manufacturer] || null,
-              unit_of_measure: row[columnMapping.unit_of_measure] || 'each',
+              part_number: String(row[columnMapping.part_number] || ''),
+              name: String(row[columnMapping.name] || ''),
+              description: String(row[columnMapping.description] || ''),
+              category: String(row[columnMapping.category] || ''),
+              manufacturer: String(row[columnMapping.manufacturer] || ''),
+              unit_of_measure: String(row[columnMapping.unit_of_measure] || 'each'),
               minimum_stock: parseInt(row[columnMapping.minimum_stock]) || 0,
               reorder_point: parseInt(row[columnMapping.reorder_point]) || 0,
-              unit_cost: parseFloat(row[columnMapping.unit_cost]) || null
+              unit_cost: parseFloat(row[columnMapping.unit_cost]) || 0,
+              bin_no: String(row[columnMapping.bin_no] || ''),
+              stock_qty: parseInt(row[columnMapping.stock_qty]) || 0,
+              reorder_qty: parseInt(row[columnMapping.reorder_qty]) || 0,
+              purchase_price: parseFloat(row[columnMapping.purchase_price]) || 0,
+              sale_markup: parseFloat(row[columnMapping.sale_markup]) || 0,
+              sale_price: parseFloat(row[columnMapping.sale_price]) || 0,
+              stock_category: String(row[columnMapping.stock_category] || ''),
+              open_balance: parseFloat(row[columnMapping.open_balance]) || 0,
+              open_bal_date: row[columnMapping.open_bal_date] ? new Date(row[columnMapping.open_bal_date]).toISOString().split('T')[0] : null,
+              notes: String(row[columnMapping.notes] || ''),
+              original_part_no: String(row[columnMapping.original_part_no] || ''),
+              active: Boolean(row[columnMapping.active] !== false && row[columnMapping.active] !== 'false'),
+              department_id: String(row[columnMapping.department_id] || ''),
+              superseding_no: String(row[columnMapping.superseding_no] || ''),
+              alternate_department: String(row[columnMapping.alternate_department] || ''),
+              rack: String(row[columnMapping.rack] || ''),
+              row_position: String(row[columnMapping.row_position] || '')
             };
 
             if (!productData.part_number || !productData.name) {
@@ -197,7 +256,7 @@ export const ExcelImport = () => {
           }
         }
       } else {
-        // Import batches - need to find product IDs first
+        // Import batches with all new fields
         for (let i = 0; i < excelData.length; i++) {
           const row = excelData[i];
           try {
@@ -223,15 +282,41 @@ export const ExcelImport = () => {
             const batchData: any = {
               user_id: userData.user.id,
               product_id: product.id,
-              batch_number: row[columnMapping.batch_number] || '',
+              batch_number: String(row[columnMapping.batch_number] || ''),
               quantity: parseInt(row[columnMapping.quantity]) || 0,
-              cost_per_unit: parseFloat(row[columnMapping.cost_per_unit]) || null,
-              received_date: row[columnMapping.received_date] || new Date().toISOString().split('T')[0],
-              expiry_date: row[columnMapping.expiry_date] || null,
-              location: row[columnMapping.location] || null,
-              purchase_order: row[columnMapping.purchase_order] || null,
-              supplier_invoice_number: row[columnMapping.supplier_invoice_number] || null,
-              notes: row[columnMapping.notes] || null
+              cost_per_unit: parseFloat(row[columnMapping.cost_per_unit]) || 0,
+              received_date: row[columnMapping.received_date] ? new Date(row[columnMapping.received_date]).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+              expiry_date: row[columnMapping.expiry_date] ? new Date(row[columnMapping.expiry_date]).toISOString().split('T')[0] : null,
+              location: String(row[columnMapping.location] || ''),
+              purchase_order: String(row[columnMapping.purchase_order] || ''),
+              supplier_invoice_number: String(row[columnMapping.supplier_invoice_number] || ''),
+              notes: String(row[columnMapping.notes] || ''),
+              receipt_id: String(row[columnMapping.receipt_id] || ''),
+              department_id: String(row[columnMapping.department_id] || ''),
+              buying_price: parseFloat(row[columnMapping.buying_price]) || 0,
+              sale_markup_percent: parseFloat(row[columnMapping.sale_markup_percent]) || 0,
+              sale_markup_value: parseFloat(row[columnMapping.sale_markup_value]) || 0,
+              selling_price: parseFloat(row[columnMapping.selling_price]) || 0,
+              lpo: String(row[columnMapping.lpo] || ''),
+              reference_no: String(row[columnMapping.reference_no] || ''),
+              batch_date: row[columnMapping.batch_date] ? new Date(row[columnMapping.batch_date]).toISOString().split('T')[0] : null,
+              bin_no: String(row[columnMapping.bin_no] || ''),
+              the_size: String(row[columnMapping.the_size] || ''),
+              dollar_rate: parseFloat(row[columnMapping.dollar_rate]) || 0,
+              freight_rate: parseFloat(row[columnMapping.freight_rate]) || 0,
+              total_rate: parseFloat(row[columnMapping.total_rate]) || 0,
+              dollar_amount: parseFloat(row[columnMapping.dollar_amount]) || 0,
+              core_value: parseFloat(row[columnMapping.core_value]) || 0,
+              aircraft_reg_no: String(row[columnMapping.aircraft_reg_no] || ''),
+              batch_id_a: String(row[columnMapping.batch_id_a] || ''),
+              batch_id_b: String(row[columnMapping.batch_id_b] || ''),
+              received_by: String(row[columnMapping.received_by] || ''),
+              receive_code: String(row[columnMapping.receive_code] || ''),
+              verified_by: String(row[columnMapping.verified_by] || ''),
+              verification_code: String(row[columnMapping.verification_code] || ''),
+              core_id: String(row[columnMapping.core_id] || ''),
+              serial_no: String(row[columnMapping.serial_no] || ''),
+              alternate_department_id: String(row[columnMapping.alternate_department_id] || '')
             };
 
             if (!batchData.batch_number) {
@@ -303,8 +388,8 @@ export const ExcelImport = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="products">Inventory Products</SelectItem>
-                <SelectItem value="batches">Inventory Batches</SelectItem>
+                <SelectItem value="products">Inventory Products (Station)</SelectItem>
+                <SelectItem value="batches">Inventory Batches (Items)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -316,7 +401,7 @@ export const ExcelImport = () => {
               Download Template
             </Button>
             <span className="text-sm text-muted-foreground">
-              Download a template with the correct column headers
+              Download a template with the correct column headers from your previous system
             </span>
           </div>
 
