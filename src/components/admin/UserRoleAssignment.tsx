@@ -59,7 +59,7 @@ export const UserRoleAssignment = () => {
     queryKey: ['user-roles-combined'],
     queryFn: async () => {
       // Try to use the view first, fallback to manual join if it doesn't exist
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('user_roles_combined_view')
         .select('*')
         .order('email');
@@ -79,7 +79,7 @@ export const UserRoleAssignment = () => {
           `)
           .not('role', 'is', null);
         
-        const { data: customRoleData, error: customError } = await supabase
+        const { data: customRoleData, error: customError } = await (supabase as any)
           .from('user_roles')
           .select(`
             id,
@@ -98,12 +98,13 @@ export const UserRoleAssignment = () => {
         
         // Process system roles
         systemRoles?.forEach(role => {
-          if (role.profiles && typeof role.profiles === 'object' && 'email' in role.profiles) {
+          if (role.profiles! && typeof role.profiles! === 'object' && 'email' in role.profiles!) {
+            const profiles = role.profiles! as any;
             combinedData.push({
               id: role.id,
               user_id: role.user_id,
-              email: role.profiles.email || '',
-              full_name: role.profiles.full_name || '',
+              email: profiles.email || '',
+              full_name: profiles.full_name || '',
               role_name: role.role,
               role_label: systemRoleLabels[role.role as AppRole] || role.role,
               role_description: `System role: ${role.role}`,
@@ -116,16 +117,18 @@ export const UserRoleAssignment = () => {
         
         // Process custom roles
         customRoleData?.forEach(role => {
-          if (role.profiles && typeof role.profiles === 'object' && 'email' in role.profiles &&
+          if (role.profiles! && typeof role.profiles === 'object' && 'email' in role.profiles &&
               role.custom_roles && typeof role.custom_roles === 'object' && 'name' in role.custom_roles) {
+            const profiles = role.profiles as any;
+            const customRoles = role.custom_roles as any;
             combinedData.push({
               id: role.id,
               user_id: role.user_id,
-              email: role.profiles.email || '',
-              full_name: role.profiles.full_name || '',
-              role_name: role.custom_roles.name || '',
-              role_label: role.custom_roles.label || '',
-              role_description: role.custom_roles.description || '',
+              email: profiles.email || '',
+              full_name: profiles.full_name || '',
+              role_name: customRoles.name || '',
+              role_label: customRoles.label || '',
+              role_description: customRoles.description || '',
               is_system_role: false,
               custom_role_id: role.custom_role_id || '',
               created_at: role.created_at || '',

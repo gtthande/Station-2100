@@ -34,7 +34,7 @@ export const useUserRoles = () => {
       if (!user) return [];
       
       // Try to get combined roles with custom roles
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('user_roles')
         .select(`
           *,
@@ -59,7 +59,7 @@ export const useUserRoles = () => {
   const hasCustomRole = (roleName: string): boolean => {
     return allUserRoles?.some(ur => 
       ur.custom_roles && typeof ur.custom_roles === 'object' && 
-      'name' in ur.custom_roles && ur.custom_roles.name === roleName
+      'name' in ur.custom_roles && ur.custom_roles!.name === roleName
     ) || false;
   };
 

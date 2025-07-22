@@ -49,7 +49,7 @@ export const CustomRoleManagement = () => {
   const { data: customRoles, isLoading } = useQuery({
     queryKey: ['custom-roles'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('custom_roles')
         .select('*')
         .order('label');
@@ -62,7 +62,7 @@ export const CustomRoleManagement = () => {
 
   const createRoleMutation = useMutation({
     mutationFn: async (roleData: CustomRoleForm) => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('custom_roles')
         .insert(roleData)
         .select()
@@ -91,7 +91,7 @@ export const CustomRoleManagement = () => {
 
   const deleteRoleMutation = useMutation({
     mutationFn: async (roleId: string) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('custom_roles')
         .delete()
         .eq('id', roleId);

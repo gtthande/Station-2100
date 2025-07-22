@@ -19,7 +19,7 @@ export const useCustomRoles = () => {
   const { data: customRoles, isLoading } = useQuery({
     queryKey: ['custom-roles'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('custom_roles')
         .select('*')
         .order('label');
@@ -32,7 +32,7 @@ export const useCustomRoles = () => {
 
   const assignCustomRoleMutation = useMutation({
     mutationFn: async ({ userId, customRoleId }: { userId: string; customRoleId: string }) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_roles')
         .insert({ 
           user_id: userId, 
@@ -51,7 +51,7 @@ export const useCustomRoles = () => {
 
   const removeCustomRoleMutation = useMutation({
     mutationFn: async ({ userId, customRoleId }: { userId: string; customRoleId: string }) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_roles')
         .delete()
         .eq('user_id', userId)
