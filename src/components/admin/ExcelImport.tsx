@@ -101,8 +101,13 @@ export const ExcelImport = () => {
   const { toast } = useToast();
 
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('🔥 handleFileUpload called - event:', event);
     const file = event.target.files?.[0];
-    if (!file) return;
+    console.log('🔥 File from input:', file);
+    if (!file) {
+      console.log('🔥 No file selected, returning');
+      return;
+    }
 
     console.log('File selected:', file.name, file.type, file.size);
     
