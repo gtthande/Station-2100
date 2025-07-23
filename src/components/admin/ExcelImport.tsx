@@ -104,20 +104,36 @@ export const ExcelImport = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    console.log('File selected:', file.name, file.type, file.size);
+    
+    // Show loading state immediately
+    toast({
+      title: "Processing",
+      description: "Reading Excel file...",
+    });
+
     setSelectedFile(file);
     const reader = new FileReader();
 
     reader.onload = (e) => {
       try {
+        console.log('FileReader onload triggered');
         const data = e.target?.result;
+        if (!data) {
+          throw new Error('No data read from file');
+        }
+        
+        console.log('Reading workbook...');
         const workbook = XLSX.read(data, { type: 'binary' });
         const sheets = workbook.SheetNames;
+        console.log('Sheets found:', sheets);
         setSheetNames(sheets);
         
         if (sheets.length > 0) {
           setSelectedSheet(sheets[0]);
           const worksheet = workbook.Sheets[sheets[0]];
           const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+          console.log('Raw data:', jsonData.slice(0, 3)); // Log first 3 rows
           
           // Convert to object format with first row as headers
           const headers = jsonData[0] as string[];
@@ -130,18 +146,34 @@ export const ExcelImport = () => {
             return obj;
           });
           
+          console.log('Formatted data:', formattedData.slice(0, 2)); // Log first 2 rows
           setExcelData(formattedData);
+          
+          toast({
+            title: "Success",
+            description: `Excel file loaded with ${formattedData.length} rows`,
+          });
         }
       } catch (error) {
         console.error('Error reading Excel file:', error);
         toast({
           title: "Error",
-          description: "Failed to read Excel file. Please check the file format.",
+          description: `Failed to read Excel file: ${error instanceof Error ? error.message : 'Unknown error'}`,
           variant: "destructive"
         });
       }
     };
 
+    reader.onerror = (error) => {
+      console.error('FileReader error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to read the file. Please try again.",
+        variant: "destructive"
+      });
+    };
+
+    console.log('Starting to read file as binary string...');
     reader.readAsBinaryString(file);
   }, [toast]);
 
