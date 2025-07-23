@@ -498,14 +498,17 @@ export const ExcelImport = () => {
                 <div key={key} className="space-y-2">
                   <Label>{label}</Label>
                   <Select 
-                    value={columnMapping[key] || ''} 
-                    onValueChange={(value) => setColumnMapping(prev => ({ ...prev, [key]: value }))}
+                    value={columnMapping[key] || '__skip__'} 
+                    onValueChange={(value) => setColumnMapping(prev => ({ 
+                      ...prev, 
+                      [key]: value === '__skip__' ? '' : value 
+                    }))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select column" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">-- Skip --</SelectItem>
+                      <SelectItem value="__skip__">-- Skip --</SelectItem>
                       {getAvailableColumns().map(col => (
                         <SelectItem key={col} value={col}>{col}</SelectItem>
                       ))}
