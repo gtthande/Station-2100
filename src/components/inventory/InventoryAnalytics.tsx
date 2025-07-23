@@ -25,7 +25,7 @@ export const InventoryAnalytics = () => {
           *,
           inventory_products (
             category,
-            name
+            part_number
           )
         `);
       
@@ -63,7 +63,7 @@ export const InventoryAnalytics = () => {
   const stockLevelsData = analytics.summary
     .slice(0, 10)
     .map(item => ({
-      name: item.name?.substring(0, 15) + (item.name && item.name.length > 15 ? '...' : ''),
+      name: item.part_number?.substring(0, 15) + (item.part_number && item.part_number.length > 15 ? '...' : ''),
       stock: item.total_quantity || 0,
       minimum: item.minimum_stock || 0
     }));

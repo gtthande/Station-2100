@@ -37,8 +37,8 @@ export const BatchSubmissionForm = () => {
       
       const { data, error } = await supabase
         .from('inventory_products')
-        .select('id, name, part_number')
-        .order('name');
+        .select('id, part_number, description')
+        .order('part_number');
       
       if (error) throw error;
       return data;
@@ -196,7 +196,7 @@ export const BatchSubmissionForm = () => {
                 <SelectContent className="bg-surface-dark border-white/20">
                   {products?.map((product) => (
                     <SelectItem key={product.id} value={product.id} className="text-white">
-                      {product.name} ({product.part_number})
+                      {product.part_number} - {product.description}
                     </SelectItem>
                   ))}
                 </SelectContent>

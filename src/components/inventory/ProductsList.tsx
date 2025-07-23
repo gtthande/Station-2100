@@ -14,7 +14,6 @@ interface ExtendedInventorySummary {
   id: string;
   user_id: string;
   part_number: string;
-  name: string;
   description?: string;
   category?: string;
   manufacturer?: string;
@@ -57,7 +56,7 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
       const { data, error } = await supabase
         .from('inventory_summary')
         .select('*')
-        .order('name');
+        .order('part_number');
       
       if (error) throw error;
       return data as ExtendedInventorySummary[];
@@ -66,8 +65,8 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
   });
 
   const filteredProducts = products?.filter(product =>
-    product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.part_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.category?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
@@ -125,14 +124,14 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <GlassCardTitle className="text-lg mb-1 flex items-center gap-2">
-                      {product.name}
+                      {product.part_number}
                       {product.is_owner_supplied && (
                         <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">
                           Owner
                         </Badge>
                       )}
                     </GlassCardTitle>
-                    <p className="text-sm text-white/60 mb-2">Part: {product.part_number}</p>
+                    <p className="text-sm text-white/60 mb-2">{product.description}</p>
                     {product.category && (
                       <Badge variant="secondary" className="bg-white/10 text-white/80">
                         {product.category}

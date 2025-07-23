@@ -71,6 +71,33 @@ export type Database = {
         }
         Relationships: []
       }
+      departments: {
+        Row: {
+          created_at: string
+          department_description: string | null
+          department_name: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department_description?: string | null
+          department_name: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          department_description?: string | null
+          department_name?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       inventory_batches: {
         Row: {
           aircraft_reg_no: string | null
@@ -255,20 +282,16 @@ export type Database = {
       inventory_products: {
         Row: {
           active: boolean | null
-          alternate_department: string | null
           bin_no: string | null
           category: string | null
           created_at: string
           department_id: string | null
           description: string | null
           id: string
-          manufacturer: string | null
           minimum_stock: number | null
-          name: string
           notes: string | null
           open_bal_date: string | null
           open_balance: number | null
-          original_part_no: string | null
           part_number: string
           purchase_price: number | null
           rack: string | null
@@ -278,7 +301,6 @@ export type Database = {
           sale_markup: number | null
           sale_price: number | null
           stock_category: string | null
-          stock_qty: number | null
           superseding_no: string | null
           unit_cost: number | null
           unit_of_measure: string | null
@@ -287,20 +309,16 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
-          alternate_department?: string | null
           bin_no?: string | null
           category?: string | null
           created_at?: string
           department_id?: string | null
           description?: string | null
           id?: string
-          manufacturer?: string | null
           minimum_stock?: number | null
-          name: string
           notes?: string | null
           open_bal_date?: string | null
           open_balance?: number | null
-          original_part_no?: string | null
           part_number: string
           purchase_price?: number | null
           rack?: string | null
@@ -310,7 +328,6 @@ export type Database = {
           sale_markup?: number | null
           sale_price?: number | null
           stock_category?: string | null
-          stock_qty?: number | null
           superseding_no?: string | null
           unit_cost?: number | null
           unit_of_measure?: string | null
@@ -319,20 +336,16 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
-          alternate_department?: string | null
           bin_no?: string | null
           category?: string | null
           created_at?: string
           department_id?: string | null
           description?: string | null
           id?: string
-          manufacturer?: string | null
           minimum_stock?: number | null
-          name?: string
           notes?: string | null
           open_bal_date?: string | null
           open_balance?: number | null
-          original_part_no?: string | null
           part_number?: string
           purchase_price?: number | null
           rack?: string | null
@@ -342,7 +355,6 @@ export type Database = {
           sale_markup?: number | null
           sale_price?: number | null
           stock_category?: string | null
-          stock_qty?: number | null
           superseding_no?: string | null
           unit_cost?: number | null
           unit_of_measure?: string | null
@@ -568,6 +580,36 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_categories: {
+        Row: {
+          category_description: string | null
+          category_name: string
+          created_at: string
+          department_id: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category_description?: string | null
+          category_name: string
+          created_at?: string
+          department_id: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category_description?: string | null
+          category_name?: string
+          created_at?: string
+          department_id?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       suppliers: {
         Row: {
           address: string | null
@@ -657,21 +699,18 @@ export type Database = {
       inventory_summary: {
         Row: {
           active: boolean | null
-          alternate_department: string | null
           batch_count: number | null
           bin_no: string | null
           category: string | null
           created_at: string | null
           department_id: string | null
+          department_name: string | null
           description: string | null
           id: string | null
-          manufacturer: string | null
           minimum_stock: number | null
-          name: string | null
           notes: string | null
           open_bal_date: string | null
           open_balance: number | null
-          original_part_no: string | null
           part_number: string | null
           purchase_price: number | null
           rack: string | null
@@ -681,7 +720,7 @@ export type Database = {
           sale_markup: number | null
           sale_price: number | null
           stock_category: string | null
-          stock_qty: number | null
+          stock_category_name: string | null
           superseding_no: string | null
           total_quantity: number | null
           unit_cost: number | null

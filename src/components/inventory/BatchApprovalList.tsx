@@ -28,8 +28,8 @@ export const BatchApprovalList = () => {
         .select(`
           *,
           inventory_products (
-            name,
-            part_number
+            part_number,
+            description
           ),
           suppliers (
             name
@@ -51,7 +51,7 @@ export const BatchApprovalList = () => {
 
   const filteredBatches = batches?.filter(batch =>
     batch.batch_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    batch.inventory_products?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    batch.inventory_products?.part_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     batch.job_allocated_to?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 

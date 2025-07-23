@@ -25,8 +25,8 @@ interface UnapprovedBatch {
   supplier_invoice_number: string | null;
   location: string | null;
   inventory_products: {
-    name: string;
     part_number: string;
+    description: string;
   } | null;
   suppliers: {
     name: string;
@@ -69,8 +69,8 @@ export const UnapprovedBatchesReport = () => {
           supplier_invoice_number,
           location,
           inventory_products!inner (
-            name,
-            part_number
+            part_number,
+            description
           ),
           suppliers (
             name
@@ -172,8 +172,8 @@ export const UnapprovedBatchesReport = () => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch = !searchTerm || 
       batch.batch_number.toLowerCase().includes(searchLower) ||
-      batch.inventory_products?.name.toLowerCase().includes(searchLower) ||
       batch.inventory_products?.part_number.toLowerCase().includes(searchLower) ||
+      batch.inventory_products?.description.toLowerCase().includes(searchLower) ||
       batch.suppliers?.name?.toLowerCase().includes(searchLower) ||
       batch.supplier_invoice_number?.toLowerCase().includes(searchLower);
 
@@ -325,7 +325,7 @@ export const UnapprovedBatchesReport = () => {
                           {batch.batch_number}
                         </h3>
                         <p className="text-white/70">
-                          {batch.inventory_products?.name} ({batch.inventory_products?.part_number})
+                          {batch.inventory_products?.part_number} - {batch.inventory_products?.description}
                         </p>
                       </div>
                     </div>

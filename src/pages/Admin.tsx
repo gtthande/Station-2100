@@ -5,15 +5,17 @@ import { UserManagement } from '@/components/admin/UserManagement';
 import { CustomRoleManagement } from '@/components/admin/CustomRoleManagement';
 import { UserRoleAssignment } from '@/components/admin/UserRoleAssignment';
 import { ExcelImport } from '@/components/admin/ExcelImport';
+import { DepartmentManagement } from '@/components/admin/DepartmentManagement';
+import { StockCategoryManagement } from '@/components/admin/StockCategoryManagement';
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link } from 'react-router-dom';
-import { Shield, Users, Settings, UserCheck, Cog, Upload } from 'lucide-react';
+import { Shield, Users, Settings, UserCheck, Cog, Upload, Building2, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GlassCard, GlassCardContent } from '@/components/ui/glass-card';
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'custom-roles' | 'advanced-assignment' | 'import'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'custom-roles' | 'advanced-assignment' | 'import' | 'departments' | 'stock-categories'>('users');
   const { canManageSystem, isLoading } = useUserRoles();
 
   if (isLoading) {
@@ -127,6 +129,30 @@ const Admin = () => {
             <Upload className="w-4 h-4 mr-2" />
             Excel Import
           </Button>
+          <Button
+            variant={activeTab === 'departments' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('departments')}
+            className={
+              activeTab === 'departments'
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700'
+                : 'border-white/20 text-white hover:bg-white/10'
+            }
+          >
+            <Building2 className="w-4 h-4 mr-2" />
+            Departments
+          </Button>
+          <Button
+            variant={activeTab === 'stock-categories' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('stock-categories')}
+            className={
+              activeTab === 'stock-categories'
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700'
+                : 'border-white/20 text-white hover:bg-white/10'
+            }
+          >
+            <Package className="w-4 h-4 mr-2" />
+            Stock Categories
+          </Button>
         </div>
 
         {activeTab === 'users' && <UserManagement />}
@@ -134,6 +160,8 @@ const Admin = () => {
         {activeTab === 'custom-roles' && <CustomRoleManagement />}
         {activeTab === 'advanced-assignment' && <UserRoleAssignment />}
         {activeTab === 'import' && <ExcelImport />}
+        {activeTab === 'departments' && <DepartmentManagement />}
+        {activeTab === 'stock-categories' && <StockCategoryManagement />}
       </div>
     </div>
   );
