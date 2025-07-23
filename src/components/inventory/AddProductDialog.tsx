@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
 interface AddProductDialogProps {
@@ -22,16 +23,13 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
   
   const [formData, setFormData] = useState({
     part_number: '',
-    name: '',
     description: '',
     category: '',
-    manufacturer: '',
     unit_of_measure: 'each',
     minimum_stock: 0,
     reorder_point: 0,
     unit_cost: 0,
     bin_no: '',
-    stock_qty: 0,
     reorder_qty: 0,
     purchase_price: 0,
     sale_markup: 0,
@@ -40,13 +38,47 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
     open_balance: 0,
     open_bal_date: '',
     notes: '',
-    original_part_no: '',
     active: true,
     department_id: '',
     superseding_no: '',
-    alternate_department: '',
     rack: '',
     row_position: ''
+  });
+
+  // Fetch departments
+  const { data: departments = [] } = useQuery({
+    queryKey: ["departments", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from("departments")
+        .select("id, department_name")
+        .eq("user_id", user.id)
+        .order("department_name");
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Fetch stock categories
+  const { data: stockCategories = [] } = useQuery({
+    queryKey: ["stock_categories", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from("stock_categories")
+        .select("id, category_name")
+        .eq("user_id", user.id)
+        .order("category_name");
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
   });
 
   const createProductMutation = useMutation({
@@ -74,16 +106,13 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
       onOpenChange(false);
       setFormData({
         part_number: '',
-        name: '',
         description: '',
         category: '',
-        manufacturer: '',
         unit_of_measure: 'each',
         minimum_stock: 0,
         reorder_point: 0,
         unit_cost: 0,
         bin_no: '',
-        stock_qty: 0,
         reorder_qty: 0,
         purchase_price: 0,
         sale_markup: 0,
@@ -92,11 +121,9 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
         open_balance: 0,
         open_bal_date: '',
         notes: '',
-        original_part_no: '',
         active: true,
         department_id: '',
         superseding_no: '',
-        alternate_department: '',
         rack: '',
         row_position: ''
       });
@@ -139,14 +166,19 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
               </div>
               
               <div>
-                <Label htmlFor="name">Product Name *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white"
-                  required
-                />
+                <Label htmlFor="department_id">Department</Label>
+                <Select value={formData.department_id} onValueChange={(value) => setFormData({ ...formData, department_id: value })}>
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                    <SelectValue placeholder="Select department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.department_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -161,23 +193,13 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="category">Category</Label>
                 <Input
                   id="category"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="manufacturer">Manufacturer</Label>
-                <Input
-                  id="manufacturer"
-                  value={formData.manufacturer}
-                  onChange={(e) => setFormData({ ...formData, manufacturer: e.target.value })}
                   className="bg-white/5 border-white/10 text-white"
                 />
               </div>
@@ -199,25 +221,14 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
             <h3 className="text-lg font-medium">Stock Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="stock_qty">Current Stock Quantity</Label>
-                <Input
-                  id="stock_qty"
-                  type="number"
-                  min="0"
-                  value={formData.stock_qty}
-                  onChange={(e) => setFormData({ ...formData, stock_qty: parseInt(e.target.value) || 0 })}
-                  className="bg-white/5 border-white/10 text-white"
-                />
-              </div>
-
-              <div>
                 <Label htmlFor="minimum_stock">Minimum Stock</Label>
                 <Input
                   id="minimum_stock"
                   type="number"
                   min="0"
+                  step="0.01"
                   value={formData.minimum_stock}
-                  onChange={(e) => setFormData({ ...formData, minimum_stock: parseInt(e.target.value) || 0 })}
+                  onChange={(e) => setFormData({ ...formData, minimum_stock: parseFloat(e.target.value) || 0 })}
                   className="bg-white/5 border-white/10 text-white"
                 />
               </div>
@@ -228,35 +239,41 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
                   id="reorder_point"
                   type="number"
                   min="0"
+                  step="0.01"
                   value={formData.reorder_point}
-                  onChange={(e) => setFormData({ ...formData, reorder_point: parseInt(e.target.value) || 0 })}
+                  onChange={(e) => setFormData({ ...formData, reorder_point: parseFloat(e.target.value) || 0 })}
                   className="bg-white/5 border-white/10 text-white"
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="reorder_qty">Reorder Quantity</Label>
                 <Input
                   id="reorder_qty"
                   type="number"
                   min="0"
+                  step="0.01"
                   value={formData.reorder_qty}
-                  onChange={(e) => setFormData({ ...formData, reorder_qty: parseInt(e.target.value) || 0 })}
+                  onChange={(e) => setFormData({ ...formData, reorder_qty: parseFloat(e.target.value) || 0 })}
                   className="bg-white/5 border-white/10 text-white"
                 />
               </div>
+            </div>
 
-              <div>
-                <Label htmlFor="stock_category">Stock Category</Label>
-                <Input
-                  id="stock_category"
-                  value={formData.stock_category}
-                  onChange={(e) => setFormData({ ...formData, stock_category: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white"
-                />
-              </div>
+            <div>
+              <Label htmlFor="stock_category">Stock Category</Label>
+              <Select value={formData.stock_category} onValueChange={(value) => setFormData({ ...formData, stock_category: value })}>
+                <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                  <SelectValue placeholder="Select stock category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {stockCategories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.category_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -294,15 +311,6 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
                 />
               </div>
 
-              <div>
-                <Label htmlFor="department_id">Department ID</Label>
-                <Input
-                  id="department_id"
-                  value={formData.department_id}
-                  onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white"
-                />
-              </div>
             </div>
           </div>
 
@@ -393,34 +401,12 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Additional Information</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="original_part_no">Original Part Number</Label>
-                <Input
-                  id="original_part_no"
-                  value={formData.original_part_no}
-                  onChange={(e) => setFormData({ ...formData, original_part_no: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="superseding_no">Superseding Number</Label>
-                <Input
-                  id="superseding_no"
-                  value={formData.superseding_no}
-                  onChange={(e) => setFormData({ ...formData, superseding_no: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white"
-                />
-              </div>
-            </div>
-
             <div>
-              <Label htmlFor="alternate_department">Alternate Department</Label>
+              <Label htmlFor="superseding_no">Superseding Number</Label>
               <Input
-                id="alternate_department"
-                value={formData.alternate_department}
-                onChange={(e) => setFormData({ ...formData, alternate_department: e.target.value })}
+                id="superseding_no"
+                value={formData.superseding_no}
+                onChange={(e) => setFormData({ ...formData, superseding_no: e.target.value })}
                 className="bg-white/5 border-white/10 text-white"
               />
             </div>

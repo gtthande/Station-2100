@@ -81,7 +81,7 @@ export function StockCategoryManagement() {
         .from("stock_categories")
         .select(`
           *,
-          departments!inner(department_name)
+          departments(department_name)
         `)
         .eq("user_id", user.id)
         .order("category_name");
