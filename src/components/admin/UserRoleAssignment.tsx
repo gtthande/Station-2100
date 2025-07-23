@@ -79,18 +79,9 @@ export const UserRoleAssignment = () => {
           `)
           .not('role', 'is', null);
         
-        const { data: customRoleData, error: customError } = await (supabase as any)
-          .from('user_roles')
-          .select(`
-            id,
-            user_id,
-            custom_role_id,
-            created_at,
-            updated_at,
-            profiles:user_id (email, full_name),
-            custom_roles:custom_role_id (name, label, description)
-          `)
-          .not('custom_role_id', 'is', null);
+        // Since custom_roles table doesn't exist, skip custom roles query
+        const customRoleData = null;
+        const customError = null;
         
         if (systemError && customError) throw systemError;
         

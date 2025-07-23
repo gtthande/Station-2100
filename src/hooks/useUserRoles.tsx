@@ -33,17 +33,10 @@ export const useUserRoles = () => {
     queryFn: async () => {
       if (!user) return [];
       
-      // Try to get combined roles with custom roles
+      // Get user roles without custom_roles join since the table doesn't exist
       const { data, error } = await (supabase as any)
         .from('user_roles')
-        .select(`
-          *,
-          custom_roles (
-            name,
-            label,
-            description
-          )
-        `)
+        .select('*')
         .eq('user_id', user.id);
       
       if (error) throw error;
@@ -57,10 +50,8 @@ export const useUserRoles = () => {
   };
 
   const hasCustomRole = (roleName: string): boolean => {
-    return allUserRoles?.some(ur => 
-      ur.custom_roles && typeof ur.custom_roles === 'object' && 
-      'name' in ur.custom_roles && ur.custom_roles!.name === roleName
-    ) || false;
+    // Custom roles not implemented yet
+    return false;
   };
 
   const isAdmin = (): boolean => hasRole('admin');

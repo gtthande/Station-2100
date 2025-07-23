@@ -49,13 +49,8 @@ export const CustomRoleManagement = () => {
   const { data: customRoles, isLoading } = useQuery({
     queryKey: ['custom-roles'],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('custom_roles')
-        .select('*')
-        .order('label');
-      
-      if (error) throw error;
-      return data as CustomRole[];
+      // Custom roles table doesn't exist yet, return empty array
+      return [];
     },
     enabled: canManageSystem(),
   });
