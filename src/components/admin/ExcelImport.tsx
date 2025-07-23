@@ -212,7 +212,7 @@ export const ExcelImport = () => {
 
   const getAvailableColumns = () => {
     if (excelData.length === 0) return [];
-    return Object.keys(excelData[0]);
+    return Object.keys(excelData[0]).filter(key => key && key.trim() !== '');
   };
 
   const getTargetFields = () => {
