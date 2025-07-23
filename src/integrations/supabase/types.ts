@@ -576,28 +576,22 @@ export type Database = {
       }
       stock_categories: {
         Row: {
-          category_description: string | null
           category_name: string
           created_at: string
-          department_id: string
           id: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          category_description?: string | null
           category_name: string
           created_at?: string
-          department_id: string
           id?: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          category_description?: string | null
           category_name?: string
           created_at?: string
-          department_id?: string
           id?: string
           updated_at?: string
           user_id?: string
