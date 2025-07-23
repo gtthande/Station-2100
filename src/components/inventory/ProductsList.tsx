@@ -15,7 +15,7 @@ interface ExtendedInventorySummary {
   user_id: string;
   part_number: string;
   description?: string;
-  category?: string;
+  stock_category_name?: string;
   manufacturer?: string;
   unit_of_measure?: string;
   minimum_stock?: number;
@@ -67,7 +67,7 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
   const filteredProducts = products?.filter(product =>
     product.part_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category?.toLowerCase().includes(searchTerm.toLowerCase())
+    product.stock_category_name?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   const handleAddBatch = (productId: string) => {
@@ -95,7 +95,7 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 w-4 h-4" />
               <Input
-                placeholder="Search products by name, part number, or category..."
+                placeholder="Search products by name, part number, or stock category..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 bg-white/5 border-white/10 text-white"
@@ -132,9 +132,9 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
                       )}
                     </GlassCardTitle>
                     <p className="text-sm text-white/60 mb-2">{product.description}</p>
-                    {product.category && (
+                    {product.stock_category_name && (
                       <Badge variant="secondary" className="bg-white/10 text-white/80">
-                        {product.category}
+                        {product.stock_category_name}
                       </Badge>
                     )}
                   </div>

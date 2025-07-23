@@ -24,7 +24,6 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
   const [formData, setFormData] = useState({
     part_number: '',
     description: '',
-    category: '',
     unit_of_measure: 'each',
     minimum_stock: 0,
     reorder_point: 0,
@@ -37,7 +36,6 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
     stock_category: '',
     open_balance: 0,
     open_bal_date: '',
-    notes: '',
     active: true,
     department_id: '',
     superseding_no: '',
@@ -107,7 +105,6 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
       setFormData({
         part_number: '',
         description: '',
-        category: '',
         unit_of_measure: 'each',
         minimum_stock: 0,
         reorder_point: 0,
@@ -120,7 +117,6 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
         stock_category: '',
         open_balance: 0,
         open_bal_date: '',
-        notes: '',
         active: true,
         department_id: '',
         superseding_no: '',
@@ -193,26 +189,14 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="category">Category</Label>
-                <Input
-                  id="category"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="unit_of_measure">Unit of Measure</Label>
-                <Input
-                  id="unit_of_measure"
-                  value={formData.unit_of_measure}
-                  onChange={(e) => setFormData({ ...formData, unit_of_measure: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white"
-                />
-              </div>
+            <div>
+              <Label htmlFor="unit_of_measure">Unit of Measure</Label>
+              <Input
+                id="unit_of_measure"
+                value={formData.unit_of_measure}
+                onChange={(e) => setFormData({ ...formData, unit_of_measure: e.target.value })}
+                className="bg-white/5 border-white/10 text-white"
+              />
             </div>
           </div>
 
@@ -311,6 +295,15 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
                 />
               </div>
 
+              <div>
+                <Label htmlFor="superseding_no">Superseding Number</Label>
+                <Input
+                  id="superseding_no"
+                  value={formData.superseding_no}
+                  onChange={(e) => setFormData({ ...formData, superseding_no: e.target.value })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
             </div>
           </div>
 
@@ -401,16 +394,6 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Additional Information</h3>
             
-            <div>
-              <Label htmlFor="superseding_no">Superseding Number</Label>
-              <Input
-                id="superseding_no"
-                value={formData.superseding_no}
-                onChange={(e) => setFormData({ ...formData, superseding_no: e.target.value })}
-                className="bg-white/5 border-white/10 text-white"
-              />
-            </div>
-
             <div className="flex items-center space-x-2 p-4 bg-white/5 rounded-lg">
               <Switch
                 id="active"
@@ -420,17 +403,6 @@ export const AddProductDialog = ({ open, onOpenChange }: AddProductDialogProps) 
               <Label htmlFor="active" className="text-white">
                 Active Product
               </Label>
-            </div>
-
-            <div>
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                className="bg-white/5 border-white/10 text-white"
-                rows={3}
-              />
             </div>
           </div>
 

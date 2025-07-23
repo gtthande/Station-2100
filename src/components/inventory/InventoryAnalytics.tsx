@@ -24,7 +24,6 @@ export const InventoryAnalytics = () => {
         .select(`
           *,
           inventory_products (
-            category,
             part_number
           )
         `);
@@ -69,7 +68,7 @@ export const InventoryAnalytics = () => {
     }));
 
   const categoryData = analytics.summary.reduce((acc: any[], item) => {
-    const category = item.category || 'Uncategorized';
+    const category = item.stock_category_name || 'Uncategorized';
     const existing = acc.find(c => c.name === category);
     if (existing) {
       existing.value += item.total_quantity || 0;

@@ -283,13 +283,11 @@ export type Database = {
         Row: {
           active: boolean | null
           bin_no: string | null
-          category: string | null
           created_at: string
           department_id: string | null
           description: string | null
           id: string
           minimum_stock: number | null
-          notes: string | null
           open_bal_date: string | null
           open_balance: number | null
           part_number: string
@@ -310,13 +308,11 @@ export type Database = {
         Insert: {
           active?: boolean | null
           bin_no?: string | null
-          category?: string | null
           created_at?: string
           department_id?: string | null
           description?: string | null
           id?: string
           minimum_stock?: number | null
-          notes?: string | null
           open_bal_date?: string | null
           open_balance?: number | null
           part_number: string
@@ -337,13 +333,11 @@ export type Database = {
         Update: {
           active?: boolean | null
           bin_no?: string | null
-          category?: string | null
           created_at?: string
           department_id?: string | null
           description?: string | null
           id?: string
           minimum_stock?: number | null
-          notes?: string | null
           open_bal_date?: string | null
           open_balance?: number | null
           part_number?: string
@@ -701,14 +695,12 @@ export type Database = {
           active: boolean | null
           batch_count: number | null
           bin_no: string | null
-          category: string | null
           created_at: string | null
           department_id: string | null
           department_name: string | null
           description: string | null
           id: string | null
           minimum_stock: number | null
-          notes: string | null
           open_bal_date: string | null
           open_balance: number | null
           part_number: string | null
