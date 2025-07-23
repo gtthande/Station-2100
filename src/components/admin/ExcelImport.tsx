@@ -244,34 +244,40 @@ export const ExcelImport = () => {
         for (let i = 0; i < excelData.length; i++) {
           const row = excelData[i];
           try {
+            // Helper function to get mapped value
+            const getMappedValue = (fieldKey: string) => {
+              const excelColumn = columnMapping[fieldKey];
+              return excelColumn ? row[excelColumn] : '';
+            };
+
             const productData: any = {
               user_id: userData.user.id,
-              part_number: String(row[columnMapping.part_number] || ''),
-              name: String(row[columnMapping.name] || ''),
-              description: String(row[columnMapping.description] || ''),
-              category: String(row[columnMapping.category] || ''),
-              manufacturer: String(row[columnMapping.manufacturer] || ''),
-              unit_of_measure: String(row[columnMapping.unit_of_measure] || 'each'),
-              minimum_stock: parseInt(row[columnMapping.minimum_stock]) || 0,
-              reorder_point: parseInt(row[columnMapping.reorder_point]) || 0,
-              unit_cost: parseFloat(row[columnMapping.unit_cost]) || 0,
-              bin_no: String(row[columnMapping.bin_no] || ''),
-              stock_qty: parseInt(row[columnMapping.stock_qty]) || 0,
-              reorder_qty: parseInt(row[columnMapping.reorder_qty]) || 0,
-              purchase_price: parseFloat(row[columnMapping.purchase_price]) || 0,
-              sale_markup: parseFloat(row[columnMapping.sale_markup]) || 0,
-              sale_price: parseFloat(row[columnMapping.sale_price]) || 0,
-              stock_category: String(row[columnMapping.stock_category] || ''),
-              open_balance: parseFloat(row[columnMapping.open_balance]) || 0,
-              open_bal_date: row[columnMapping.open_bal_date] ? new Date(row[columnMapping.open_bal_date]).toISOString().split('T')[0] : null,
-              notes: String(row[columnMapping.notes] || ''),
-              original_part_no: String(row[columnMapping.original_part_no] || ''),
-              active: Boolean(row[columnMapping.active] !== false && row[columnMapping.active] !== 'false'),
-              department_id: String(row[columnMapping.department_id] || ''),
-              superseding_no: String(row[columnMapping.superseding_no] || ''),
-              alternate_department: String(row[columnMapping.alternate_department] || ''),
-              rack: String(row[columnMapping.rack] || ''),
-              row_position: String(row[columnMapping.row_position] || '')
+              part_number: String(getMappedValue('part_number') || ''),
+              name: String(getMappedValue('name') || ''),
+              description: String(getMappedValue('description') || ''),
+              category: String(getMappedValue('category') || ''),
+              manufacturer: String(getMappedValue('manufacturer') || ''),
+              unit_of_measure: String(getMappedValue('unit_of_measure') || 'each'),
+              minimum_stock: parseInt(getMappedValue('minimum_stock')) || 0,
+              reorder_point: parseInt(getMappedValue('reorder_point')) || 0,
+              unit_cost: parseFloat(getMappedValue('unit_cost')) || 0,
+              bin_no: String(getMappedValue('bin_no') || ''),
+              stock_qty: parseInt(getMappedValue('stock_qty')) || 0,
+              reorder_qty: parseInt(getMappedValue('reorder_qty')) || 0,
+              purchase_price: parseFloat(getMappedValue('purchase_price')) || 0,
+              sale_markup: parseFloat(getMappedValue('sale_markup')) || 0,
+              sale_price: parseFloat(getMappedValue('sale_price')) || 0,
+              stock_category: String(getMappedValue('stock_category') || ''),
+              open_balance: parseFloat(getMappedValue('open_balance')) || 0,
+              open_bal_date: getMappedValue('open_bal_date') ? new Date(getMappedValue('open_bal_date')).toISOString().split('T')[0] : null,
+              notes: String(getMappedValue('notes') || ''),
+              original_part_no: String(getMappedValue('original_part_no') || ''),
+              active: Boolean(getMappedValue('active') !== false && getMappedValue('active') !== 'false'),
+              department_id: String(getMappedValue('department_id') || ''),
+              superseding_no: String(getMappedValue('superseding_no') || ''),
+              alternate_department: String(getMappedValue('alternate_department') || ''),
+              rack: String(getMappedValue('rack') || ''),
+              row_position: String(getMappedValue('row_position') || '')
             };
 
             if (!productData.part_number || !productData.name) {
@@ -297,7 +303,13 @@ export const ExcelImport = () => {
         for (let i = 0; i < excelData.length; i++) {
           const row = excelData[i];
           try {
-            const partNumber = row[columnMapping.part_number];
+            // Helper function to get mapped value
+            const getMappedValue = (fieldKey: string) => {
+              const excelColumn = columnMapping[fieldKey];
+              return excelColumn ? row[excelColumn] : '';
+            };
+
+            const partNumber = getMappedValue('part_number');
             if (!partNumber) {
               errors.push(`Row ${i + 1}: Part number is required`);
               continue;
@@ -319,41 +331,41 @@ export const ExcelImport = () => {
             const batchData: any = {
               user_id: userData.user.id,
               product_id: product.id,
-              batch_number: String(row[columnMapping.batch_number] || ''),
-              quantity: parseInt(row[columnMapping.quantity]) || 0,
-              cost_per_unit: parseFloat(row[columnMapping.cost_per_unit]) || 0,
-              received_date: row[columnMapping.received_date] ? new Date(row[columnMapping.received_date]).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-              expiry_date: row[columnMapping.expiry_date] ? new Date(row[columnMapping.expiry_date]).toISOString().split('T')[0] : null,
-              location: String(row[columnMapping.location] || ''),
-              purchase_order: String(row[columnMapping.purchase_order] || ''),
-              supplier_invoice_number: String(row[columnMapping.supplier_invoice_number] || ''),
-              notes: String(row[columnMapping.notes] || ''),
-              receipt_id: String(row[columnMapping.receipt_id] || ''),
-              department_id: String(row[columnMapping.department_id] || ''),
-              buying_price: parseFloat(row[columnMapping.buying_price]) || 0,
-              sale_markup_percent: parseFloat(row[columnMapping.sale_markup_percent]) || 0,
-              sale_markup_value: parseFloat(row[columnMapping.sale_markup_value]) || 0,
-              selling_price: parseFloat(row[columnMapping.selling_price]) || 0,
-              lpo: String(row[columnMapping.lpo] || ''),
-              reference_no: String(row[columnMapping.reference_no] || ''),
-              batch_date: row[columnMapping.batch_date] ? new Date(row[columnMapping.batch_date]).toISOString().split('T')[0] : null,
-              bin_no: String(row[columnMapping.bin_no] || ''),
-              the_size: String(row[columnMapping.the_size] || ''),
-              dollar_rate: parseFloat(row[columnMapping.dollar_rate]) || 0,
-              freight_rate: parseFloat(row[columnMapping.freight_rate]) || 0,
-              total_rate: parseFloat(row[columnMapping.total_rate]) || 0,
-              dollar_amount: parseFloat(row[columnMapping.dollar_amount]) || 0,
-              core_value: parseFloat(row[columnMapping.core_value]) || 0,
-              aircraft_reg_no: String(row[columnMapping.aircraft_reg_no] || ''),
-              batch_id_a: String(row[columnMapping.batch_id_a] || ''),
-              batch_id_b: String(row[columnMapping.batch_id_b] || ''),
-              received_by: String(row[columnMapping.received_by] || ''),
-              receive_code: String(row[columnMapping.receive_code] || ''),
-              verified_by: String(row[columnMapping.verified_by] || ''),
-              verification_code: String(row[columnMapping.verification_code] || ''),
-              core_id: String(row[columnMapping.core_id] || ''),
-              serial_no: String(row[columnMapping.serial_no] || ''),
-              alternate_department_id: String(row[columnMapping.alternate_department_id] || '')
+              batch_number: String(getMappedValue('batch_number') || ''),
+              quantity: parseInt(getMappedValue('quantity')) || 0,
+              cost_per_unit: parseFloat(getMappedValue('cost_per_unit')) || 0,
+              received_date: getMappedValue('received_date') ? new Date(getMappedValue('received_date')).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+              expiry_date: getMappedValue('expiry_date') ? new Date(getMappedValue('expiry_date')).toISOString().split('T')[0] : null,
+              location: String(getMappedValue('location') || ''),
+              purchase_order: String(getMappedValue('purchase_order') || ''),
+              supplier_invoice_number: String(getMappedValue('supplier_invoice_number') || ''),
+              notes: String(getMappedValue('notes') || ''),
+              receipt_id: String(getMappedValue('receipt_id') || ''),
+              department_id: String(getMappedValue('department_id') || ''),
+              buying_price: parseFloat(getMappedValue('buying_price')) || 0,
+              sale_markup_percent: parseFloat(getMappedValue('sale_markup_percent')) || 0,
+              sale_markup_value: parseFloat(getMappedValue('sale_markup_value')) || 0,
+              selling_price: parseFloat(getMappedValue('selling_price')) || 0,
+              lpo: String(getMappedValue('lpo') || ''),
+              reference_no: String(getMappedValue('reference_no') || ''),
+              batch_date: getMappedValue('batch_date') ? new Date(getMappedValue('batch_date')).toISOString().split('T')[0] : null,
+              bin_no: String(getMappedValue('bin_no') || ''),
+              the_size: String(getMappedValue('the_size') || ''),
+              dollar_rate: parseFloat(getMappedValue('dollar_rate')) || 0,
+              freight_rate: parseFloat(getMappedValue('freight_rate')) || 0,
+              total_rate: parseFloat(getMappedValue('total_rate')) || 0,
+              dollar_amount: parseFloat(getMappedValue('dollar_amount')) || 0,
+              core_value: parseFloat(getMappedValue('core_value')) || 0,
+              aircraft_reg_no: String(getMappedValue('aircraft_reg_no') || ''),
+              batch_id_a: String(getMappedValue('batch_id_a') || ''),
+              batch_id_b: String(getMappedValue('batch_id_b') || ''),
+              received_by: String(getMappedValue('received_by') || ''),
+              receive_code: String(getMappedValue('receive_code') || ''),
+              verified_by: String(getMappedValue('verified_by') || ''),
+              verification_code: String(getMappedValue('verification_code') || ''),
+              core_id: String(getMappedValue('core_id') || ''),
+              serial_no: String(getMappedValue('serial_no') || ''),
+              alternate_department_id: String(getMappedValue('alternate_department_id') || '')
             };
 
             if (!batchData.batch_number) {
