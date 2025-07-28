@@ -407,6 +407,195 @@ export type Database = {
           },
         ]
       }
+      job_cards: {
+        Row: {
+          ac_approvedate: string | null
+          ac_aproved: boolean | null
+          ac_aproved_by: string | null
+          ac_forwarddate: string | null
+          ac_no: number | null
+          accomponentserno: string | null
+          aircraft_regno: string | null
+          approvedate: string | null
+          approvedby: string | null
+          assignedto: number | null
+          authorisedby: number | null
+          authoriseddate: string | null
+          category: string | null
+          close_invoice: string | null
+          closed: boolean | null
+          consumables_approved: boolean | null
+          consumables_approved_by: string | null
+          custaddress: string | null
+          custfax: string | null
+          custinvno: number | null
+          customerid: number | null
+          customername: string | null
+          custphone: string | null
+          date_closed: string | null
+          date_opened: string | null
+          dateforwarded: string | null
+          description: string | null
+          empid: number | null
+          issuedby: number | null
+          issueddate: string | null
+          jobcardid: number
+          manual_jobno: number | null
+          oss_approved: boolean | null
+          oss_approved_by: string | null
+          oss_approvedate: string | null
+          oss_forwarddate: string | null
+          oss_no: number | null
+          parts_cost: unknown | null
+          parts_price: unknown | null
+          prepaid: boolean | null
+          preparedate: string | null
+          preparedby: string | null
+          printed: boolean | null
+          receivedby: number | null
+          receiveddate: string | null
+          remarks: string | null
+          requestedby: number | null
+          requisitiondate: string | null
+          service_cost: unknown | null
+          service_fitting_cost: unknown | null
+          stockcardpostedby: number | null
+          stockcardposteddate: string | null
+          subjobcardid: string | null
+          whb_approvedate: string | null
+          whb_aproved: boolean | null
+          whb_aproved_by: string | null
+          whb_forwarddate: string | null
+          whbnc_cost: unknown | null
+          whbnc_fitting: unknown | null
+          whbnc_no: number | null
+        }
+        Insert: {
+          ac_approvedate?: string | null
+          ac_aproved?: boolean | null
+          ac_aproved_by?: string | null
+          ac_forwarddate?: string | null
+          ac_no?: number | null
+          accomponentserno?: string | null
+          aircraft_regno?: string | null
+          approvedate?: string | null
+          approvedby?: string | null
+          assignedto?: number | null
+          authorisedby?: number | null
+          authoriseddate?: string | null
+          category?: string | null
+          close_invoice?: string | null
+          closed?: boolean | null
+          consumables_approved?: boolean | null
+          consumables_approved_by?: string | null
+          custaddress?: string | null
+          custfax?: string | null
+          custinvno?: number | null
+          customerid?: number | null
+          customername?: string | null
+          custphone?: string | null
+          date_closed?: string | null
+          date_opened?: string | null
+          dateforwarded?: string | null
+          description?: string | null
+          empid?: number | null
+          issuedby?: number | null
+          issueddate?: string | null
+          jobcardid?: number
+          manual_jobno?: number | null
+          oss_approved?: boolean | null
+          oss_approved_by?: string | null
+          oss_approvedate?: string | null
+          oss_forwarddate?: string | null
+          oss_no?: number | null
+          parts_cost?: unknown | null
+          parts_price?: unknown | null
+          prepaid?: boolean | null
+          preparedate?: string | null
+          preparedby?: string | null
+          printed?: boolean | null
+          receivedby?: number | null
+          receiveddate?: string | null
+          remarks?: string | null
+          requestedby?: number | null
+          requisitiondate?: string | null
+          service_cost?: unknown | null
+          service_fitting_cost?: unknown | null
+          stockcardpostedby?: number | null
+          stockcardposteddate?: string | null
+          subjobcardid?: string | null
+          whb_approvedate?: string | null
+          whb_aproved?: boolean | null
+          whb_aproved_by?: string | null
+          whb_forwarddate?: string | null
+          whbnc_cost?: unknown | null
+          whbnc_fitting?: unknown | null
+          whbnc_no?: number | null
+        }
+        Update: {
+          ac_approvedate?: string | null
+          ac_aproved?: boolean | null
+          ac_aproved_by?: string | null
+          ac_forwarddate?: string | null
+          ac_no?: number | null
+          accomponentserno?: string | null
+          aircraft_regno?: string | null
+          approvedate?: string | null
+          approvedby?: string | null
+          assignedto?: number | null
+          authorisedby?: number | null
+          authoriseddate?: string | null
+          category?: string | null
+          close_invoice?: string | null
+          closed?: boolean | null
+          consumables_approved?: boolean | null
+          consumables_approved_by?: string | null
+          custaddress?: string | null
+          custfax?: string | null
+          custinvno?: number | null
+          customerid?: number | null
+          customername?: string | null
+          custphone?: string | null
+          date_closed?: string | null
+          date_opened?: string | null
+          dateforwarded?: string | null
+          description?: string | null
+          empid?: number | null
+          issuedby?: number | null
+          issueddate?: string | null
+          jobcardid?: number
+          manual_jobno?: number | null
+          oss_approved?: boolean | null
+          oss_approved_by?: string | null
+          oss_approvedate?: string | null
+          oss_forwarddate?: string | null
+          oss_no?: number | null
+          parts_cost?: unknown | null
+          parts_price?: unknown | null
+          prepaid?: boolean | null
+          preparedate?: string | null
+          preparedby?: string | null
+          printed?: boolean | null
+          receivedby?: number | null
+          receiveddate?: string | null
+          remarks?: string | null
+          requestedby?: number | null
+          requisitiondate?: string | null
+          service_cost?: unknown | null
+          service_fitting_cost?: unknown | null
+          stockcardpostedby?: number | null
+          stockcardposteddate?: string | null
+          subjobcardid?: string | null
+          whb_approvedate?: string | null
+          whb_aproved?: boolean | null
+          whb_aproved_by?: string | null
+          whb_forwarddate?: string | null
+          whbnc_cost?: unknown | null
+          whbnc_fitting?: unknown | null
+          whbnc_no?: number | null
+        }
+        Relationships: []
+      }
       job_items: {
         Row: {
           batch_no: number | null
@@ -481,6 +670,80 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "jobs"
             referencedColumns: ["job_id"]
+          },
+        ]
+      }
+      jobcard_parts: {
+        Row: {
+          batch_no: string
+          buying_price: unknown | null
+          cancelled: boolean | null
+          department_id: number
+          description: string | null
+          empno: string | null
+          fitting_price: unknown | null
+          issuecode: string | null
+          issuedby: string | null
+          jobcardid: number | null
+          part_date: string | null
+          partno: number
+          prepaid_dets: string | null
+          qty_requested: number | null
+          quantity: number | null
+          staffname: string | null
+          type: string | null
+          uom: string | null
+          verified: boolean | null
+        }
+        Insert: {
+          batch_no: string
+          buying_price?: unknown | null
+          cancelled?: boolean | null
+          department_id: number
+          description?: string | null
+          empno?: string | null
+          fitting_price?: unknown | null
+          issuecode?: string | null
+          issuedby?: string | null
+          jobcardid?: number | null
+          part_date?: string | null
+          partno: number
+          prepaid_dets?: string | null
+          qty_requested?: number | null
+          quantity?: number | null
+          staffname?: string | null
+          type?: string | null
+          uom?: string | null
+          verified?: boolean | null
+        }
+        Update: {
+          batch_no?: string
+          buying_price?: unknown | null
+          cancelled?: boolean | null
+          department_id?: number
+          description?: string | null
+          empno?: string | null
+          fitting_price?: unknown | null
+          issuecode?: string | null
+          issuedby?: string | null
+          jobcardid?: number | null
+          part_date?: string | null
+          partno?: number
+          prepaid_dets?: string | null
+          qty_requested?: number | null
+          quantity?: number | null
+          staffname?: string | null
+          type?: string | null
+          uom?: string | null
+          verified?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobcard_parts_jobcardid_fkey"
+            columns: ["jobcardid"]
+            isOneToOne: false
+            referencedRelation: "job_cards"
+            referencedColumns: ["jobcardid"]
           },
         ]
       }

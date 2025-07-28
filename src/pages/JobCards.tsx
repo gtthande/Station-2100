@@ -7,6 +7,7 @@ import { JobsList } from "@/components/jobs/JobsList";
 import { CreateJobDialog } from "@/components/jobs/CreateJobDialog";
 import { JobItemsList } from "@/components/jobs/JobItemsList";
 import { JobAuthList } from "@/components/jobs/JobAuthList";
+import { JobCardInterface } from "@/components/jobs/JobCardInterface";
 
 export default function JobCards() {
   const [createJobOpen, setCreateJobOpen] = useState(false);
@@ -27,12 +28,17 @@ export default function JobCards() {
         </Button>
       </div>
 
-      <Tabs defaultValue="jobs" className="space-y-4">
+      <Tabs defaultValue="interface" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="interface">Job Card Interface</TabsTrigger>
           <TabsTrigger value="jobs">Job Cards</TabsTrigger>
           <TabsTrigger value="items">Job Items</TabsTrigger>
           <TabsTrigger value="auth">Authorizations</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="interface" className="space-y-4">
+          <JobCardInterface />
+        </TabsContent>
 
         <TabsContent value="jobs" className="space-y-4">
           <Card>
