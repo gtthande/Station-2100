@@ -44,6 +44,7 @@ const INVENTORY_BATCH_FIELDS = {
   receipt_id: 'Receipt ID (RECEIPTID)',
   part_number: 'Part Number (PARTNO) - Reference',
   batch_number: 'Batch Number (BATCH_NO)',
+  supplier_id: 'Supplier ID (SUPPLIER_ID)',
   department_id: 'Department ID (DEPARTMENT_ID)',
   quantity: 'Quantity (QUANTITY)',
   buying_price: 'Buying Price (BUYING_PRICE)',
@@ -331,7 +332,7 @@ export const ExcelImport = () => {
           }
         }
       } else {
-        // Import batches with all new fields
+        // Import batches with enhanced field mapping and validation
         for (let i = 0; i < excelData.length; i++) {
           const row = excelData[i];
           try {
@@ -341,21 +342,59 @@ export const ExcelImport = () => {
               return excelColumn ? row[excelColumn] : '';
             };
 
+            // Helper function to parse numeric values with better null handling
+            const parseNumeric = (value: any): number | null => {
+              if (value === null || value === undefined || value === '') return null;
+              const parsed = parseFloat(String(value).replace(/[,$%]/g, ''));
+              return isNaN(parsed) ? null : parsed;
+            };
+
+            // Helper function to parse date values
+            const parseDate = (value: any): string | null => {
+              if (!value) return null;
+              try {
+                const date = new Date(value);
+                return isNaN(date.getTime()) ? null : date.toISOString().split('T')[0];
+              } catch {
+                return null;
+              }
+            };
+
+            // Helper function to parse UUID (supplier_id, department_id, alternate_department_id)
+            const parseUUID = (value: any): string | null => {
+              if (!value || String(value).trim() === '') return null;
+              const str = String(value).trim();
+              
+              // Enhanced UUID format validation
+              const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+              if (!uuidRegex.test(str)) {
+                console.warn(`Invalid UUID format for batch import: ${str}`);
+                return null;
+              }
+              
+              return str;
+            };
+
             const partNumber = getMappedValue('part_number');
             if (!partNumber) {
               errors.push(`Row ${i + 1}: Part number is required`);
               continue;
             }
 
-            // Find the product
+            // Find the product using maybeSingle for safer lookup
             const { data: product, error: productError } = await supabase
               .from('inventory_products')
               .select('id')
               .eq('part_number', partNumber)
               .eq('user_id', userData.user.id)
-              .single();
+              .maybeSingle();
 
-            if (productError || !product) {
+            if (productError) {
+              errors.push(`Row ${i + 1}: Database error finding product "${partNumber}": ${productError.message}`);
+              continue;
+            }
+
+            if (!product) {
               errors.push(`Row ${i + 1}: Product with part number "${partNumber}" not found`);
               continue;
             }
@@ -363,41 +402,42 @@ export const ExcelImport = () => {
             const batchData: any = {
               user_id: userData.user.id,
               product_id: product.id,
-              batch_number: String(getMappedValue('batch_number') || ''),
-              quantity: parseInt(getMappedValue('quantity')) || 0,
-              cost_per_unit: parseFloat(getMappedValue('cost_per_unit')) || 0,
-              received_date: getMappedValue('received_date') ? new Date(getMappedValue('received_date')).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-              expiry_date: getMappedValue('expiry_date') ? new Date(getMappedValue('expiry_date')).toISOString().split('T')[0] : null,
-              location: String(getMappedValue('location') || ''),
-              purchase_order: String(getMappedValue('purchase_order') || ''),
-              supplier_invoice_number: String(getMappedValue('supplier_invoice_number') || ''),
-              notes: String(getMappedValue('notes') || ''),
-              receipt_id: String(getMappedValue('receipt_id') || ''),
-              department_id: String(getMappedValue('department_id') || ''),
-              buying_price: parseFloat(getMappedValue('buying_price')) || 0,
-              sale_markup_percent: parseFloat(getMappedValue('sale_markup_percent')) || 0,
-              sale_markup_value: parseFloat(getMappedValue('sale_markup_value')) || 0,
-              selling_price: parseFloat(getMappedValue('selling_price')) || 0,
-              lpo: String(getMappedValue('lpo') || ''),
-              reference_no: String(getMappedValue('reference_no') || ''),
-              batch_date: getMappedValue('batch_date') ? new Date(getMappedValue('batch_date')).toISOString().split('T')[0] : null,
-              bin_no: String(getMappedValue('bin_no') || ''),
-              the_size: String(getMappedValue('the_size') || ''),
-              dollar_rate: parseFloat(getMappedValue('dollar_rate')) || 0,
-              freight_rate: parseFloat(getMappedValue('freight_rate')) || 0,
-              total_rate: parseFloat(getMappedValue('total_rate')) || 0,
-              dollar_amount: parseFloat(getMappedValue('dollar_amount')) || 0,
-              core_value: parseFloat(getMappedValue('core_value')) || 0,
-              aircraft_reg_no: String(getMappedValue('aircraft_reg_no') || ''),
-              batch_id_a: String(getMappedValue('batch_id_a') || ''),
-              batch_id_b: String(getMappedValue('batch_id_b') || ''),
-              received_by: String(getMappedValue('received_by') || ''),
-              receive_code: String(getMappedValue('receive_code') || ''),
-              verified_by: String(getMappedValue('verified_by') || ''),
-              verification_code: String(getMappedValue('verification_code') || ''),
-              core_id: String(getMappedValue('core_id') || ''),
-              serial_no: String(getMappedValue('serial_no') || ''),
-              alternate_department_id: String(getMappedValue('alternate_department_id') || '')
+              batch_number: String(getMappedValue('batch_number') || '').trim(),
+              quantity: parseInt(String(getMappedValue('quantity'))) || 0,
+              cost_per_unit: parseNumeric(getMappedValue('cost_per_unit')),
+              buying_price: parseNumeric(getMappedValue('buying_price')),
+              sale_markup_percent: parseNumeric(getMappedValue('sale_markup_percent')),
+              sale_markup_value: parseNumeric(getMappedValue('sale_markup_value')),
+              selling_price: parseNumeric(getMappedValue('selling_price')),
+              supplier_id: parseUUID(getMappedValue('supplier_id')),
+              department_id: parseUUID(getMappedValue('department_id')),
+              alternate_department_id: parseUUID(getMappedValue('alternate_department_id')),
+              received_date: parseDate(getMappedValue('received_date')) || new Date().toISOString().split('T')[0],
+              batch_date: parseDate(getMappedValue('batch_date')),
+              expiry_date: parseDate(getMappedValue('expiry_date')),
+              dollar_rate: parseNumeric(getMappedValue('dollar_rate')),
+              freight_rate: parseNumeric(getMappedValue('freight_rate')),
+              total_rate: parseNumeric(getMappedValue('total_rate')),
+              dollar_amount: parseNumeric(getMappedValue('dollar_amount')),
+              core_value: parseNumeric(getMappedValue('core_value')),
+              location: String(getMappedValue('location') || '').trim() || null,
+              purchase_order: String(getMappedValue('purchase_order') || '').trim() || null,
+              supplier_invoice_number: String(getMappedValue('supplier_invoice_number') || '').trim() || null,
+              notes: String(getMappedValue('notes') || '').trim() || null,
+              receipt_id: String(getMappedValue('receipt_id') || '').trim() || null,
+              lpo: String(getMappedValue('lpo') || '').trim() || null,
+              reference_no: String(getMappedValue('reference_no') || '').trim() || null,
+              bin_no: String(getMappedValue('bin_no') || '').trim() || null,
+              the_size: String(getMappedValue('the_size') || '').trim() || null,
+              aircraft_reg_no: String(getMappedValue('aircraft_reg_no') || '').trim() || null,
+              batch_id_a: String(getMappedValue('batch_id_a') || '').trim() || null,
+              batch_id_b: String(getMappedValue('batch_id_b') || '').trim() || null,
+              received_by: String(getMappedValue('received_by') || '').trim() || null,
+              receive_code: String(getMappedValue('receive_code') || '').trim() || null,
+              verified_by: String(getMappedValue('verified_by') || '').trim() || null,
+              verification_code: String(getMappedValue('verification_code') || '').trim() || null,
+              core_id: String(getMappedValue('core_id') || '').trim() || null,
+              serial_no: String(getMappedValue('serial_no') || '').trim() || null
             };
 
             if (!batchData.batch_number) {
