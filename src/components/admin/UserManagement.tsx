@@ -65,6 +65,7 @@ export const UserManagement = () => {
   const queryClient = useQueryClient();
   const [emailFilter, setEmailFilter] = useState('');
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
+  const [lastCreateTime, setLastCreateTime] = useState<number>(0);
   const [newUserData, setNewUserData] = useState({
     email: '',
     password: '',
@@ -102,13 +103,21 @@ export const UserManagement = () => {
 
   const createUserMutation = useMutation({
     mutationFn: async (userData: typeof newUserData) => {
+      // Validate password complexity
+      if (userData.password.length < 8) {
+        throw new Error('Password must be at least 8 characters long');
+      }
+      if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(userData.password)) {
+        throw new Error('Password must contain at least one uppercase letter, one lowercase letter, and one number');
+      }
+
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: userData.email,
         password: userData.password,
         user_metadata: {
           full_name: userData.full_name
         },
-        email_confirm: true
+        email_confirm: false  // Require proper email verification
       });
 
       if (authError) throw authError;
@@ -194,6 +203,17 @@ export const UserManagement = () => {
   const handleCreateUser = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Rate limiting: prevent creation more than once every 30 seconds
+    const now = Date.now();
+    if (now - lastCreateTime < 30000) {
+      toast({
+        title: "Error",
+        description: "Please wait 30 seconds between user creations to prevent abuse",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!newUserData.email || !newUserData.password) {
       toast({
         title: "Error",
@@ -203,6 +223,26 @@ export const UserManagement = () => {
       return;
     }
 
+    // Additional client-side password validation
+    if (newUserData.password.length < 8) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 8 characters long",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newUserData.password)) {
+      toast({
+        title: "Error", 
+        description: "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLastCreateTime(now);
     createUserMutation.mutate(newUserData);
   };
 
@@ -308,8 +348,12 @@ export const UserManagement = () => {
                       value={newUserData.password}
                       onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
                       className="bg-white/5 border-white/10 text-white"
+                      placeholder="Min 8 chars, 1 uppercase, 1 lowercase, 1 number"
                       required
                     />
+                    <p className="text-xs text-white/60 mt-1">
+                      Password must be at least 8 characters with uppercase, lowercase, and number
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="full_name">Full Name</Label>

@@ -268,13 +268,25 @@ export const ExcelImport = () => {
               return str === 'true' || str === '1' || str === 'yes' || str === 'active';
             };
 
-            // Helper function to parse UUID (department_id, stock_category)
+            // Helper function to parse UUID (department_id, stock_category)  
             const parseUUID = (value: any): string | null => {
               if (!value || String(value).trim() === '') return null;
               const str = String(value).trim();
-              // Basic UUID format validation
-              const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-              return uuidRegex.test(str) ? str : null;
+              
+              // Enhanced UUID format validation
+              const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+              if (!uuidRegex.test(str)) {
+                console.warn(`Invalid UUID format: ${str}`);
+                return null;
+              }
+              
+              // Additional length validation
+              if (str.length !== 36) {
+                console.warn(`Invalid UUID length: ${str.length}, expected 36`);
+                return null;
+              }
+              
+              return str;
             };
 
             const productData: any = {
