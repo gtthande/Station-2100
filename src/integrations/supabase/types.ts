@@ -462,6 +462,7 @@ export type Database = {
           stockcardpostedby: number | null
           stockcardposteddate: string | null
           subjobcardid: string | null
+          user_id: string | null
           whb_approvedate: string | null
           whb_aproved: boolean | null
           whb_aproved_by: string | null
@@ -524,6 +525,7 @@ export type Database = {
           stockcardpostedby?: number | null
           stockcardposteddate?: string | null
           subjobcardid?: string | null
+          user_id?: string | null
           whb_approvedate?: string | null
           whb_aproved?: boolean | null
           whb_aproved_by?: string | null
@@ -586,6 +588,7 @@ export type Database = {
           stockcardpostedby?: number | null
           stockcardposteddate?: string | null
           subjobcardid?: string | null
+          user_id?: string | null
           whb_approvedate?: string | null
           whb_aproved?: boolean | null
           whb_aproved_by?: string | null
@@ -693,6 +696,7 @@ export type Database = {
           staffname: string | null
           type: string | null
           uom: string | null
+          user_id: string | null
           verified: boolean | null
         }
         Insert: {
@@ -714,6 +718,7 @@ export type Database = {
           staffname?: string | null
           type?: string | null
           uom?: string | null
+          user_id?: string | null
           verified?: boolean | null
         }
         Update: {
@@ -735,6 +740,7 @@ export type Database = {
           staffname?: string | null
           type?: string | null
           uom?: string | null
+          user_id?: string | null
           verified?: boolean | null
         }
         Relationships: [

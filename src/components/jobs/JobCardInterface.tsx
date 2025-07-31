@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,6 +43,7 @@ export function JobCardInterface() {
   const [consumableParts, setConsumableParts] = useState<JobCardPart[]>([]);
   const [ownerSuppliedParts, setOwnerSuppliedParts] = useState<JobCardPart[]>([]);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const form = useForm<JobCardFormData>({
     defaultValues: {
@@ -80,10 +82,20 @@ export function JobCardInterface() {
   };
 
   const onSubmit = async (data: JobCardFormData) => {
+    if (!user?.id) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to create job cards",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const jobCardData = {
         ...data,
+        user_id: user.id,
         date_opened: new Date(data.date_opened).toISOString()
       };
 
