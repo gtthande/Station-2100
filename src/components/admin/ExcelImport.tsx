@@ -20,31 +20,24 @@ interface ColumnMapping {
 
 const INVENTORY_PRODUCT_FIELDS = {
   part_number: 'Part Number (PARTNO)',
-  name: 'Description',
+  description: 'Description (DESCRIP)',
   bin_no: 'Bin Number (BINNO)',
-  stock_qty: 'Stock Quantity (STOCKQTY)',
-  reorder_qty: 'Reorder Quantity (REORDERQTY)',
-  purchase_price: 'Purchase Price (PURCHPRICE)',
+  unit_of_measure: 'Unit of Measure (UNIT_OF_MEASURE)',
+  unit_cost: 'Unit Cost (PURCHPRICE)',
   sale_markup: 'Sale Markup (SALEMARKUP)',
   sale_price: 'Sale Price (SALEPRICE)',
-  stock_category: 'Stock Category (STOCKCATEGORY)',
   open_balance: 'Open Balance (OPENBALANCE)',
+  reorder_qty: 'Reorder Quantity (REORDERQTY)',
   open_bal_date: 'Open Balance Date (OPENBALDATE)',
-  notes: 'Notes (NOTES)',
-  original_part_no: 'Original Part No (ORIGINALPARTNO)',
   active: 'Active',
-  unit_of_measure: 'Unit of Measure (UNIT_OF_MEASURE)',
   department_id: 'Department ID (DEPARTMENT_ID)',
-  superseding_no: 'Superseding No (SUPERSEDING_NO)',
-  alternate_department: 'Alternate Department (ALTERNATE_DEPARTMENT)',
-  rack: 'Rack (RACK)',
-  row_position: 'Row (ROW)',
-  description: 'Description',
-  category: 'Category',
-  manufacturer: 'Manufacturer',
+  stock_category: 'Stock Category (STOCKCATEGORY)',
+  superseding_no: 'Superseding No (SUPERCEDING_NO)',
   minimum_stock: 'Minimum Stock',
   reorder_point: 'Reorder Point',
-  unit_cost: 'Unit Cost'
+  purchase_price: 'Purchase Price',
+  rack: 'Rack',
+  row_position: 'Row Position'
 };
 
 const INVENTORY_BATCH_FIELDS = {
@@ -250,38 +243,65 @@ export const ExcelImport = () => {
               return excelColumn ? row[excelColumn] : '';
             };
 
-            const productData: any = {
-              user_id: userData.user.id,
-              part_number: String(getMappedValue('part_number') || ''),
-              name: String(getMappedValue('name') || ''),
-              description: String(getMappedValue('description') || ''),
-              category: String(getMappedValue('category') || ''),
-              manufacturer: String(getMappedValue('manufacturer') || ''),
-              unit_of_measure: String(getMappedValue('unit_of_measure') || 'each'),
-              minimum_stock: parseInt(getMappedValue('minimum_stock')) || 0,
-              reorder_point: parseInt(getMappedValue('reorder_point')) || 0,
-              unit_cost: parseFloat(getMappedValue('unit_cost')) || 0,
-              bin_no: String(getMappedValue('bin_no') || ''),
-              stock_qty: parseInt(getMappedValue('stock_qty')) || 0,
-              reorder_qty: parseInt(getMappedValue('reorder_qty')) || 0,
-              purchase_price: parseFloat(getMappedValue('purchase_price')) || 0,
-              sale_markup: parseFloat(getMappedValue('sale_markup')) || 0,
-              sale_price: parseFloat(getMappedValue('sale_price')) || 0,
-              stock_category: String(getMappedValue('stock_category') || ''),
-              open_balance: parseFloat(getMappedValue('open_balance')) || 0,
-              open_bal_date: getMappedValue('open_bal_date') ? new Date(getMappedValue('open_bal_date')).toISOString().split('T')[0] : null,
-              notes: String(getMappedValue('notes') || ''),
-              original_part_no: String(getMappedValue('original_part_no') || ''),
-              active: Boolean(getMappedValue('active') !== false && getMappedValue('active') !== 'false'),
-              department_id: String(getMappedValue('department_id') || ''),
-              superseding_no: String(getMappedValue('superseding_no') || ''),
-              alternate_department: String(getMappedValue('alternate_department') || ''),
-              rack: String(getMappedValue('rack') || ''),
-              row_position: String(getMappedValue('row_position') || '')
+            // Helper function to parse numeric values
+            const parseNumeric = (value: any): number | null => {
+              if (value === null || value === undefined || value === '') return null;
+              const parsed = parseFloat(String(value));
+              return isNaN(parsed) ? null : parsed;
             };
 
-            if (!productData.part_number || !productData.name) {
-              errors.push(`Row ${i + 1}: Part number and name are required`);
+            // Helper function to parse date values
+            const parseDate = (value: any): string | null => {
+              if (!value) return null;
+              try {
+                const date = new Date(value);
+                return isNaN(date.getTime()) ? null : date.toISOString().split('T')[0];
+              } catch {
+                return null;
+              }
+            };
+
+            // Helper function to parse boolean values
+            const parseBoolean = (value: any): boolean => {
+              if (typeof value === 'boolean') return value;
+              const str = String(value).toLowerCase();
+              return str === 'true' || str === '1' || str === 'yes' || str === 'active';
+            };
+
+            // Helper function to parse UUID (department_id, stock_category)
+            const parseUUID = (value: any): string | null => {
+              if (!value || String(value).trim() === '') return null;
+              const str = String(value).trim();
+              // Basic UUID format validation
+              const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+              return uuidRegex.test(str) ? str : null;
+            };
+
+            const productData: any = {
+              user_id: userData.user.id,
+              part_number: String(getMappedValue('part_number') || '').trim(),
+              description: String(getMappedValue('description') || '').trim(),
+              bin_no: String(getMappedValue('bin_no') || '').trim(),
+              unit_of_measure: String(getMappedValue('unit_of_measure') || 'each').trim(),
+              unit_cost: parseNumeric(getMappedValue('unit_cost')),
+              purchase_price: parseNumeric(getMappedValue('purchase_price')),
+              sale_markup: parseNumeric(getMappedValue('sale_markup')),
+              sale_price: parseNumeric(getMappedValue('sale_price')),
+              open_balance: parseNumeric(getMappedValue('open_balance')),
+              reorder_qty: parseNumeric(getMappedValue('reorder_qty')),
+              open_bal_date: parseDate(getMappedValue('open_bal_date')),
+              active: parseBoolean(getMappedValue('active')),
+              department_id: parseUUID(getMappedValue('department_id')),
+              stock_category: parseUUID(getMappedValue('stock_category')),
+              superseding_no: String(getMappedValue('superseding_no') || '').trim() || null,
+              minimum_stock: parseNumeric(getMappedValue('minimum_stock')),
+              reorder_point: parseNumeric(getMappedValue('reorder_point')),
+              rack: String(getMappedValue('rack') || '').trim() || null,
+              row_position: String(getMappedValue('row_position') || '').trim() || null
+            };
+
+            if (!productData.part_number) {
+              errors.push(`Row ${i + 1}: Part number is required`);
               continue;
             }
 
