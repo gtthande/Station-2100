@@ -64,6 +64,32 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
     enabled: !!user,
   });
 
+  // Get stock values for each product (only approved batches)
+  const { data: stockValues } = useQuery({
+    queryKey: ['product-stock-values'],
+    queryFn: async () => {
+      if (!user || !products?.length) return {};
+      
+      const { data: approvedBatches } = await supabase
+        .from('inventory_batches')
+        .select('product_id, quantity, cost_per_unit')
+        .eq('approval_status', 'approved')
+        .not('cost_per_unit', 'is', null);
+      
+      // Calculate total value per product
+      const productValues: { [key: string]: number } = {};
+      approvedBatches?.forEach(batch => {
+        if (batch.product_id) {
+          productValues[batch.product_id] = (productValues[batch.product_id] || 0) + 
+            ((batch.quantity || 0) * (batch.cost_per_unit || 0));
+        }
+      });
+      
+      return productValues;
+    },
+    enabled: !!user && !!products?.length,
+  });
+
   const filteredProducts = products?.filter(product =>
     product.part_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -155,6 +181,12 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-white/60">Total Stock:</span>
                     <span className="font-semibold text-white">{product.total_quantity || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-white/60">Stock Value:</span>
+                    <span className="font-semibold text-green-300">
+                      ${((stockValues?.[product.id!] || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-white/60">Active Batches:</span>
