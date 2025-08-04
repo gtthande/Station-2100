@@ -40,7 +40,9 @@ const Reports = () => {
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         <UnapprovedBatchesReport />
-        <ReorderReport />
+        <div className="mt-8">
+          <ReorderReport />
+        </div>
       </div>
     </div>
   );
