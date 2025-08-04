@@ -13,8 +13,11 @@ import { format } from 'date-fns';
 type ExtendedInventoryBatch = Tables<'inventory_batches'> & {
   warehouse_id?: string;
   inventory_products?: {
-    name: string;
     part_number: string;
+    description: string;
+    unit_of_measure: string;
+    unit_cost: number;
+    sale_price: number;
   };
   suppliers?: {
     name: string;
@@ -44,8 +47,11 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
         .select(`
           *,
           inventory_products (
-            name,
-            part_number
+            part_number,
+            description,
+            unit_of_measure,
+            unit_cost,
+            sale_price
           ),
           suppliers (
             name
@@ -90,7 +96,8 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
 
   const filteredBatches = batches?.filter(batch =>
     batch.batch_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    batch.inventory_products?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    batch.inventory_products?.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    batch.inventory_products?.part_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     batch.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     batch.warehouses?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
@@ -168,13 +175,23 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
             <GlassCard key={batch.id} className="hover:bg-white/5 transition-all duration-300">
               <GlassCardHeader className="pb-4">
                 <div className="flex items-start justify-between">
-                  <div>
+                  <div className="flex-1">
                     <GlassCardTitle className="text-lg mb-1">
                       Batch: {batch.batch_number}
                     </GlassCardTitle>
-                    <p className="text-sm text-white/60">
-                      {batch.inventory_products?.name} ({batch.inventory_products?.part_number})
-                    </p>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-white">
+                        {batch.inventory_products?.part_number}
+                      </p>
+                      <p className="text-sm text-white/80">
+                        {batch.inventory_products?.description}
+                      </p>
+                      {batch.inventory_products?.unit_of_measure && (
+                        <p className="text-xs text-white/60">
+                          Unit: {batch.inventory_products.unit_of_measure}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <div className="flex flex-col gap-2">
                     <Badge className={`${getStatusColor(batch.status || 'active')} border text-xs`}>
@@ -191,6 +208,30 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
                   <span className="text-sm text-white/60">Quantity:</span>
                   <span className="font-semibold text-white">{batch.quantity}</span>
                 </div>
+
+                {/* Cost per unit and total value */}
+                {batch.cost_per_unit && (
+                  <>
+                    <div className="flex items-center gap-2 justify-between">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-green-400" />
+                        <span className="text-sm text-white/60">Cost per unit:</span>
+                      </div>
+                      <span className="font-semibold text-green-300">
+                        ${Number(batch.cost_per_unit).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 justify-between bg-white/5 p-3 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-blue-400" />
+                        <span className="text-sm font-medium text-white">Total Batch Value:</span>
+                      </div>
+                      <span className="font-bold text-blue-300 text-lg">
+                        ${(Number(batch.cost_per_unit) * Number(batch.quantity)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </>
+                )}
                 
                 {batch.warehouses && (
                   <div className="flex items-center gap-2">
@@ -208,15 +249,6 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
                   </div>
                 )}
                 
-                {batch.cost_per_unit && (
-                  <div className="flex items-center gap-2 justify-between">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="w-4 h-4 text-green-400" />
-                      <span className="text-sm text-white/60">Cost per unit:</span>
-                    </div>
-                    <span className="font-semibold text-green-300">${batch.cost_per_unit}</span>
-                  </div>
-                )}
                 
                 {batch.received_date && (
                   <div className="flex items-center gap-2">
