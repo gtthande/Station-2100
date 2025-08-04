@@ -144,6 +144,20 @@ export const BatchApprovalCard = ({ batch }: BatchApprovalCardProps) => {
               {batch.received_date ? format(new Date(batch.received_date), 'MMM dd, yyyy') : 'N/A'}
             </span>
           </div>
+          <div>
+            <span className="text-white/60">Cost per Unit:</span>
+            <span className="ml-2 text-white font-semibold">
+              {batch.cost_per_unit ? `$${parseFloat(batch.cost_per_unit).toFixed(2)}` : 'N/A'}
+            </span>
+          </div>
+          <div>
+            <span className="text-white/60">Total Cost:</span>
+            <span className="ml-2 text-white font-semibold">
+              {batch.cost_per_unit && batch.quantity ? 
+                `$${(parseFloat(batch.cost_per_unit) * batch.quantity).toFixed(2)}` : 'N/A'
+              }
+            </span>
+          </div>
         </div>
 
         {batch.job_allocated_to && (
