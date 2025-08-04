@@ -3,6 +3,7 @@ import { UserMenu } from '@/components/navigation/UserMenu';
 import { Link } from 'react-router-dom';
 import { FileText, AlertTriangle, Plus } from 'lucide-react';
 import { UnapprovedBatchesReport } from '@/components/inventory/UnapprovedBatchesReport';
+import ReorderReport from '@/components/reports/ReorderReport';
 import { Button } from '@/components/ui/button';
 
 const Reports = () => {
@@ -37,8 +38,9 @@ const Reports = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         <UnapprovedBatchesReport />
+        <ReorderReport />
       </div>
     </div>
   );
