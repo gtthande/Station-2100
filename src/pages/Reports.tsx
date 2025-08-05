@@ -1,12 +1,34 @@
 
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { Link } from 'react-router-dom';
-import { FileText, AlertTriangle, Plus } from 'lucide-react';
+import { FileText, AlertTriangle, Plus, ChevronDown } from 'lucide-react';
 import { UnapprovedBatchesReport } from '@/components/inventory/UnapprovedBatchesReport';
 import ReorderReportCard from '@/components/reports/ReorderReportCard';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useState } from 'react';
 
 const Reports = () => {
+  const [selectedReport, setSelectedReport] = useState<string>('reminders');
+
+  const reportOptions = [
+    { value: 'reminders', label: 'Unapproved Batches - Reminders', icon: AlertTriangle },
+    { value: 'reorder', label: 'Reorder Report - Low Stock Items', icon: FileText }
+  ];
+
+  const renderSelectedReport = () => {
+    switch (selectedReport) {
+      case 'reminders':
+        return <UnapprovedBatchesReport />;
+      case 'reorder':
+        return <ReorderReportCard />;
+      default:
+        return <UnapprovedBatchesReport />;
+    }
+  };
+
+  const selectedReportData = reportOptions.find(option => option.value === selectedReport);
+
   return (
     <div className="min-h-screen bg-surface-dark">
       {/* Header */}
@@ -39,10 +61,39 @@ const Reports = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        <UnapprovedBatchesReport />
-        <div className="mt-8">
-          <ReorderReportCard />
+        {/* Report Selection Dropdown */}
+        <div className="flex items-center gap-4 mb-6">
+          <label className="text-white font-medium">Select Report:</label>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="min-w-[300px] justify-between bg-surface-dark/50 border-white/20 text-white hover:bg-white/10">
+                <div className="flex items-center gap-2">
+                  {selectedReportData && <selectedReportData.icon className="w-4 h-4" />}
+                  {selectedReportData?.label || 'Select a report'}
+                </div>
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              className="min-w-[300px] bg-surface-dark border-white/20" 
+              align="start"
+            >
+              {reportOptions.map((option) => (
+                <DropdownMenuItem 
+                  key={option.value}
+                  onClick={() => setSelectedReport(option.value)}
+                  className="text-white hover:bg-white/10 cursor-pointer"
+                >
+                  <option.icon className="w-4 h-4 mr-2" />
+                  {option.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
+
+        {/* Selected Report Content */}
+        {renderSelectedReport()}
       </div>
     </div>
   );
