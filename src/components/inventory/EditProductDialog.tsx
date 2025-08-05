@@ -133,6 +133,8 @@ export const EditProductDialog = ({ open, onOpenChange, productId }: EditProduct
       const productData = {
         ...data,
         open_bal_date: data.open_bal_date || null,
+        department_id: data.department_id || null,
+        stock_category: data.stock_category || null,
       };
       
       const { error } = await supabase

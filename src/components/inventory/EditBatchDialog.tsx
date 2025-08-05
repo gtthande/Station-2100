@@ -157,6 +157,8 @@ export const EditBatchDialog = ({ open, onOpenChange, batchId }: EditBatchDialog
         supplier_invoice_number: data.supplier_invoice_number || null,
         expiry_date: data.expiry_date || null,
         batch_date: data.batch_date || null,
+        department_id: data.department_id || null,
+        alternate_department_id: data.alternate_department_id || null,
       };
 
       const { error } = await supabase
