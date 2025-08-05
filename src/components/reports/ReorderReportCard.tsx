@@ -36,7 +36,7 @@ const ReorderReportCard = () => {
         .from('inventory_summary')
         .select('*')
         .eq('user_id', user.id)
-        .or('total_quantity.lte.minimum_stock,total_quantity.lte.reorder_point')
+        .lt('total_quantity', 'reorder_qty')
         .order('part_number');
 
       if (error) throw error;
@@ -97,7 +97,7 @@ const ReorderReportCard = () => {
                   <Package className="w-8 h-8 text-blue-400" />
                   <div>
                     <h3 className="text-xl font-semibold text-white">Reorder Report</h3>
-                    <p className="text-white/60">Items below minimum stock levels</p>
+                    <p className="text-white/60">Items below reorder quantity levels</p>
                   </div>
                 </div>
                 {lowStockCount > 0 && (
@@ -117,7 +117,7 @@ const ReorderReportCard = () => {
             <DialogHeader>
               <DialogTitle className="text-white flex items-center gap-2">
                 <Package className="w-5 h-5" />
-                Reorder Report - Low Stock Items
+                Reorder Report - Items Below Reorder Quantity
               </DialogTitle>
             </DialogHeader>
 
@@ -139,7 +139,7 @@ const ReorderReportCard = () => {
                 {/* Print Header */}
                 <div className="hidden print:block mb-6 text-center border-b border-gray-300 pb-4">
                   <h1 className="text-2xl font-bold">REORDER REPORT</h1>
-                  <p className="text-sm text-gray-600">Low Stock Items Requiring Reorder</p>
+                  <p className="text-sm text-gray-600">Items Below Reorder Quantity Levels</p>
                   <p className="text-sm text-gray-600">Generated on: {format(new Date(), 'MMMM dd, yyyy')}</p>
                 </div>
 
@@ -149,7 +149,7 @@ const ReorderReportCard = () => {
                   </div>
                 ) : !lowStockItems || lowStockItems.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-white/60 print:text-gray-600">No low stock items found</p>
+                    <p className="text-white/60 print:text-gray-600">No items below reorder quantity found</p>
                   </div>
                 ) : (
                   <>
@@ -180,15 +180,15 @@ const ReorderReportCard = () => {
                             <th className="text-left py-3 px-2 text-white/80 print:text-black font-semibold">Description</th>
                             <th className="text-left py-3 px-2 text-white/80 print:text-black font-semibold">Category</th>
                             <th className="text-right py-3 px-2 text-white/80 print:text-black font-semibold">Current</th>
-                            <th className="text-right py-3 px-2 text-white/80 print:text-black font-semibold">Min Stock</th>
                             <th className="text-right py-3 px-2 text-white/80 print:text-black font-semibold">Reorder Qty</th>
+                            <th className="text-right py-3 px-2 text-white/80 print:text-black font-semibold">Shortage</th>
                             <th className="text-right py-3 px-2 text-white/80 print:text-black font-semibold">Unit Cost</th>
                             <th className="text-right py-3 px-2 text-white/80 print:text-black font-semibold">Est. Cost</th>
                           </tr>
                         </thead>
                         <tbody>
                           {lowStockItems.map((item, index) => {
-                            const shortage = Math.max(0, (item.minimum_stock || 0) - (item.total_quantity || 0));
+                            const shortage = Math.max(0, (item.reorder_qty || 0) - (item.total_quantity || 0));
                             const estimatedCost = item.unit_cost && item.reorder_qty ? 
                               parseFloat(item.unit_cost.toString()) * (item.reorder_qty || 0) : 0;
                             
@@ -212,10 +212,10 @@ const ReorderReportCard = () => {
                                   {item.total_quantity || 0}
                                 </td>
                                 <td className="py-3 px-2 text-right text-white/80 print:text-gray-700">
-                                  {item.minimum_stock || 0}
-                                </td>
-                                <td className="py-3 px-2 text-right text-white/80 print:text-gray-700">
                                   {item.reorder_qty || 0}
+                                </td>
+                                <td className="py-3 px-2 text-right text-red-400 print:text-red-600 font-medium">
+                                  {shortage}
                                 </td>
                                 <td className="py-3 px-2 text-right text-white/80 print:text-gray-700">
                                   {item.unit_cost ? `$${parseFloat(item.unit_cost.toString()).toFixed(2)}` : 'N/A'}
