@@ -21,6 +21,7 @@ interface ExtendedInventorySummary {
   unit_of_measure?: string;
   minimum_stock?: number;
   reorder_point?: number;
+  reorder_qty?: number;
   unit_cost?: number;
   is_owner_supplied?: boolean;
   markup_percentage?: number;
@@ -30,6 +31,7 @@ interface ExtendedInventorySummary {
   total_quantity?: number;
   batch_count?: number;
   pending_quantity?: number;
+  needs_reorder?: boolean;
   warehouse_distribution?: Array<{
     warehouse_id: string;
     warehouse_name: string;
@@ -56,17 +58,68 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
   const [editState, setEditState] = useState<EditState>({ isOpen: false, productId: null });
 
   const { data: products, isLoading } = useQuery({
-    queryKey: ['inventory-summary'],
+    queryKey: ['inventory-products-with-stock'],
     queryFn: async () => {
       if (!user) return [];
       
-      const { data, error } = await supabase
-        .from('inventory_summary')
+      // Get all products first
+      const { data: allProducts } = await supabase
+        .from('inventory_products')
         .select('*')
+        .eq('user_id', user.id)
         .order('part_number');
-      
-      if (error) throw error;
-      return data as ExtendedInventorySummary[];
+
+      if (!allProducts) return [];
+
+      // Get stock categories separately
+      const { data: stockCategories } = await supabase
+        .from('stock_categories')
+        .select('*')
+        .eq('user_id', user.id);
+
+      // Calculate stock for each product
+      const productsWithStock = await Promise.all(
+        allProducts.map(async (product) => {
+          const { data: batches } = await supabase
+            .from('inventory_batches')
+            .select('quantity, approval_status')
+            .eq('product_id', product.id);
+
+          const approvedStock = batches
+            ?.filter(b => b.approval_status === 'approved')
+            ?.reduce((sum, b) => sum + (b.quantity || 0), 0) || 0;
+
+          const pendingStock = batches
+            ?.filter(b => b.approval_status === 'pending')
+            ?.reduce((sum, b) => sum + (b.quantity || 0), 0) || 0;
+
+          const totalStock = (product.open_balance || 0) + approvedStock;
+          const batchCount = batches?.length || 0;
+
+          // Find stock category name
+          const stockCategory = stockCategories?.find(cat => cat.id === product.stock_category);
+
+          return {
+            ...product,
+            total_quantity: totalStock,
+            approved_stock: approvedStock,
+            pending_quantity: pendingStock,
+            batch_count: batchCount,
+            stock_category_name: stockCategory?.category_name || '',
+            is_low_stock: totalStock <= (product.minimum_stock || 0),
+            needs_reorder: product.reorder_qty ? totalStock < product.reorder_qty : false,
+            is_owner_supplied: false, // Add default values for missing fields
+            markup_percentage: 0,
+            sale_price: 0,
+            owner_cost_price: 0,
+            calculated_sale_price: 0,
+            warehouse_distribution: [],
+            manufacturer: ''
+          } as ExtendedInventorySummary;
+        })
+      );
+
+      return productsWithStock;
     },
     enabled: !!user,
   });
@@ -165,7 +218,13 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <GlassCardTitle className="text-lg mb-1 flex items-center gap-2">
-                      {product.part_number}
+                      <button 
+                        onClick={() => onSelectProduct(product.id!)}
+                        className="text-left hover:text-blue-300 transition-colors"
+                        title="Click to view batches"
+                      >
+                        {product.part_number}
+                      </button>
                       {product.is_owner_supplied && (
                         <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">
                           Owner
@@ -278,11 +337,23 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
                     </div>
                   )}
                   
-                  {/* Low Stock Warning */}
+                  {/* Stock Alerts */}
                   {(product.total_quantity || 0) <= (product.minimum_stock || 0) && (
                     <div className="flex items-center gap-2 p-2 bg-orange-500/20 rounded-lg border border-orange-500/30">
                       <AlertTriangle className="w-4 h-4 text-orange-400" />
                       <span className="text-sm text-orange-300">Low Stock Alert</span>
+                    </div>
+                  )}
+                  {product.needs_reorder && (
+                    <div className="flex items-center gap-2 p-2 bg-red-500/20 rounded-lg border border-red-500/30">
+                      <AlertTriangle className="w-4 h-4 text-red-400" />
+                      <span className="text-sm text-red-300">Needs Reorder</span>
+                    </div>
+                  )}
+                  {(product.pending_quantity || 0) > 0 && (
+                    <div className="flex items-center gap-2 p-2 bg-yellow-500/20 rounded-lg border border-yellow-500/30">
+                      <Package className="w-4 h-4 text-yellow-400" />
+                      <span className="text-sm text-yellow-300">{product.pending_quantity} pending approval</span>
                     </div>
                   )}
                 </div>

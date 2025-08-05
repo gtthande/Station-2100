@@ -30,15 +30,58 @@ const ReorderReport = () => {
     queryFn: async () => {
       if (!user?.id) return [];
       
-      const { data, error } = await supabase
-        .from('inventory_summary')
+      // Get products and calculate actual stock
+      const { data: products } = await supabase
+        .from('inventory_products')
         .select('*')
         .eq('user_id', user.id)
-        .lt('total_quantity', 'reorder_qty')
-        .order('part_number');
+        .not('reorder_qty', 'is', null)
+        .gt('reorder_qty', 0);
 
-      if (error) throw error;
-      return data as LowStockItem[];
+      if (!products) return [];
+
+      // Get stock categories separately
+      const { data: stockCategories } = await supabase
+        .from('stock_categories')
+        .select('*')
+        .eq('user_id', user.id);
+
+      // Calculate current stock for each product
+      const lowStockItems = await Promise.all(
+        products.map(async (product) => {
+          const { data: batches } = await supabase
+            .from('inventory_batches')
+            .select('quantity')
+            .eq('product_id', product.id)
+            .eq('approval_status', 'approved');
+
+          const batchStock = batches?.reduce((sum, batch) => sum + (batch.quantity || 0), 0) || 0;
+          const totalStock = (product.open_balance || 0) + batchStock;
+
+          // Find stock category name
+          const stockCategory = stockCategories?.find(cat => cat.id === product.stock_category);
+
+          // Return only if below reorder quantity
+          if (totalStock < (product.reorder_qty || 0)) {
+            return {
+              id: product.id,
+              part_number: product.part_number,
+              description: product.description || '',
+              stock_category_name: stockCategory?.category_name || '',
+              total_quantity: totalStock,
+              minimum_stock: product.minimum_stock || 0,
+              reorder_point: product.reorder_point || 0,
+              reorder_qty: product.reorder_qty || 0,
+              unit_cost: product.unit_cost || 0,
+              unit_of_measure: product.unit_of_measure || 'each',
+              department_name: ''
+            };
+          }
+          return null;
+        })
+      );
+
+      return lowStockItems.filter(item => item !== null) as LowStockItem[];
     },
     enabled: !!user?.id,
   });
