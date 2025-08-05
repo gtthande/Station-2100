@@ -7,8 +7,9 @@ import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/
 import { GradientButton } from '@/components/ui/gradient-button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Package, Plus, AlertTriangle, DollarSign, Building2, Edit } from 'lucide-react';
+import { Search, Package, Plus, AlertTriangle, DollarSign, Building2, Edit, Activity } from 'lucide-react';
 import { EditProductDialog } from './EditProductDialog';
+import { ProductMovementDialog } from './ProductMovementDialog';
 
 // Define extended inventory summary type with new fields
 interface ExtendedInventorySummary {
@@ -23,6 +24,8 @@ interface ExtendedInventorySummary {
   reorder_point?: number;
   reorder_qty?: number;
   unit_cost?: number;
+  open_balance?: number;
+  open_bal_date?: string;
   is_owner_supplied?: boolean;
   markup_percentage?: number;
   sale_price?: number;
@@ -52,10 +55,16 @@ interface EditState {
   productId: string | null;
 }
 
+interface MovementState {
+  isOpen: boolean;
+  productId: string | null;
+}
+
 export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps) => {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [editState, setEditState] = useState<EditState>({ isOpen: false, productId: null });
+  const [movementState, setMovementState] = useState<MovementState>({ isOpen: false, productId: null });
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['inventory-products-with-stock'],
@@ -124,26 +133,32 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
     enabled: !!user,
   });
 
-  // Get stock values for each product (only approved batches)
+  // Get stock values for each product (opening balance + approved batches)
   const { data: stockValues } = useQuery({
     queryKey: ['product-stock-values'],
     queryFn: async () => {
       if (!user || !products?.length) return {};
       
-      const { data: approvedBatches } = await supabase
-        .from('inventory_batches')
-        .select('product_id, quantity, cost_per_unit')
-        .eq('approval_status', 'approved')
-        .not('cost_per_unit', 'is', null);
-      
-      // Calculate total value per product
       const productValues: { [key: string]: number } = {};
-      approvedBatches?.forEach(batch => {
-        if (batch.product_id) {
-          productValues[batch.product_id] = (productValues[batch.product_id] || 0) + 
-            ((batch.quantity || 0) * (batch.cost_per_unit || 0));
-        }
-      });
+      
+      // Calculate for each product
+      for (const product of products) {
+        // Opening balance value
+        const openingValue = (product.open_balance || 0) * (product.unit_cost || 0);
+        
+        // Get approved batches value
+        const { data: approvedBatches } = await supabase
+          .from('inventory_batches')
+          .select('quantity, cost_per_unit')
+          .eq('product_id', product.id)
+          .eq('approval_status', 'approved')
+          .not('cost_per_unit', 'is', null);
+        
+        const batchesValue = approvedBatches?.reduce((sum, batch) => 
+          sum + ((batch.quantity || 0) * (batch.cost_per_unit || 0)), 0) || 0;
+        
+        productValues[product.id!] = openingValue + batchesValue;
+      }
       
       return productValues;
     },
@@ -167,6 +182,14 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
 
   const handleCloseEdit = () => {
     setEditState({ isOpen: false, productId: null });
+  };
+
+  const handleShowMovement = (productId: string) => {
+    setMovementState({ isOpen: true, productId });
+  };
+
+  const handleCloseMovement = () => {
+    setMovementState({ isOpen: false, productId: null });
   };
 
   if (isLoading) {
@@ -239,6 +262,15 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
                     )}
                   </div>
                   <div className="flex gap-2">
+                    <GradientButton
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleShowMovement(product.id!)}
+                      className="p-2"
+                      title="View movement history"
+                    >
+                      <Activity className="w-4 h-4" />
+                    </GradientButton>
                     <GradientButton
                       size="sm"
                       variant="outline"
@@ -367,6 +399,12 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
         open={editState.isOpen}
         onOpenChange={handleCloseEdit}
         productId={editState.productId}
+      />
+      
+      <ProductMovementDialog
+        open={movementState.isOpen}
+        onOpenChange={handleCloseMovement}
+        productId={movementState.productId}
       />
     </div>
   );
