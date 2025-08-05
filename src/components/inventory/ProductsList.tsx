@@ -7,7 +7,8 @@ import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/
 import { GradientButton } from '@/components/ui/gradient-button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Package, Plus, AlertTriangle, DollarSign, Building2 } from 'lucide-react';
+import { Search, Package, Plus, AlertTriangle, DollarSign, Building2, Edit } from 'lucide-react';
+import { EditProductDialog } from './EditProductDialog';
 
 // Define extended inventory summary type with new fields
 interface ExtendedInventorySummary {
@@ -44,9 +45,15 @@ interface ProductsListProps {
   onAddBatch: () => void;
 }
 
+interface EditState {
+  isOpen: boolean;
+  productId: string | null;
+}
+
 export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps) => {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const [editState, setEditState] = useState<EditState>({ isOpen: false, productId: null });
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['inventory-summary'],
@@ -99,6 +106,14 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
   const handleAddBatch = (productId: string) => {
     onSelectProduct(productId);
     onAddBatch();
+  };
+
+  const handleEditProduct = (productId: string) => {
+    setEditState({ isOpen: true, productId });
+  };
+
+  const handleCloseEdit = () => {
+    setEditState({ isOpen: false, productId: null });
   };
 
   if (isLoading) {
@@ -165,6 +180,14 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
                     )}
                   </div>
                   <div className="flex gap-2">
+                    <GradientButton
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEditProduct(product.id!)}
+                      className="p-2"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </GradientButton>
                     <GradientButton
                       size="sm"
                       variant="outline"
@@ -268,6 +291,12 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
           ))}
         </div>
       )}
+      
+      <EditProductDialog
+        open={editState.isOpen}
+        onOpenChange={handleCloseEdit}
+        productId={editState.productId}
+      />
     </div>
   );
 };

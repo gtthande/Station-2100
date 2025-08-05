@@ -3,11 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/components/ui/glass-card';
+import { GradientButton } from '@/components/ui/gradient-button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Package2, MapPin, Calendar, Truck, Building2, DollarSign } from 'lucide-react';
+import { Search, Package2, MapPin, Calendar, Truck, Building2, DollarSign, Edit } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
 import { format } from 'date-fns';
+import { EditBatchDialog } from './EditBatchDialog';
 
 // Extend the inventory batch type to include warehouse_id and relationships
 type ExtendedInventoryBatch = Tables<'inventory_batches'> & {
@@ -33,9 +35,15 @@ interface BatchesListProps {
   selectedProductId?: string | null;
 }
 
+interface EditState {
+  isOpen: boolean;
+  batchId: string | null;
+}
+
 export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const [editState, setEditState] = useState<EditState>({ isOpen: false, batchId: null });
 
   const { data: batches, isLoading } = useQuery({
     queryKey: ['inventory-batches', selectedProductId],
@@ -130,6 +138,14 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
     }
   };
 
+  const handleEditBatch = (batchId: string) => {
+    setEditState({ isOpen: true, batchId });
+  };
+
+  const handleCloseEdit = () => {
+    setEditState({ isOpen: false, batchId: null });
+  };
+
   if (isLoading) {
     return (
       <GlassCard>
@@ -194,6 +210,16 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <GradientButton
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEditBatch(batch.id)}
+                        className="p-2"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </GradientButton>
+                    </div>
                     <Badge className={`${getStatusColor(batch.status || 'active')} border text-xs`}>
                       {batch.status || 'active'}
                     </Badge>
@@ -299,6 +325,12 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
           ))}
         </div>
       )}
+      
+      <EditBatchDialog
+        open={editState.isOpen}
+        onOpenChange={handleCloseEdit}
+        batchId={editState.batchId}
+      />
     </div>
   );
 };
