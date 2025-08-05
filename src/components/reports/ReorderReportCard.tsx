@@ -42,7 +42,7 @@ const ReorderReportCard = () => {
       if (error) throw error;
       return data as LowStockItem[];
     },
-    enabled: !!user?.id && isOpen,
+    enabled: !!user?.id,
   });
 
   const handlePrint = () => {
