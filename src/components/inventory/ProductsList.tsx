@@ -189,10 +189,6 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
     setEditState({ isOpen: false, productId: null });
   };
 
-  const handleShowMovement = (productId: string) => {
-    setMovementState({ isOpen: true, productId });
-  };
-
   const handleCloseMovement = () => {
     setMovementState({ isOpen: false, productId: null });
   };
@@ -200,38 +196,7 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
   // Check if user can approve batches
   const canApproveBatches = isAdmin() || isSupervisor() || isPartsApprover();
 
-  // Mutation to approve all pending batches for a product
-  const approvePendingBatchesMutation = useMutation({
-    mutationFn: async (productId: string) => {
-      const { error } = await supabase
-        .from('inventory_batches')
-        .update({
-          approval_status: 'approved',
-          approved_by: user?.id,
-          approved_at: new Date().toISOString()
-        })
-        .eq('product_id', productId)
-        .eq('approval_status', 'pending');
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Batches Approved",
-        description: "All pending batches have been approved successfully",
-      });
-      queryClient.invalidateQueries({ queryKey: ['inventory-products-with-stock'] });
-      queryClient.invalidateQueries({ queryKey: ['approval-batches'] });
-      queryClient.invalidateQueries({ queryKey: ['inventory-batches'] });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+  // Remove the bulk approval mutation as we're now using individual approvals
 
   if (isLoading) {
     return (
@@ -302,13 +267,16 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
                       </Badge>
                     )}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1">
                     <GradientButton
                       size="sm"
                       variant="outline"
-                      onClick={() => handleShowMovement(product.id!)}
+                      onClick={() => setMovementState({ 
+                        isOpen: true, 
+                        productId: product.id!
+                      })}
                       className="p-2"
-                      title="View movement history"
+                      title="View movement history and batches"
                     >
                       <Activity className="w-4 h-4" />
                     </GradientButton>
@@ -317,6 +285,7 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
                       variant="outline"
                       onClick={() => handleEditProduct(product.id!)}
                       className="p-2"
+                      title="Edit product"
                     >
                       <Edit className="w-4 h-4" />
                     </GradientButton>
@@ -325,6 +294,7 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
                       variant="outline"
                       onClick={() => handleAddBatch(product.id!)}
                       className="p-2"
+                      title="Add new batch"
                     >
                       <Plus className="w-4 h-4" />
                     </GradientButton>
@@ -427,10 +397,10 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
                     <div className="p-2 bg-yellow-500/20 rounded-lg border border-yellow-500/30">
                       {canApproveBatches ? (
                         <button
-                          onClick={() => approvePendingBatchesMutation.mutate(product.id!)}
-                          disabled={approvePendingBatchesMutation.isPending}
+                          onClick={() => setMovementState({ isOpen: true, productId: product.id! })}
+                          disabled={false}
                           className="w-full flex items-center justify-between hover:bg-yellow-500/30 transition-colors rounded p-1 group"
-                          title="Click to approve all pending batches"
+                          title="Click to view and approve pending batches"
                         >
                           <div className="flex items-center gap-2">
                             <Package className="w-4 h-4 text-yellow-400" />
@@ -438,7 +408,7 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
                           </div>
                           <div className="flex items-center gap-1 text-green-300 opacity-0 group-hover:opacity-100 transition-opacity">
                             <CheckCircle className="w-4 h-4" />
-                            <span className="text-xs">Click to approve</span>
+                            <span className="text-xs">View & approve</span>
                           </div>
                         </button>
                       ) : (
@@ -466,6 +436,7 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
         open={movementState.isOpen}
         onOpenChange={handleCloseMovement}
         productId={movementState.productId}
+        showApprovalActions={canApproveBatches}
       />
     </div>
   );
