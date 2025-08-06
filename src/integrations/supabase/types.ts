@@ -294,13 +294,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "inventory_batches_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "inventory_summary"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "inventory_batches_supplier_id_fkey"
             columns: ["supplier_id"]
             isOneToOne: false
@@ -873,6 +866,30 @@ export type Database = {
         }
         Relationships: []
       }
+      security_config_notes: {
+        Row: {
+          config_type: string
+          created_at: string | null
+          description: string
+          id: string
+          status: string | null
+        }
+        Insert: {
+          config_type: string
+          created_at?: string | null
+          description: string
+          id?: string
+          status?: string | null
+        }
+        Update: {
+          config_type?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
       stock_categories: {
         Row: {
           category_name: string
@@ -1015,52 +1032,31 @@ export type Database = {
       }
     }
     Views: {
-      inventory_summary: {
-        Row: {
-          active: boolean | null
-          batch_count: number | null
-          bin_no: string | null
-          created_at: string | null
-          department_id: string | null
-          department_name: string | null
-          description: string | null
-          id: string | null
-          minimum_stock: number | null
-          open_bal_date: string | null
-          open_balance: number | null
-          part_number: string | null
-          purchase_price: number | null
-          rack: string | null
-          reorder_point: number | null
-          reorder_qty: number | null
-          row_position: string | null
-          sale_markup: number | null
-          sale_price: number | null
-          stock_category: string | null
-          stock_category_name: string | null
-          superseding_no: string | null
-          total_quantity: number | null
-          unit_cost: number | null
-          unit_of_measure: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
-      user_roles_view: {
-        Row: {
-          created_at: string | null
-          email: string | null
-          full_name: string | null
-          id: string | null
-          role: Database["public"]["Enums"]["app_role"] | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
+      get_inventory_summary: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          product_id: string
+          part_number: string
+          description: string
+          total_quantity: number
+          allocated_quantity: number
+          available_quantity: number
+          reorder_point: number
+        }[]
+      }
+      get_user_roles_with_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          user_id: string
+          role: string
+          full_name: string
+          email: string
+          created_at: string
+        }[]
+      }
       has_role: {
         Args: {
           _user_id: string
