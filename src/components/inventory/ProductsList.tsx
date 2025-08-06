@@ -424,23 +424,28 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
                     </div>
                   )}
                   {(product.pending_quantity || 0) > 0 && (
-                    <div className="flex items-center justify-between p-2 bg-yellow-500/20 rounded-lg border border-yellow-500/30">
-                      <div className="flex items-center gap-2">
-                        <Package className="w-4 h-4 text-yellow-400" />
-                        <span className="text-sm text-yellow-300">{product.pending_quantity} pending approval</span>
-                      </div>
-                      {canApproveBatches && (
-                        <GradientButton
-                          size="sm"
-                          variant="outline"
+                    <div className="p-2 bg-yellow-500/20 rounded-lg border border-yellow-500/30">
+                      {canApproveBatches ? (
+                        <button
                           onClick={() => approvePendingBatchesMutation.mutate(product.id!)}
                           disabled={approvePendingBatchesMutation.isPending}
-                          className="ml-2 h-6 px-2 text-xs bg-green-600/20 hover:bg-green-600/30 border-green-500/30"
-                          title="Approve all pending batches"
+                          className="w-full flex items-center justify-between hover:bg-yellow-500/30 transition-colors rounded p-1 group"
+                          title="Click to approve all pending batches"
                         >
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          Approve
-                        </GradientButton>
+                          <div className="flex items-center gap-2">
+                            <Package className="w-4 h-4 text-yellow-400" />
+                            <span className="text-sm text-yellow-300">{product.pending_quantity} pending approval</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-green-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <CheckCircle className="w-4 h-4" />
+                            <span className="text-xs">Click to approve</span>
+                          </div>
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Package className="w-4 h-4 text-yellow-400" />
+                          <span className="text-sm text-yellow-300">{product.pending_quantity} pending approval</span>
+                        </div>
                       )}
                     </div>
                   )}
