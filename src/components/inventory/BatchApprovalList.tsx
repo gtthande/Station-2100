@@ -52,7 +52,10 @@ export const BatchApprovalList = () => {
   const filteredBatches = batches?.filter(batch =>
     batch.batch_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     batch.inventory_products?.part_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    batch.job_allocated_to?.toLowerCase().includes(searchTerm.toLowerCase())
+    batch.inventory_products?.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    batch.job_allocated_to?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    batch.suppliers?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    batch.purchase_order?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   if (!canAccess) {
@@ -87,7 +90,7 @@ export const BatchApprovalList = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 w-4 h-4" />
               <Input
-                placeholder="Search by batch number, product, or job allocation..."
+                placeholder="Search by batch number, part number, description, supplier, or job allocation..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 bg-white/5 border-white/10 text-white"

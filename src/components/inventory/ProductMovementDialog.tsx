@@ -61,10 +61,12 @@ export const ProductMovementDialog = ({ open, onOpenChange, productId, showAppro
   });
 
   // Fetch all batches for this product
-  const { data: batches } = useQuery({
+  const { data: batches, isLoading: batchesLoading, error: batchesError } = useQuery({
     queryKey: ['product-batches', productId],
     queryFn: async () => {
       if (!productId || !user) return [];
+      
+      console.log('Fetching batches for product:', productId);
       
       const { data, error } = await supabase
         .from('inventory_batches')
@@ -81,19 +83,48 @@ export const ProductMovementDialog = ({ open, onOpenChange, productId, showAppro
           location,
           purchase_order,
           created_at,
-          suppliers!supplier_id(name),
-          profiles!approved_by(full_name, email)
+          suppliers!supplier_id(name)
         `)
         .eq('product_id', productId)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching batches:', error);
+        throw error;
+      }
       
-      return data.map(batch => ({
-        ...batch,
-        supplier_name: (batch.suppliers as any)?.name || 'Unknown',
-        approved_by_name: (batch.profiles as any)?.full_name || (batch.profiles as any)?.email || 'Unknown'
-      })) as (BatchData & { approved_by_name: string })[];
+      console.log('Raw batch data:', data);
+      
+      if (!data || data.length === 0) {
+        return [];
+      }
+      
+      // Get approved by names separately
+      const batchesWithNames = await Promise.all(
+        data.map(async (batch) => {
+          let approved_by_name = 'Unknown';
+          
+          if (batch.approved_by) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('full_name, email')
+              .eq('id', batch.approved_by)
+              .maybeSingle();
+            
+            approved_by_name = profile?.full_name || profile?.email || 'Unknown';
+          }
+          
+          return {
+            ...batch,
+            supplier_name: (batch.suppliers as any)?.name || 'Unknown',
+            approved_by_name
+          };
+        })
+      );
+      
+      console.log('Processed batches with names:', batchesWithNames);
+      return batchesWithNames as (BatchData & { approved_by_name: string })[];
     },
     enabled: !!productId && !!user,
   });
@@ -249,7 +280,21 @@ export const ProductMovementDialog = ({ open, onOpenChange, productId, showAppro
               Batch Movements ({batches?.length || 0})
             </h3>
             
-            {batches && batches.length > 0 ? (
+            {batchesLoading ? (
+              <GlassCard>
+                <GlassCardContent className="p-8 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+                  <p className="text-white/70">Loading batches...</p>
+                </GlassCardContent>
+              </GlassCard>
+            ) : batchesError ? (
+              <GlassCard>
+                <GlassCardContent className="p-8 text-center">
+                  <FileText className="w-12 h-12 text-red-400/20 mx-auto mb-3" />
+                  <p className="text-red-400">Error loading batches: {batchesError.message}</p>
+                </GlassCardContent>
+              </GlassCard>
+            ) : batches && batches.length > 0 ? (
               <div className="space-y-3">
                 {batches.map((batch) => (
                   <GlassCard key={batch.id}>
