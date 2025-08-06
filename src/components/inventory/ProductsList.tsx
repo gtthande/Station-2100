@@ -1,15 +1,17 @@
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRoles } from '@/hooks/useUserRoles';
 import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/components/ui/glass-card';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Package, Plus, AlertTriangle, DollarSign, Building2, Edit, Activity } from 'lucide-react';
+import { Search, Package, Plus, AlertTriangle, DollarSign, Building2, Edit, Activity, CheckCircle } from 'lucide-react';
 import { EditProductDialog } from './EditProductDialog';
 import { ProductMovementDialog } from './ProductMovementDialog';
+import { useToast } from '@/hooks/use-toast';
 
 // Define extended inventory summary type with new fields
 interface ExtendedInventorySummary {
@@ -62,6 +64,9 @@ interface MovementState {
 
 export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps) => {
   const { user } = useAuth();
+  const { isAdmin, isSupervisor, isPartsApprover } = useUserRoles();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [editState, setEditState] = useState<EditState>({ isOpen: false, productId: null });
   const [movementState, setMovementState] = useState<MovementState>({ isOpen: false, productId: null });
@@ -191,6 +196,42 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
   const handleCloseMovement = () => {
     setMovementState({ isOpen: false, productId: null });
   };
+
+  // Check if user can approve batches
+  const canApproveBatches = isAdmin() || isSupervisor() || isPartsApprover();
+
+  // Mutation to approve all pending batches for a product
+  const approvePendingBatchesMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      const { error } = await supabase
+        .from('inventory_batches')
+        .update({
+          approval_status: 'approved',
+          approved_by: user?.id,
+          approved_at: new Date().toISOString()
+        })
+        .eq('product_id', productId)
+        .eq('approval_status', 'pending');
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Batches Approved",
+        description: "All pending batches have been approved successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['inventory-products-with-stock'] });
+      queryClient.invalidateQueries({ queryKey: ['approval-batches'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory-batches'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   if (isLoading) {
     return (
@@ -383,9 +424,24 @@ export const ProductsList = ({ onSelectProduct, onAddBatch }: ProductsListProps)
                     </div>
                   )}
                   {(product.pending_quantity || 0) > 0 && (
-                    <div className="flex items-center gap-2 p-2 bg-yellow-500/20 rounded-lg border border-yellow-500/30">
-                      <Package className="w-4 h-4 text-yellow-400" />
-                      <span className="text-sm text-yellow-300">{product.pending_quantity} pending approval</span>
+                    <div className="flex items-center justify-between p-2 bg-yellow-500/20 rounded-lg border border-yellow-500/30">
+                      <div className="flex items-center gap-2">
+                        <Package className="w-4 h-4 text-yellow-400" />
+                        <span className="text-sm text-yellow-300">{product.pending_quantity} pending approval</span>
+                      </div>
+                      {canApproveBatches && (
+                        <GradientButton
+                          size="sm"
+                          variant="outline"
+                          onClick={() => approvePendingBatchesMutation.mutate(product.id!)}
+                          disabled={approvePendingBatchesMutation.isPending}
+                          className="ml-2 h-6 px-2 text-xs bg-green-600/20 hover:bg-green-600/30 border-green-500/30"
+                          title="Approve all pending batches"
+                        >
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          Approve
+                        </GradientButton>
+                      )}
                     </div>
                   )}
                 </div>
