@@ -15,8 +15,7 @@ export const InventoryAnalytics = () => {
       
       // Get inventory summary data
       const { data: summaryData } = await supabase
-        .from('inventory_summary')
-        .select('*');
+        .rpc('get_inventory_summary');
       
       // Get batch data for analytics
       const { data: batchData } = await supabase
@@ -64,11 +63,11 @@ export const InventoryAnalytics = () => {
     .map(item => ({
       name: item.part_number?.substring(0, 15) + (item.part_number && item.part_number.length > 15 ? '...' : ''),
       stock: item.total_quantity || 0,
-      minimum: item.minimum_stock || 0
+      minimum: item.reorder_point || 0
     }));
 
   const categoryData = analytics.summary.reduce((acc: any[], item) => {
-    const category = item.stock_category_name || 'Uncategorized';
+    const category = 'Uncategorized'; // Note: stock_category_name not available in get_inventory_summary
     const existing = acc.find(c => c.name === category);
     if (existing) {
       existing.value += item.total_quantity || 0;
@@ -237,7 +236,7 @@ export const InventoryAnalytics = () => {
               <div className="text-center p-4 bg-white/5 rounded-lg">
                 <h4 className="text-2xl font-bold text-orange-300">
                   {analytics.summary.filter(item => 
-                    (item.total_quantity || 0) <= (item.minimum_stock || 0)
+                    (item.total_quantity || 0) <= (item.reorder_point || 0)
                   ).length}
                 </h4>
                 <p className="text-white/60 text-sm">Low Stock</p>

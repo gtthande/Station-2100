@@ -29,8 +29,7 @@ const Inventory = () => {
       
       // Get inventory summary
       const { data: products } = await supabase
-        .from('inventory_summary')
-        .select('*');
+        .rpc('get_inventory_summary');
       
       // Get approved batches with cost data
       const { data: approvedBatches } = await supabase
@@ -47,7 +46,7 @@ const Inventory = () => {
 
       const totalProducts = products?.length || 0;
       const totalStock = products?.reduce((sum, p) => sum + (p.total_quantity || 0), 0) || 0;
-      const lowStockItems = products?.filter(p => (p.total_quantity || 0) <= (p.minimum_stock || 0)).length || 0;
+      const lowStockItems = products?.filter(p => (p.total_quantity || 0) <= (p.reorder_point || 0)).length || 0;
       const totalStockValue = approvedBatches?.reduce((sum, b) => sum + ((b.quantity || 0) * (b.cost_per_unit || 0)), 0) || 0;
       const activeBatchesCount = activeBatches?.length || 0;
 

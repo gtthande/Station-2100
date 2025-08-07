@@ -41,9 +41,7 @@ export const UserRoleManagement = () => {
     queryKey: ['all-user-roles'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('user_roles_view')
-        .select('*')
-        .order('email');
+        .rpc('get_user_roles_with_profiles');
       
       if (error) throw error;
       return data;
@@ -191,7 +189,7 @@ export const UserRoleManagement = () => {
                 
                 <div className="flex flex-wrap gap-2">
                   {user.roles.map((userRole) => (
-                    <div key={userRole.id} className="flex items-center gap-1">
+                    <div key={`${userRole.user_id}-${userRole.role}`} className="flex items-center gap-1">
                       <Badge className={`${roleColors[userRole.role as AppRole]} border`}>
                         {roleLabels[userRole.role as AppRole]}
                       </Badge>

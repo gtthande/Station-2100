@@ -77,9 +77,7 @@ export const UserManagement = () => {
     queryKey: ['all-user-roles'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('user_roles_view')
-        .select('*')
-        .order('email');
+        .rpc('get_user_roles_with_profiles');
       
       if (error) throw error;
       return data;
@@ -486,7 +484,7 @@ export const UserManagement = () => {
                       <div className="grid gap-3">
                         {user.roles.map((userRole) => (
                           <div 
-                            key={userRole.id} 
+                            key={`${userRole.user_id}-${userRole.role}`} 
                             className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10"
                           >
                             <div className="flex items-center gap-3">
