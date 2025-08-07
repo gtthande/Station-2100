@@ -95,7 +95,22 @@ const SUPPLIER_FIELDS = {
   notes: 'Notes/Comments'
 };
 
-type ImportType = 'products' | 'batches' | 'suppliers';
+const CUSTOMER_FIELDS = {
+  customer_id: 'Customer ID (UUID - Required)',
+  name: 'Customer Name (Required)',
+  email: 'Email Address',
+  phone: 'Phone Number',
+  address: 'Street Address',
+  city: 'City',
+  state: 'State/Province',
+  country: 'Country',
+  aircraft_type: 'Aircraft Type',
+  tail_number: 'Tail Number',
+  contact_person: 'Contact Person',
+  notes: 'Notes/Comments'
+};
+
+type ImportType = 'products' | 'batches' | 'suppliers' | 'customers';
 
 export const ExcelImport = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -232,6 +247,8 @@ export const ExcelImport = () => {
         return INVENTORY_BATCH_FIELDS;
       case 'suppliers':
         return SUPPLIER_FIELDS;
+      case 'customers':
+        return CUSTOMER_FIELDS;
       default:
         return INVENTORY_PRODUCT_FIELDS;
     }
@@ -528,6 +545,91 @@ export const ExcelImport = () => {
             errors.push(`Row ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
           }
         }
+      } else if (importType === 'customers') {
+        // Import customers with UUID validation and proper field mapping
+        for (let i = 0; i < excelData.length; i++) {
+          const row = excelData[i];
+          try {
+            // Helper function to get mapped value
+            const getMappedValue = (fieldKey: string) => {
+              const excelColumn = columnMapping[fieldKey];
+              return excelColumn ? row[excelColumn] : '';
+            };
+
+            // Helper function to validate UUID format
+            const validateUUID = (value: any): string | null => {
+              if (!value || String(value).trim() === '') return null;
+              const str = String(value).trim();
+              
+              // Enhanced UUID format validation
+              const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+              if (!uuidRegex.test(str)) {
+                throw new Error(`Invalid UUID format: ${str}`);
+              }
+              
+              // Additional length validation
+              if (str.length !== 36) {
+                throw new Error(`Invalid UUID length: ${str.length}, expected 36`);
+              }
+              
+              return str;
+            };
+
+            const customerId = getMappedValue('customer_id');
+            const customerName = String(getMappedValue('name') || '').trim();
+
+            if (!customerId) {
+              errors.push(`Row ${i + 1}: Customer ID is required`);
+              continue;
+            }
+
+            if (!customerName) {
+              errors.push(`Row ${i + 1}: Customer name is required`);
+              continue;
+            }
+
+            let validatedCustomerId: string;
+            try {
+              validatedCustomerId = validateUUID(customerId) || '';
+              if (!validatedCustomerId) {
+                errors.push(`Row ${i + 1}: Invalid customer ID format`);
+                continue;
+              }
+            } catch (error) {
+              errors.push(`Row ${i + 1}: ${error instanceof Error ? error.message : 'Invalid customer ID'}`);
+              continue;
+            }
+
+            const customerData: any = {
+              id: validatedCustomerId, // Use customer_id from spreadsheet as primary id
+              user_id: userData.user.id,
+              name: customerName,
+              email: String(getMappedValue('email') || '').trim() || null,
+              phone: String(getMappedValue('phone') || '').trim() || null,
+              address: String(getMappedValue('address') || '').trim() || null,
+              city: String(getMappedValue('city') || '').trim() || null,
+              state: String(getMappedValue('state') || '').trim() || null,
+              country: String(getMappedValue('country') || 'Kenya').trim(),
+              zip_code: '00000', // Default placeholder as requested
+              aircraft_type: String(getMappedValue('aircraft_type') || '').trim() || null,
+              tail_number: String(getMappedValue('tail_number') || '').trim() || null,
+              contact_person: String(getMappedValue('contact_person') || '').trim() || null,
+              notes: String(getMappedValue('notes') || '').trim() || null
+            };
+
+            const { error } = await supabase
+              .from('customers')
+              .insert(customerData);
+
+            if (error) {
+              errors.push(`Row ${i + 1}: ${error.message}`);
+            } else {
+              successCount++;
+            }
+          } catch (error) {
+            errors.push(`Row ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          }
+        }
       }
 
       setImportResults({ success: successCount, errors });
@@ -582,6 +684,7 @@ export const ExcelImport = () => {
                 <SelectItem value="products">Inventory Products (Station)</SelectItem>
                 <SelectItem value="batches">Inventory Batches (Items)</SelectItem>
                 <SelectItem value="suppliers">Suppliers</SelectItem>
+                <SelectItem value="customers">Customers</SelectItem>
               </SelectContent>
             </Select>
           </div>
