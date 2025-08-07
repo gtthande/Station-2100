@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Printer, Plus, Trash2, Calculator } from "lucide-react";
+import { Printer, Plus, Trash2, Calculator, Package } from "lucide-react";
+import { InventoryPartLookup } from "./InventoryPartLookup";
 
 interface JobPart {
   id?: string;
@@ -19,6 +20,8 @@ interface JobPart {
   fitting_price: number;
   warehouse_type: 'warehouse_a' | 'warehouse_bc' | 'owner_supplied';
   job_id?: number;
+  batch_id?: string;
+  batch_number?: string;
 }
 
 interface TabTotals {
@@ -39,6 +42,8 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
     owner_supplied: { fitting_total: 0, parts_count: 0 }
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [inventoryLookupOpen, setInventoryLookupOpen] = useState(false);
+  const [selectedWarehouseType, setSelectedWarehouseType] = useState<'warehouse_a' | 'warehouse_bc' | 'owner_supplied'>('warehouse_a');
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -110,6 +115,11 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
   };
 
   const addNewPart = (warehouse_type: 'warehouse_a' | 'warehouse_bc' | 'owner_supplied') => {
+    setSelectedWarehouseType(warehouse_type);
+    setInventoryLookupOpen(true);
+  };
+
+  const addManualPart = (warehouse_type: 'warehouse_a' | 'warehouse_bc' | 'owner_supplied') => {
     const newPart: JobPart = {
       id: `temp_${Date.now()}`,
       partno: '',
@@ -119,6 +129,29 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
       fitting_price: 0,
       warehouse_type,
       job_id: jobId
+    };
+    setParts([...parts, newPart]);
+  };
+
+  const addInventoryPart = (inventoryPart: {
+    part_number: string;
+    description: string;
+    quantity: number;
+    cost_price: number;
+    batch_id: string;
+    batch_number: string;
+  }) => {
+    const newPart: JobPart = {
+      id: `temp_${Date.now()}`,
+      partno: inventoryPart.part_number,
+      description: inventoryPart.description,
+      quantity: inventoryPart.quantity,
+      cost_price: inventoryPart.cost_price,
+      fitting_price: 0,
+      warehouse_type: selectedWarehouseType,
+      job_id: jobId,
+      batch_id: inventoryPart.batch_id,
+      batch_number: inventoryPart.batch_number
     };
     setParts([...parts, newPart]);
   };
@@ -289,14 +322,25 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
     return (
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <Button
-            onClick={() => addNewPart(warehouseType)}
-            size="sm"
-            variant="outline"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Part
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => addNewPart(warehouseType)}
+              size="sm"
+              variant="outline"
+              className="bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100"
+            >
+              <Package className="w-4 h-4 mr-2" />
+              From Inventory
+            </Button>
+            <Button
+              onClick={() => addManualPart(warehouseType)}
+              size="sm"
+              variant="outline"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Manual Entry
+            </Button>
+          </div>
           <Button
             onClick={() => printTab(warehouseType)}
             size="sm"
@@ -324,12 +368,19 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
             {filteredParts.map((part) => (
               <TableRow key={part.id}>
                 <TableCell>
-                  <Input
-                    value={part.partno}
-                    onChange={(e) => updatePart(part.id!, 'partno', e.target.value)}
-                    placeholder="Part number"
-                    className="w-32"
-                  />
+                  <div className="space-y-1">
+                    <Input
+                      value={part.partno}
+                      onChange={(e) => updatePart(part.id!, 'partno', e.target.value)}
+                      placeholder="Part number"
+                      className="w-32"
+                    />
+                    {part.batch_number && (
+                      <div className="text-xs text-blue-600 font-mono">
+                        Batch: {part.batch_number}
+                      </div>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <Input
@@ -514,6 +565,13 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
             {renderPartsTable('owner_supplied')}
           </TabsContent>
         </Tabs>
+
+        <InventoryPartLookup
+          isOpen={inventoryLookupOpen}
+          onClose={() => setInventoryLookupOpen(false)}
+          onSelectPart={addInventoryPart}
+          warehouseType={selectedWarehouseType}
+        />
       </CardContent>
     </Card>
   );
