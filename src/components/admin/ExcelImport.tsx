@@ -80,7 +80,22 @@ const INVENTORY_BATCH_FIELDS = {
   notes: 'Notes'
 };
 
-type ImportType = 'products' | 'batches';
+const SUPPLIER_FIELDS = {
+  name: 'Supplier Name (Required)',
+  email: 'Email Address',
+  phone: 'Phone Number',
+  address: 'Street Address',
+  city: 'City',
+  state: 'State/Province',
+  country: 'Country',
+  website: 'Website URL',
+  contact_person: 'Contact Person',
+  specialty: 'Specialty/Services',
+  payment_terms: 'Payment Terms',
+  notes: 'Notes/Comments'
+};
+
+type ImportType = 'products' | 'batches' | 'suppliers';
 
 export const ExcelImport = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -210,7 +225,16 @@ export const ExcelImport = () => {
   };
 
   const getTargetFields = () => {
-    return importType === 'products' ? INVENTORY_PRODUCT_FIELDS : INVENTORY_BATCH_FIELDS;
+    switch (importType) {
+      case 'products':
+        return INVENTORY_PRODUCT_FIELDS;
+      case 'batches':
+        return INVENTORY_BATCH_FIELDS;
+      case 'suppliers':
+        return SUPPLIER_FIELDS;
+      default:
+        return INVENTORY_PRODUCT_FIELDS;
+    }
   };
 
   const handleImport = async () => {
@@ -331,7 +355,7 @@ export const ExcelImport = () => {
             errors.push(`Row ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
           }
         }
-      } else {
+      } else if (importType === 'batches') {
         // Import batches with enhanced field mapping and validation
         for (let i = 0; i < excelData.length; i++) {
           const row = excelData[i];
@@ -458,6 +482,52 @@ export const ExcelImport = () => {
             errors.push(`Row ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
           }
         }
+      } else if (importType === 'suppliers') {
+        // Import suppliers with proper field mapping
+        for (let i = 0; i < excelData.length; i++) {
+          const row = excelData[i];
+          try {
+            // Helper function to get mapped value
+            const getMappedValue = (fieldKey: string) => {
+              const excelColumn = columnMapping[fieldKey];
+              return excelColumn ? row[excelColumn] : '';
+            };
+
+            const supplierData: any = {
+              user_id: userData.user.id,
+              name: String(getMappedValue('name') || '').trim(),
+              email: String(getMappedValue('email') || '').trim() || null,
+              phone: String(getMappedValue('phone') || '').trim() || null,
+              address: String(getMappedValue('address') || '').trim() || null,
+              city: String(getMappedValue('city') || '').trim() || null,
+              state: String(getMappedValue('state') || '').trim() || null,
+              country: String(getMappedValue('country') || 'Kenya').trim(),
+              zip_code: '00000', // Default for Kenyan companies as requested
+              website: String(getMappedValue('website') || '').trim() || null,
+              contact_person: String(getMappedValue('contact_person') || '').trim() || null,
+              specialty: String(getMappedValue('specialty') || '').trim() || null,
+              payment_terms: String(getMappedValue('payment_terms') || '').trim() || null,
+              notes: String(getMappedValue('notes') || '').trim() || null
+            };
+
+            if (!supplierData.name) {
+              errors.push(`Row ${i + 1}: Supplier name is required`);
+              continue;
+            }
+
+            const { error } = await supabase
+              .from('suppliers')
+              .insert(supplierData);
+
+            if (error) {
+              errors.push(`Row ${i + 1}: ${error.message}`);
+            } else {
+              successCount++;
+            }
+          } catch (error) {
+            errors.push(`Row ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          }
+        }
       }
 
       setImportResults({ success: successCount, errors });
@@ -511,6 +581,7 @@ export const ExcelImport = () => {
               <SelectContent>
                 <SelectItem value="products">Inventory Products (Station)</SelectItem>
                 <SelectItem value="batches">Inventory Batches (Items)</SelectItem>
+                <SelectItem value="suppliers">Suppliers</SelectItem>
               </SelectContent>
             </Select>
           </div>
