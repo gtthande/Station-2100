@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRoles } from "@/hooks/useUserRoles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,8 +10,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, CheckCircle, Clock, AlertCircle, FileText, Printer } from "lucide-react";
+import { JobCardApprovalPanel } from "./JobCardApprovalPanel";
+import { JobCardReports } from "./JobCardReports";
 
 interface JobCardFormData {
   customername: string;
@@ -27,13 +31,27 @@ interface JobCardPart {
   partno: number;
   description: string | null;
   quantity: number | null;
-  buying_price: unknown;
-  fitting_price: unknown;
+  buying_price: number | null;
+  fitting_price: number | null;
   issuedby: string | null;
-  type: string | null;
+  type: 'aircraft' | 'consumable' | 'owner_supplied';
   jobcardid: number;
   batch_no: string;
   department_id: number;
+  cost_price?: number;
+  fitting_cost?: number;
+  approved?: boolean;
+  approved_by?: string;
+  approved_at?: string;
+}
+
+interface JobCardApproval {
+  tab_name: 'warehouse_a' | 'warehouse_bc' | 'owner_supplied';
+  approved: boolean;
+  approved_by?: string;
+  approved_at?: string;
+  requires_invoice?: boolean;
+  invoice_number?: string;
 }
 
 export function JobCardInterface() {
@@ -42,8 +60,12 @@ export function JobCardInterface() {
   const [aircraftParts, setAircraftParts] = useState<JobCardPart[]>([]);
   const [consumableParts, setConsumableParts] = useState<JobCardPart[]>([]);
   const [ownerSuppliedParts, setOwnerSuppliedParts] = useState<JobCardPart[]>([]);
+  const [approvals, setApprovals] = useState<JobCardApproval[]>([]);
+  const [jobStatus, setJobStatus] = useState<'draft' | 'submitted' | 'partially_approved' | 'fully_approved' | 'closed'>('draft');
+  const [invoiceNumber, setInvoiceNumber] = useState('');
   const { toast } = useToast();
   const { user } = useAuth();
+  const { hasRole, isAdmin } = useUserRoles();
 
   const form = useForm<JobCardFormData>({
     defaultValues: {
@@ -67,7 +89,15 @@ export function JobCardInterface() {
 
       if (error) throw error;
 
-      const parts = data || [];
+      const parts = (data || []).map(part => ({
+        ...part,
+        buying_price: Number(part.buying_price) || 0,
+        fitting_price: Number(part.fitting_price) || 0,
+        cost_price: Number(part.buying_price) || 0,
+        fitting_cost: Number(part.fitting_price) || 0,
+        type: part.type as 'aircraft' | 'consumable' | 'owner_supplied'
+      }));
+      
       setAircraftParts(parts.filter(p => p.type === 'aircraft'));
       setConsumableParts(parts.filter(p => p.type === 'consumable'));
       setOwnerSuppliedParts(parts.filter(p => p.type === 'owner_supplied'));
@@ -169,56 +199,252 @@ export function JobCardInterface() {
     }
   };
 
-  const renderPartsTable = (parts: JobCardPart[], type: string) => (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Part No</TableHead>
-          <TableHead>Description</TableHead>
-          <TableHead>Quantity</TableHead>
-          <TableHead>Buying Price</TableHead>
-          <TableHead>Fitting Price</TableHead>
-          <TableHead>Issued By</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {parts.map((part) => (
-          <TableRow key={`${part.partno}-${type}`}>
-            <TableCell>{part.partno}</TableCell>
-            <TableCell>{part.description}</TableCell>
-            <TableCell>
-              <Input
-                type="number"
-                value={part.quantity || 0}
-                onChange={(e) => updatePartField(part.partno, 'quantity', Number(e.target.value), type)}
-                className="w-20"
-              />
-            </TableCell>
-            <TableCell>{part.buying_price ? String(part.buying_price) : '-'}</TableCell>
-            <TableCell>{part.fitting_price ? String(part.fitting_price) : '-'}</TableCell>
-            <TableCell>
-              <Input
-                value={part.issuedby || ''}
-                onChange={(e) => updatePartField(part.partno, 'issuedby', e.target.value, type)}
-                className="w-32"
-              />
-            </TableCell>
-          </TableRow>
-        ))}
-        {parts.length === 0 && (
-          <TableRow>
-            <TableCell colSpan={6} className="text-center text-muted-foreground">
-              No parts found for this category
-            </TableCell>
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
-  );
+  const renderPartsTable = (parts: JobCardPart[], type: 'aircraft' | 'consumable' | 'owner_supplied', tabName: string) => {
+    const isApproved = approvals.find(a => a.tab_name === tabName as any)?.approved || false;
+    const canEdit = !isApproved || isAdmin();
+    
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <h3 className="text-lg font-semibold">
+              {tabName === 'warehouse_a' ? 'Aircraft Spares' : 
+               tabName === 'warehouse_bc' ? 'Consumables' : 'Owner-Supplied Items'}
+            </h3>
+            {isApproved && (
+              <Badge variant="default" className="bg-green-100 text-green-800">
+                <CheckCircle className="w-3 h-3 mr-1" />
+                Approved
+              </Badge>
+            )}
+          </div>
+          {jobStatus !== 'draft' && (
+            <JobCardApprovalPanel
+              tabName={tabName as any}
+              jobCardId={currentJobCardId!}
+              onApprovalChange={loadJobCardApprovals}
+            />
+          )}
+        </div>
+        
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Part No</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Quantity</TableHead>
+              {type !== 'owner_supplied' && <TableHead>Cost Price</TableHead>}
+              <TableHead>Fitting Price</TableHead>
+              <TableHead>Issued By</TableHead>
+              {type !== 'owner_supplied' && <TableHead>Total Cost</TableHead>}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {parts.map((part) => (
+              <TableRow key={`${part.partno}-${type}`}>
+                <TableCell>{part.partno}</TableCell>
+                <TableCell>{part.description}</TableCell>
+                <TableCell>
+                  <Input
+                    type="number"
+                    value={part.quantity || 0}
+                    onChange={(e) => updatePartField(part.partno, 'quantity', Number(e.target.value), type)}
+                    className="w-20"
+                    disabled={!canEdit}
+                  />
+                </TableCell>
+                {type !== 'owner_supplied' && (
+                  <TableCell>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={part.cost_price || 0}
+                      onChange={(e) => updatePartField(part.partno, 'cost_price', Number(e.target.value), type)}
+                      className="w-24"
+                      disabled={!canEdit}
+                    />
+                  </TableCell>
+                )}
+                <TableCell>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={part.fitting_cost || 0}
+                    onChange={(e) => updatePartField(part.partno, 'fitting_cost', Number(e.target.value), type)}
+                    className="w-24"
+                    disabled={!canEdit}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Input
+                    value={part.issuedby || ''}
+                    onChange={(e) => updatePartField(part.partno, 'issuedby', e.target.value, type)}
+                    className="w-32"
+                    disabled={!canEdit}
+                  />
+                </TableCell>
+                {type !== 'owner_supplied' && (
+                  <TableCell className="font-medium">
+                    ${((part.cost_price || 0) * (part.quantity || 0)).toFixed(2)}
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
+            {parts.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={type !== 'owner_supplied' ? 7 : 5} className="text-center text-muted-foreground">
+                  No parts found for this category
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
+
+  const loadJobCardApprovals = async () => {
+    if (!currentJobCardId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('job_cards')
+        .select('*')
+        .eq('jobcardid', currentJobCardId)
+        .single();
+
+      if (error) throw error;
+
+      // Map existing approval fields to our new structure
+      const approvalData: JobCardApproval[] = [
+        {
+          tab_name: 'warehouse_a',
+          approved: data.ac_aproved || false,
+          approved_by: data.ac_aproved_by,
+          approved_at: data.ac_approvedate
+        },
+        {
+          tab_name: 'warehouse_bc', 
+          approved: data.whb_aproved || false,
+          approved_by: data.whb_aproved_by,
+          approved_at: data.whb_approvedate
+        },
+        {
+          tab_name: 'owner_supplied',
+          approved: data.oss_approved || false,
+          approved_by: data.oss_approved_by,
+          approved_at: data.oss_approvedate
+        }
+      ];
+
+      setApprovals(approvalData);
+      setInvoiceNumber(data.close_invoice || '');
+      
+      // Determine job status
+      const allApproved = approvalData.every(a => a.approved);
+      const someApproved = approvalData.some(a => a.approved);
+      const isClosed = data.closed || false;
+      
+      if (isClosed) {
+        setJobStatus('closed');
+      } else if (allApproved) {
+        setJobStatus('fully_approved');
+      } else if (someApproved) {
+        setJobStatus('partially_approved');
+      } else {
+        setJobStatus('submitted');
+      }
+    } catch (error) {
+      console.error('Error loading approvals:', error);
+    }
+  };
+
+  const submitForApproval = async () => {
+    if (!currentJobCardId) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('job_cards')
+        .update({ 
+          printed: true, // Mark as submitted
+          preparedate: new Date().toISOString()
+        })
+        .eq('jobcardid', currentJobCardId);
+
+      if (error) throw error;
+
+      setJobStatus('submitted');
+      toast({
+        title: "Success",
+        description: "Job card submitted for approval"
+      });
+    } catch (error) {
+      console.error('Error submitting job card:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit job card",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const closeJob = async () => {
+    if (!currentJobCardId || !invoiceNumber.trim()) {
+      toast({
+        title: "Error", 
+        description: "Invoice number is required to close the job",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const allApproved = approvals.every(a => a.approved);
+    if (!allApproved) {
+      toast({
+        title: "Error",
+        description: "All tabs must be approved before closing the job",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('job_cards')
+        .update({
+          closed: true,
+          close_invoice: invoiceNumber,
+          date_closed: new Date().toISOString()
+        })
+        .eq('jobcardid', currentJobCardId);
+
+      if (error) throw error;
+
+      setJobStatus('closed');
+      toast({
+        title: "Success",
+        description: "Job card closed successfully"
+      });
+    } catch (error) {
+      console.error('Error closing job:', error);
+      toast({
+        title: "Error",
+        description: "Failed to close job card",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (currentJobCardId) {
       loadJobCardParts(currentJobCardId);
+      loadJobCardApprovals();
     }
   }, [currentJobCardId]);
 
@@ -333,6 +559,61 @@ export function JobCardInterface() {
         </CardContent>
       </Card>
 
+      {/* Job Status and Actions */}
+      {currentJobCardId && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Job Status</span>
+              <Badge variant={
+                jobStatus === 'closed' ? 'default' :
+                jobStatus === 'fully_approved' ? 'default' :
+                jobStatus === 'partially_approved' ? 'secondary' :
+                jobStatus === 'submitted' ? 'outline' : 'secondary'
+              }>
+                {jobStatus === 'draft' && <Clock className="w-3 h-3 mr-1" />}
+                {jobStatus === 'submitted' && <AlertCircle className="w-3 h-3 mr-1" />}
+                {(jobStatus === 'fully_approved' || jobStatus === 'closed') && <CheckCircle className="w-3 h-3 mr-1" />}
+                {jobStatus.replace('_', ' ').toUpperCase()}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-4">
+              {jobStatus === 'draft' && (
+                <Button onClick={submitForApproval} disabled={isLoading}>
+                  {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
+                  Submit for Approval
+                </Button>
+              )}
+              
+              {jobStatus === 'fully_approved' && (
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="invoice">Invoice Number:</Label>
+                    <Input
+                      id="invoice"
+                      value={invoiceNumber}
+                      onChange={(e) => setInvoiceNumber(e.target.value)}
+                      placeholder="Enter invoice number"
+                      className="w-48"
+                    />
+                  </div>
+                  <Button onClick={closeJob} disabled={isLoading || !invoiceNumber.trim()}>
+                    {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
+                    Close Job
+                  </Button>
+                </div>
+              )}
+              
+              {(jobStatus === 'closed' || jobStatus === 'fully_approved') && (
+                <JobCardReports jobCardId={currentJobCardId} />
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Parts Management Tabs */}
       {currentJobCardId && (
         <Card>
@@ -340,29 +621,35 @@ export function JobCardInterface() {
             <CardTitle>Job Card Parts</CardTitle>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="aircraft" className="space-y-4">
+            <Tabs defaultValue="warehouse_a" className="space-y-4">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="aircraft">Aircraft Parts</TabsTrigger>
-                <TabsTrigger value="consumable">Consumables</TabsTrigger>
-                <TabsTrigger value="owner_supplied">Owner Supplied</TabsTrigger>
+                <TabsTrigger value="warehouse_a" className="relative">
+                  Warehouse A (Aircraft)
+                  {approvals.find(a => a.tab_name === 'warehouse_a')?.approved && 
+                    <CheckCircle className="w-4 h-4 ml-2 text-green-600" />}
+                </TabsTrigger>
+                <TabsTrigger value="warehouse_bc" className="relative">
+                  Warehouses B & C
+                  {approvals.find(a => a.tab_name === 'warehouse_bc')?.approved && 
+                    <CheckCircle className="w-4 h-4 ml-2 text-green-600" />}
+                </TabsTrigger>
+                <TabsTrigger value="owner_supplied" className="relative">
+                  Owner Supplied
+                  {approvals.find(a => a.tab_name === 'owner_supplied')?.approved && 
+                    <CheckCircle className="w-4 h-4 ml-2 text-green-600" />}
+                </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="aircraft" className="space-y-4">
-                <div className="rounded-md border">
-                  {renderPartsTable(aircraftParts, 'aircraft')}
-                </div>
+              <TabsContent value="warehouse_a" className="space-y-4">
+                {renderPartsTable(aircraftParts, 'aircraft', 'warehouse_a')}
               </TabsContent>
 
-              <TabsContent value="consumable" className="space-y-4">
-                <div className="rounded-md border">
-                  {renderPartsTable(consumableParts, 'consumable')}
-                </div>
+              <TabsContent value="warehouse_bc" className="space-y-4">
+                {renderPartsTable(consumableParts, 'consumable', 'warehouse_bc')}
               </TabsContent>
 
               <TabsContent value="owner_supplied" className="space-y-4">
-                <div className="rounded-md border">
-                  {renderPartsTable(ownerSuppliedParts, 'owner_supplied')}
-                </div>
+                {renderPartsTable(ownerSuppliedParts, 'owner_supplied', 'owner_supplied')}
               </TabsContent>
             </Tabs>
           </CardContent>

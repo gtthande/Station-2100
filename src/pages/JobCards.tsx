@@ -8,13 +8,15 @@ import { CreateJobDialog } from "@/components/jobs/CreateJobDialog";
 import { JobItemsList } from "@/components/jobs/JobItemsList";
 import { JobAuthList } from "@/components/jobs/JobAuthList";
 import { JobCardInterface } from "@/components/jobs/JobCardInterface";
+import { JobCardNotifications } from "@/components/jobs/JobCardNotifications";
 
 export default function JobCards() {
   const [createJobOpen, setCreateJobOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6 relative">
+      <JobCardNotifications />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Job Cards</h1>
