@@ -73,18 +73,18 @@ export function JobCardInterface() {
   const [approvals, setApprovals] = useState<JobCardApproval[]>([]);
   const [jobStatus, setJobStatus] = useState<'draft' | 'submitted' | 'partially_approved' | 'fully_approved' | 'closed'>('draft');
   const [invoiceNumber, setInvoiceNumber] = useState('');
-  const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState('');
   const { user } = useAuth();
-  const { hasRole, isAdmin } = useUserRoles();
-
+  const { isAdmin } = useUserRoles();
+  const { toast } = useToast();
   const form = useForm<JobCardFormData>({
     defaultValues: {
-      customer_id: "",
-      aircraft_regno: "",
+      customer_id: '',
+      aircraft_regno: '',
       date_opened: new Date().toISOString().split('T')[0],
-      remarks: "",
-      description: "",
-      category: ""
+      description: '',
+      remarks: '',
+      category: ''
     }
   });
 
@@ -561,6 +561,18 @@ export function JobCardInterface() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Search Input */}
+                  <div className="space-y-2">
+                    <Label htmlFor="customer_search" className="text-gray-900 font-medium">Search Customers</Label>
+                    <Input
+                      id="customer_search"
+                      type="text"
+                      placeholder="Search by name, email, aircraft type, or tail number..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="bg-white border-2 border-gray-300 text-gray-900 font-medium placeholder:text-gray-500 focus:border-blue-500"
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="customer_id" className="text-gray-900 font-medium">Select Customer *</Label>
                     <Select
@@ -570,28 +582,45 @@ export function JobCardInterface() {
                       <SelectTrigger className="bg-white border-2 border-gray-300 text-gray-900 font-medium hover:border-gray-400 focus:border-blue-500">
                         <SelectValue placeholder="Choose customer..." className="text-gray-900" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                      <SelectContent className="bg-white border-2 border-gray-300 shadow-lg z-50 max-h-60 overflow-y-auto">
                         {customersLoading ? (
-                          <SelectItem value="loading" disabled>
+                          <SelectItem value="loading" disabled className="text-gray-700">
                             <div className="flex items-center">
                               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                               Loading customers...
                             </div>
                           </SelectItem>
                         ) : customers && customers.length > 0 ? (
-                          customers.map((customer) => (
-                            <SelectItem key={customer.id} value={customer.id} className="hover:bg-blue-50 text-gray-900">
-                              <div className="flex flex-col py-1">
-                                <span className="font-medium text-gray-900">{customer.name}</span>
+                          customers
+                            .filter(customer => 
+                              customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              customer.aircraft_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              customer.tail_number?.toLowerCase().includes(searchTerm.toLowerCase())
+                            )
+                            .map((customer) => (
+                            <SelectItem 
+                              key={customer.id} 
+                              value={customer.id} 
+                              className="hover:bg-blue-50 text-gray-900 bg-white border-b border-gray-100"
+                            >
+                              <div className="flex flex-col py-2">
+                                <span className="font-semibold text-gray-900">{customer.name}</span>
                                 {customer.email && (
-                                  <span className="text-xs text-gray-600">{customer.email}</span>
+                                  <span className="text-sm text-gray-700">{customer.email}</span>
+                                )}
+                                {customer.aircraft_type && (
+                                  <span className="text-sm text-gray-600">Aircraft: {customer.aircraft_type}</span>
+                                )}
+                                {customer.tail_number && (
+                                  <span className="text-sm text-gray-600">Tail: {customer.tail_number}</span>
                                 )}
                               </div>
                             </SelectItem>
                           ))
                         ) : (
-                          <SelectItem value="no-customers" disabled>
-                            <span className="text-gray-500">No customers found</span>
+                          <SelectItem value="no-customers" disabled className="text-gray-600 bg-white">
+                            No customers found
                           </SelectItem>
                         )}
                       </SelectContent>

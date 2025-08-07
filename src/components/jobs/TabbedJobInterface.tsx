@@ -188,7 +188,8 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
         unit_cost: part.cost_price,
         fitting_price: part.fitting_price,
         total_cost: part.cost_price * part.quantity,
-        category: categoryValue
+        category: categoryValue,
+        batch_no: part.batch_id ? parseInt(part.batch_id) : null
       };
 
       if (part.id?.startsWith('temp_')) {
@@ -209,9 +210,14 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
         ));
       } else {
         // Update existing part
+        const updateData = {
+          ...partData,
+          batch_no: part.batch_id ? parseInt(part.batch_id) : null
+        };
+        
         const { error } = await supabase
           .from('job_items')
-          .update(partData)
+          .update(updateData)
           .eq('item_id', Number(part.id));
 
         if (error) throw error;
