@@ -160,24 +160,24 @@ export function InventoryPartLookup({ isOpen, onClose, onSelectPart, warehouseTy
               placeholder="Search by part number, description, batch number, or serial number..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-white border-2 border-gray-300 text-gray-900 font-medium"
+              className="pl-10 bg-background border-input text-foreground"
             />
           </div>
 
           {/* Batch Table */}
-          <div className="flex-1 overflow-auto border rounded-lg">
+          <div className="flex-1 overflow-auto border rounded-lg bg-background">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Part Number</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Batch Number</TableHead>
-                  <TableHead>Serial No</TableHead>
-                  <TableHead>Available Qty</TableHead>
-                  <TableHead>Cost Price</TableHead>
-                  <TableHead>Selling Price</TableHead>
-                  <TableHead>Expiry Date</TableHead>
-                  <TableHead>Action</TableHead>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="text-foreground font-semibold">Part Number</TableHead>
+                  <TableHead className="text-foreground font-semibold">Description</TableHead>
+                  <TableHead className="text-foreground font-semibold">Batch Number</TableHead>
+                  <TableHead className="text-foreground font-semibold">Serial No</TableHead>
+                  <TableHead className="text-foreground font-semibold">Available Qty</TableHead>
+                  <TableHead className="text-foreground font-semibold">Cost Price</TableHead>
+                  <TableHead className="text-foreground font-semibold">Selling Price</TableHead>
+                  <TableHead className="text-foreground font-semibold">Expiry Date</TableHead>
+                  <TableHead className="text-foreground font-semibold">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -195,31 +195,31 @@ export function InventoryPartLookup({ isOpen, onClose, onSelectPart, warehouseTy
                   </TableRow>
                 ) : (
                   filteredBatches.map((batch) => (
-                    <TableRow key={batch.id} className="hover:bg-gray-50">
-                      <TableCell className="font-medium">
+                    <TableRow key={batch.id} className="hover:bg-muted/50">
+                      <TableCell className="font-medium text-foreground">
                         {batch.inventory_products?.part_number}
                       </TableCell>
-                      <TableCell className="max-w-xs truncate">
+                      <TableCell className="max-w-xs truncate text-foreground">
                         {batch.inventory_products?.description || 'N/A'}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="font-mono">
+                        <Badge variant="outline" className="font-mono text-foreground">
                           {batch.batch_number}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-mono">
+                      <TableCell className="font-mono text-foreground">
                         {batch.serial_no || 'N/A'}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-foreground">
                         <span className="font-semibold">{batch.quantity}</span>
-                        <span className="text-gray-500 ml-1">
+                        <span className="text-muted-foreground ml-1">
                           {batch.inventory_products?.unit_of_measure || 'each'}
                         </span>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-foreground font-medium">
                         ${(batch.cost_per_unit || 0).toFixed(2)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-foreground font-medium">
                         ${(batch.selling_price || 0).toFixed(2)}
                       </TableCell>
                       <TableCell>
