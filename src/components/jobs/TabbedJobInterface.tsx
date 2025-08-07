@@ -116,7 +116,10 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
   };
 
   const scanForPart = async (scanValue: string) => {
-    if (!scanValue.trim() || !user) return;
+    if (!scanValue.trim() || !user) {
+      console.log('Scan cancelled: missing value or user');
+      return;
+    }
 
     try {
       console.log('Scanning for part:', scanValue);
@@ -146,7 +149,10 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
 
       console.log('Inventory search result:', { data, error });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       if (data && data.length > 0) {
         // Filter results by the scan value
@@ -160,6 +166,8 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
 
         if (filtered.length > 0) {
           const batch = filtered[0]; // Take first match
+          console.log('Adding inventory part:', batch);
+          
           addInventoryPart({
             part_number: batch.inventory_products?.part_number || '',
             description: batch.inventory_products?.description || '',
@@ -169,33 +177,50 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
             batch_number: batch.batch_number
           });
           
-          toast({
-            title: "Part Added",
-            description: `Added ${batch.inventory_products?.part_number} from scan`
-          });
+          try {
+            toast({
+              title: "Part Added",
+              description: `Added ${batch.inventory_products?.part_number} from scan`
+            });
+          } catch (toastError) {
+            console.error('Toast error:', toastError);
+          }
         } else {
           console.log('No matching parts found for:', scanValue);
-          toast({
-            title: "No Match",
-            description: "No inventory found for scanned value",
-            variant: "destructive"
-          });
+          try {
+            toast({
+              title: "No Match",
+              description: "No inventory found for scanned value",
+              variant: "destructive"
+            });
+          } catch (toastError) {
+            console.error('Toast error:', toastError);
+          }
         }
       } else {
         console.log('No inventory data returned');
-        toast({
-          title: "No Inventory",
-          description: "No inventory available",
-          variant: "destructive"
-        });
+        try {
+          toast({
+            title: "No Inventory",
+            description: "No inventory available",
+            variant: "destructive"
+          });
+        } catch (toastError) {
+          console.error('Toast error:', toastError);
+        }
       }
     } catch (error) {
       console.error('Error scanning for part:', error);
-      toast({
-        title: "Error",
-        description: `Failed to search inventory: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        variant: "destructive"
-      });
+      try {
+        toast({
+          title: "Error",
+          description: `Failed to search inventory: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          variant: "destructive"
+        });
+      } catch (toastError) {
+        console.error('Toast error:', toastError);
+        alert(`Failed to search inventory: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     }
   };
 
@@ -265,7 +290,10 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
   };
 
   const savePart = async (part: JobPart) => {
-    if (!jobId || !user?.id) return;
+    if (!jobId || !user?.id) {
+      console.log('Save cancelled: missing jobId or user');
+      return;
+    }
 
     try {
       console.log('Saving part:', part);
@@ -290,6 +318,7 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
 
       if (part.id?.startsWith('temp_')) {
         // Insert new part
+        console.log('Inserting new part...');
         const { data, error } = await supabase
           .from('job_items')
           .insert(partData)
@@ -298,7 +327,10 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
 
         console.log('Insert result:', { data, error });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Insert error:', error);
+          throw error;
+        }
 
         // Update the part with the real ID
         setParts(parts.map(p => 
@@ -308,9 +340,8 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
         ));
       } else {
         // Update existing part
+        console.log('Updating existing part with ID:', part.id);
         const updateData = partData;
-        
-        console.log('Updating part with ID:', part.id, 'Data:', updateData);
         
         const { error } = await supabase
           .from('job_items')
@@ -319,20 +350,32 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
 
         console.log('Update error:', error);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Update error:', error);
+          throw error;
+        }
       }
 
-      toast({
-        title: "Success",
-        description: "Part saved successfully"
-      });
+      try {
+        toast({
+          title: "Success",
+          description: "Part saved successfully"
+        });
+      } catch (toastError) {
+        console.error('Toast error:', toastError);
+      }
     } catch (error) {
       console.error('Error saving part:', error);
-      toast({
-        title: "Error",
-        description: `Failed to save part: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        variant: "destructive"
-      });
+      try {
+        toast({
+          title: "Error",
+          description: `Failed to save part: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          variant: "destructive"
+        });
+      } catch (toastError) {
+        console.error('Toast error:', toastError);
+        alert(`Failed to save part: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     }
   };
 
