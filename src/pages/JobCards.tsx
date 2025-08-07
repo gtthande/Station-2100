@@ -9,6 +9,7 @@ import { JobItemsList } from "@/components/jobs/JobItemsList";
 import { JobAuthList } from "@/components/jobs/JobAuthList";
 import { JobCardInterface } from "@/components/jobs/JobCardInterface";
 import { JobCardNotifications } from "@/components/jobs/JobCardNotifications";
+import { TabbedJobInterface } from "@/components/jobs/TabbedJobInterface";
 
 export default function JobCards() {
   const [createJobOpen, setCreateJobOpen] = useState(false);
@@ -33,6 +34,7 @@ export default function JobCards() {
       <Tabs defaultValue="interface" className="space-y-4">
         <TabsList>
           <TabsTrigger value="interface">Job Card Interface</TabsTrigger>
+          <TabsTrigger value="warehouse">Warehouse Tabs</TabsTrigger>
           <TabsTrigger value="jobs">Job Cards</TabsTrigger>
           <TabsTrigger value="items">Job Items</TabsTrigger>
           <TabsTrigger value="auth">Authorizations</TabsTrigger>
@@ -40,6 +42,10 @@ export default function JobCards() {
 
         <TabsContent value="interface" className="space-y-4">
           <JobCardInterface />
+        </TabsContent>
+
+        <TabsContent value="warehouse" className="space-y-4">
+          <TabbedJobInterface jobId={selectedJobId} />
         </TabsContent>
 
         <TabsContent value="jobs" className="space-y-4">
