@@ -562,13 +562,13 @@ export function JobCardInterface() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="customer_id">Select Customer *</Label>
+                    <Label htmlFor="customer_id" className="text-gray-900 font-medium">Select Customer *</Label>
                     <Select
                       value={form.watch('customer_id')}
                       onValueChange={(value) => form.setValue('customer_id', value)}
                     >
-                      <SelectTrigger className="bg-white border-gray-300">
-                        <SelectValue placeholder="Choose customer..." />
+                      <SelectTrigger className="bg-white border-2 border-gray-300 text-gray-900 font-medium hover:border-gray-400 focus:border-blue-500">
+                        <SelectValue placeholder="Choose customer..." className="text-gray-900" />
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                         {customersLoading ? (
@@ -580,11 +580,11 @@ export function JobCardInterface() {
                           </SelectItem>
                         ) : customers && customers.length > 0 ? (
                           customers.map((customer) => (
-                            <SelectItem key={customer.id} value={customer.id} className="hover:bg-gray-100">
+                            <SelectItem key={customer.id} value={customer.id} className="hover:bg-blue-50 text-gray-900">
                               <div className="flex flex-col py-1">
                                 <span className="font-medium text-gray-900">{customer.name}</span>
                                 {customer.email && (
-                                  <span className="text-xs text-gray-500">{customer.email}</span>
+                                  <span className="text-xs text-gray-600">{customer.email}</span>
                                 )}
                               </div>
                             </SelectItem>
@@ -599,12 +599,12 @@ export function JobCardInterface() {
                   </div>
 
                   {selectedCustomer && (
-                    <div className="space-y-2 text-sm bg-blue-50 border border-blue-200 p-3 rounded-md">
-                      <h4 className="font-medium text-blue-900">Customer Details</h4>
-                      <div className="grid grid-cols-1 gap-1">
-                        <p><span className="font-medium">Phone:</span> {selectedCustomer.phone || 'N/A'}</p>
-                        <p><span className="font-medium">Aircraft Type:</span> {selectedCustomer.aircraft_type || 'N/A'}</p>
-                        <p><span className="font-medium">Tail Number:</span> {selectedCustomer.tail_number || 'N/A'}</p>
+                    <div className="space-y-2 text-sm bg-blue-50 border-2 border-blue-200 p-4 rounded-lg">
+                      <h4 className="font-semibold text-blue-900 text-base">Customer Details</h4>
+                      <div className="grid grid-cols-1 gap-2">
+                        <p className="text-gray-800"><span className="font-semibold text-gray-900">Phone:</span> {selectedCustomer.phone || 'N/A'}</p>
+                        <p className="text-gray-800"><span className="font-semibold text-gray-900">Aircraft Type:</span> {selectedCustomer.aircraft_type || 'N/A'}</p>
+                        <p className="text-gray-800"><span className="font-semibold text-gray-900">Tail Number:</span> {selectedCustomer.tail_number || 'N/A'}</p>
                       </div>
                     </div>
                   )}
@@ -621,20 +621,22 @@ export function JobCardInterface() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="aircraft_regno">Aircraft Registration</Label>
+                    <Label htmlFor="aircraft_regno" className="text-gray-900 font-medium">Aircraft Registration *</Label>
                     <Input
                       id="aircraft_regno"
                       {...form.register("aircraft_regno", { required: "Aircraft registration is required" })}
                       placeholder="Enter aircraft registration"
+                      className="bg-white border-2 border-gray-300 text-gray-900 font-medium placeholder:text-gray-500 focus:border-blue-500"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
+                    <Label htmlFor="category" className="text-gray-900 font-medium">Category</Label>
                     <Input
                       id="category"
                       {...form.register("category")}
                       placeholder="Enter maintenance category"
+                      className="bg-white border-2 border-gray-300 text-gray-900 font-medium placeholder:text-gray-500 focus:border-blue-500"
                     />
                   </div>
                 </CardContent>
@@ -650,59 +652,67 @@ export function JobCardInterface() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="date_opened">Date Opened</Label>
+                    <Label htmlFor="date_opened" className="text-gray-900 font-medium">Date Opened *</Label>
                     <Input
                       id="date_opened"
                       type="date"
                       {...form.register("date_opened", { required: "Date opened is required" })}
+                      className="bg-white border-2 border-gray-300 text-gray-900 font-medium focus:border-blue-500"
                     />
                   </div>
 
                   {currentJobCardId && (
-                    <div className="text-sm bg-blue-50 p-3 rounded-md">
-                      <p><strong>Job Card ID:</strong> {currentJobCardId}</p>
-                      <Badge variant={
-                        jobStatus === 'closed' ? 'default' :
-                        jobStatus === 'fully_approved' ? 'default' :
-                        jobStatus === 'partially_approved' ? 'secondary' :
-                        jobStatus === 'submitted' ? 'outline' : 'secondary'
-                      }>
-                        {jobStatus === 'draft' && <Clock className="w-3 h-3 mr-1" />}
-                        {jobStatus === 'submitted' && <AlertCircle className="w-3 h-3 mr-1" />}
-                        {(jobStatus === 'fully_approved' || jobStatus === 'closed') && <CheckCircle className="w-3 h-3 mr-1" />}
-                        {jobStatus.replace('_', ' ').toUpperCase()}
-                      </Badge>
+                    <div className="text-sm bg-green-50 border-2 border-green-200 p-4 rounded-lg">
+                      <p className="text-gray-900"><span className="font-semibold">Job Card ID:</span> {currentJobCardId}</p>
+                      <div className="mt-2">
+                        <Badge variant={
+                          jobStatus === 'closed' ? 'default' :
+                          jobStatus === 'fully_approved' ? 'default' :
+                          jobStatus === 'partially_approved' ? 'secondary' :
+                          jobStatus === 'submitted' ? 'outline' : 'secondary'
+                        } className="text-sm">
+                          {jobStatus === 'draft' && <Clock className="w-3 h-3 mr-1" />}
+                          {jobStatus === 'submitted' && <AlertCircle className="w-3 h-3 mr-1" />}
+                          {(jobStatus === 'fully_approved' || jobStatus === 'closed') && <CheckCircle className="w-3 h-3 mr-1" />}
+                          {jobStatus.replace('_', ' ').toUpperCase()}
+                        </Badge>
+                      </div>
                     </div>
                   )}
                 </CardContent>
               </Card>
             </div>
 
-            {/* Description and Remarks */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="description">Work Description</Label>
+                <Label htmlFor="description" className="text-gray-900 font-medium">Work Description</Label>
                 <Textarea
                   id="description"
                   {...form.register("description")}
                   placeholder="Describe the maintenance work to be performed"
                   rows={4}
+                  className="bg-white border-2 border-gray-300 text-gray-900 font-medium placeholder:text-gray-500 focus:border-blue-500"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="remarks">Remarks</Label>
+                <Label htmlFor="remarks" className="text-gray-900 font-medium">Remarks</Label>
                 <Textarea
                   id="remarks"
                   {...form.register("remarks")}
                   placeholder="Additional notes or special instructions"
                   rows={4}
+                  className="bg-white border-2 border-gray-300 text-gray-900 font-medium placeholder:text-gray-500 focus:border-blue-500"
                 />
               </div>
             </div>
 
             <div className="flex gap-4">
-              <Button type="submit" disabled={isLoading || !selectedCustomer}>
+              <Button 
+                type="submit" 
+                disabled={isLoading || !selectedCustomer}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
+              >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -719,7 +729,12 @@ export function JobCardInterface() {
               {currentJobCardId && (
                 <div className="flex gap-2">
                   {jobStatus === 'draft' && (
-                    <Button onClick={submitForApproval} disabled={isLoading} variant="outline">
+                    <Button 
+                      onClick={submitForApproval} 
+                      disabled={isLoading} 
+                      variant="outline"
+                      className="border-2 border-green-500 text-green-700 hover:bg-green-50 font-medium"
+                    >
                       {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
                       Submit for Approval
                     </Button>
@@ -728,16 +743,21 @@ export function JobCardInterface() {
                   {jobStatus === 'fully_approved' && (
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
-                        <Label htmlFor="invoice">Invoice Number:</Label>
+                        <Label htmlFor="invoice" className="text-gray-900 font-medium">Invoice Number:</Label>
                         <Input
                           id="invoice"
                           value={invoiceNumber}
                           onChange={(e) => setInvoiceNumber(e.target.value)}
                           placeholder="Enter invoice number"
-                          className="w-48"
+                          className="w-48 bg-white border-2 border-gray-300 text-gray-900 font-medium focus:border-blue-500"
                         />
                       </div>
-                      <Button onClick={closeJob} disabled={isLoading || !invoiceNumber.trim()} variant="outline">
+                      <Button 
+                        onClick={closeJob} 
+                        disabled={isLoading || !invoiceNumber.trim()} 
+                        variant="outline"
+                        className="border-2 border-orange-500 text-orange-700 hover:bg-orange-50 font-medium"
+                      >
                         {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
                         Close Job
                       </Button>
