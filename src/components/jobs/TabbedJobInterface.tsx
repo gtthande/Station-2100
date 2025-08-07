@@ -119,6 +119,8 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
     if (!scanValue.trim() || !user) return;
 
     try {
+      console.log('Scanning for part:', scanValue);
+      
       // Search for part by part number, batch number, or serial number
       const { data, error } = await supabase
         .from('inventory_batches')
@@ -128,6 +130,7 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
           quantity,
           cost_per_unit,
           selling_price,
+          serial_no,
           inventory_products (
             id,
             part_number,
@@ -139,30 +142,50 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
         .eq('approval_status', 'approved')
         .eq('status', 'active')
         .is('job_allocated_to', null)
-        .gt('quantity', 0)
-        .or(`batch_number.ilike.%${scanValue}%,serial_no.ilike.%${scanValue}%,inventory_products.part_number.ilike.%${scanValue}%`);
+        .gt('quantity', 0);
+
+      console.log('Inventory search result:', { data, error });
 
       if (error) throw error;
 
       if (data && data.length > 0) {
-        const batch = data[0]; // Take first match
-        addInventoryPart({
-          part_number: batch.inventory_products?.part_number || '',
-          description: batch.inventory_products?.description || '',
-          quantity: 1,
-          cost_price: batch.cost_per_unit || 0,
-          batch_id: batch.id,
-          batch_number: batch.batch_number
-        });
-        
-        toast({
-          title: "Part Added",
-          description: `Added ${batch.inventory_products?.part_number} from scan`
-        });
+        // Filter results by the scan value
+        const filtered = data.filter(batch => 
+          batch.batch_number?.toLowerCase().includes(scanValue.toLowerCase()) ||
+          batch.serial_no?.toLowerCase().includes(scanValue.toLowerCase()) ||
+          batch.inventory_products?.part_number?.toLowerCase().includes(scanValue.toLowerCase())
+        );
+
+        console.log('Filtered results:', filtered);
+
+        if (filtered.length > 0) {
+          const batch = filtered[0]; // Take first match
+          addInventoryPart({
+            part_number: batch.inventory_products?.part_number || '',
+            description: batch.inventory_products?.description || '',
+            quantity: 1,
+            cost_price: batch.cost_per_unit || 0,
+            batch_id: batch.id,
+            batch_number: batch.batch_number
+          });
+          
+          toast({
+            title: "Part Added",
+            description: `Added ${batch.inventory_products?.part_number} from scan`
+          });
+        } else {
+          console.log('No matching parts found for:', scanValue);
+          toast({
+            title: "No Match",
+            description: "No inventory found for scanned value",
+            variant: "destructive"
+          });
+        }
       } else {
+        console.log('No inventory data returned');
         toast({
-          title: "No Match",
-          description: "No inventory found for scanned value",
+          title: "No Inventory",
+          description: "No inventory available",
           variant: "destructive"
         });
       }
@@ -170,7 +193,7 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
       console.error('Error scanning for part:', error);
       toast({
         title: "Error",
-        description: "Failed to search inventory",
+        description: `Failed to search inventory: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive"
       });
     }
