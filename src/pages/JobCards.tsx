@@ -31,21 +31,16 @@ export default function JobCards() {
         </Button>
       </div>
 
-      <Tabs defaultValue="interface" className="space-y-4">
+      <Tabs defaultValue="jobs" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="interface">Job Card Interface</TabsTrigger>
-          <TabsTrigger value="warehouse">Warehouse Tabs</TabsTrigger>
-          <TabsTrigger value="jobs">Job Cards</TabsTrigger>
+          <TabsTrigger value="interface">Job Card Creation</TabsTrigger>
+          <TabsTrigger value="jobs">Existing Job Cards</TabsTrigger>
           <TabsTrigger value="items">Job Items</TabsTrigger>
           <TabsTrigger value="auth">Authorizations</TabsTrigger>
         </TabsList>
 
         <TabsContent value="interface" className="space-y-4">
           <JobCardInterface />
-        </TabsContent>
-
-        <TabsContent value="warehouse" className="space-y-4">
-          <TabbedJobInterface jobId={selectedJobId} />
         </TabsContent>
 
         <TabsContent value="jobs" className="space-y-4">

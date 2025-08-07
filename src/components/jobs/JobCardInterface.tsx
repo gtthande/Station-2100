@@ -109,6 +109,43 @@ export function JobCardInterface() {
   // Get selected customer details
   const selectedCustomer = customers?.find(c => c.id === form.watch('customer_id'));
 
+  // Load job card and set form when currentJobCardId changes
+  useEffect(() => {
+    if (currentJobCardId) {
+      loadJobCardParts(currentJobCardId);
+      loadJobCardApprovals();
+      
+      // Load job card details to populate form
+      const loadJobCardDetails = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('job_cards')
+            .select('*')
+            .eq('jobcardid', currentJobCardId)
+            .single();
+
+          if (error) throw error;
+
+          // Find customer by name since we stored the name
+          const customer = customers?.find(c => c.name === data.customername);
+          
+          form.reset({
+            customer_id: customer?.id || '',
+            aircraft_regno: data.aircraft_regno || '',
+            date_opened: data.date_opened ? new Date(data.date_opened).toISOString().split('T')[0] : '',
+            description: data.description || '',
+            remarks: data.remarks || '',
+            category: data.category || ''
+          });
+        } catch (error) {
+          console.error('Error loading job card details:', error);
+        }
+      };
+
+      loadJobCardDetails();
+    }
+  }, [currentJobCardId, customers, form]);
+
   const loadJobCardParts = async (jobCardId: number) => {
     try {
       const { data, error } = await supabase
@@ -525,34 +562,50 @@ export function JobCardInterface() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="customer_id">Select Customer</Label>
+                    <Label htmlFor="customer_id">Select Customer *</Label>
                     <Select
                       value={form.watch('customer_id')}
                       onValueChange={(value) => form.setValue('customer_id', value)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white border-gray-300">
                         <SelectValue placeholder="Choose customer..." />
                       </SelectTrigger>
-                      <SelectContent>
-                        {customers?.map((customer) => (
-                          <SelectItem key={customer.id} value={customer.id}>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{customer.name}</span>
-                              {customer.email && (
-                                <span className="text-xs text-muted-foreground">{customer.email}</span>
-                              )}
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                        {customersLoading ? (
+                          <SelectItem value="loading" disabled>
+                            <div className="flex items-center">
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Loading customers...
                             </div>
                           </SelectItem>
-                        ))}
+                        ) : customers && customers.length > 0 ? (
+                          customers.map((customer) => (
+                            <SelectItem key={customer.id} value={customer.id} className="hover:bg-gray-100">
+                              <div className="flex flex-col py-1">
+                                <span className="font-medium text-gray-900">{customer.name}</span>
+                                {customer.email && (
+                                  <span className="text-xs text-gray-500">{customer.email}</span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-customers" disabled>
+                            <span className="text-gray-500">No customers found</span>
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
 
                   {selectedCustomer && (
-                    <div className="space-y-2 text-sm bg-gray-50 p-3 rounded-md">
-                      <p><strong>Phone:</strong> {selectedCustomer.phone || 'N/A'}</p>
-                      <p><strong>Aircraft Type:</strong> {selectedCustomer.aircraft_type || 'N/A'}</p>
-                      <p><strong>Tail Number:</strong> {selectedCustomer.tail_number || 'N/A'}</p>
+                    <div className="space-y-2 text-sm bg-blue-50 border border-blue-200 p-3 rounded-md">
+                      <h4 className="font-medium text-blue-900">Customer Details</h4>
+                      <div className="grid grid-cols-1 gap-1">
+                        <p><span className="font-medium">Phone:</span> {selectedCustomer.phone || 'N/A'}</p>
+                        <p><span className="font-medium">Aircraft Type:</span> {selectedCustomer.aircraft_type || 'N/A'}</p>
+                        <p><span className="font-medium">Tail Number:</span> {selectedCustomer.tail_number || 'N/A'}</p>
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -701,9 +754,41 @@ export function JobCardInterface() {
         </CardContent>
       </Card>
 
+      {/* Job Card Status Indicator */}
+      {currentJobCardId && (
+        <Card className="border-l-4 border-l-blue-500">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-blue-600" />
+                  <span className="font-semibold">Job Card #{currentJobCardId}</span>
+                </div>
+                <Badge variant={
+                  jobStatus === 'closed' ? 'default' :
+                  jobStatus === 'fully_approved' ? 'default' :
+                  jobStatus === 'partially_approved' ? 'secondary' :
+                  jobStatus === 'submitted' ? 'outline' : 'secondary'
+                }>
+                  {jobStatus === 'draft' && <Clock className="w-3 h-3 mr-1" />}
+                  {jobStatus === 'submitted' && <AlertCircle className="w-3 h-3 mr-1" />}
+                  {(jobStatus === 'fully_approved' || jobStatus === 'closed') && <CheckCircle className="w-3 h-3 mr-1" />}
+                  {jobStatus.replace('_', ' ').toUpperCase()}
+                </Badge>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Customer: {selectedCustomer?.name || 'No customer selected'}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Warehouse Tabs - Parts Management */}
       {currentJobCardId && (
-        <TabbedJobInterface jobId={currentJobCardId} />
+        <div className="mt-8">
+          <TabbedJobInterface jobId={currentJobCardId} />
+        </div>
       )}
     </div>
   );
