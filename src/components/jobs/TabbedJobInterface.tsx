@@ -44,6 +44,7 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [inventoryLookupOpen, setInventoryLookupOpen] = useState(false);
   const [selectedWarehouseType, setSelectedWarehouseType] = useState<'warehouse_a' | 'warehouse_bc' | 'owner_supplied'>('warehouse_a');
+  const [barcodeInput, setBarcodeInput] = useState('');
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -114,6 +115,75 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
     setTotals(newTotals);
   };
 
+  const scanForPart = async (scanValue: string) => {
+    if (!scanValue.trim() || !user) return;
+
+    try {
+      // Search for part by part number, batch number, or serial number
+      const { data, error } = await supabase
+        .from('inventory_batches')
+        .select(`
+          id,
+          batch_number,
+          quantity,
+          cost_per_unit,
+          selling_price,
+          inventory_products (
+            id,
+            part_number,
+            description,
+            unit_of_measure
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('approval_status', 'approved')
+        .eq('status', 'active')
+        .is('job_allocated_to', null)
+        .gt('quantity', 0)
+        .or(`batch_number.ilike.%${scanValue}%,serial_no.ilike.%${scanValue}%,inventory_products.part_number.ilike.%${scanValue}%`);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const batch = data[0]; // Take first match
+        addInventoryPart({
+          part_number: batch.inventory_products?.part_number || '',
+          description: batch.inventory_products?.description || '',
+          quantity: 1,
+          cost_price: batch.cost_per_unit || 0,
+          batch_id: batch.id,
+          batch_number: batch.batch_number
+        });
+        
+        toast({
+          title: "Part Added",
+          description: `Added ${batch.inventory_products?.part_number} from scan`
+        });
+      } else {
+        toast({
+          title: "No Match",
+          description: "No inventory found for scanned value",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error scanning for part:', error);
+      toast({
+        title: "Error",
+        description: "Failed to search inventory",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleBarcodeKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      scanForPart(barcodeInput);
+      setBarcodeInput('');
+    }
+  };
+
   const addNewPart = (warehouse_type: 'warehouse_a' | 'warehouse_bc' | 'owner_supplied') => {
     setSelectedWarehouseType(warehouse_type);
     setInventoryLookupOpen(true);
@@ -175,6 +245,8 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
     if (!jobId || !user?.id) return;
 
     try {
+      console.log('Saving part:', part);
+      
       const categoryValue = part.warehouse_type === 'warehouse_a' ? 'spare' as const : 
                            part.warehouse_type === 'warehouse_bc' ? 'consumable' as const : 
                            'owner_supplied' as const;
@@ -191,6 +263,8 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
         category: categoryValue
       };
 
+      console.log('Part data to save:', partData);
+
       if (part.id?.startsWith('temp_')) {
         // Insert new part
         const { data, error } = await supabase
@@ -198,6 +272,8 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
           .insert(partData)
           .select()
           .single();
+
+        console.log('Insert result:', { data, error });
 
         if (error) throw error;
 
@@ -211,10 +287,14 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
         // Update existing part
         const updateData = partData;
         
+        console.log('Updating part with ID:', part.id, 'Data:', updateData);
+        
         const { error } = await supabase
           .from('job_items')
           .update(updateData)
           .eq('item_id', Number(part.id));
+
+        console.log('Update error:', error);
 
         if (error) throw error;
       }
@@ -227,7 +307,7 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
       console.error('Error saving part:', error);
       toast({
         title: "Error",
-        description: "Failed to save part",
+        description: `Failed to save part: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive"
       });
     }
@@ -323,6 +403,37 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
 
     return (
       <div className="space-y-4">
+        {/* Quick Barcode Scanner */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center gap-4">
+            <Package className="w-5 h-5 text-blue-600" />
+            <div className="flex-1">
+              <Input
+                value={barcodeInput}
+                onChange={(e) => setBarcodeInput(e.target.value)}
+                onKeyDown={handleBarcodeKeyPress}
+                placeholder="Scan or type part number, batch number, or serial number and press Enter..."
+                className="bg-white border-blue-300 text-gray-900 placeholder:text-gray-500"
+              />
+            </div>
+            <Button
+              onClick={() => {
+                scanForPart(barcodeInput);
+                setBarcodeInput('');
+              }}
+              disabled={!barcodeInput.trim()}
+              size="sm"
+              variant="outline"
+              className="bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
+            >
+              Add Part
+            </Button>
+          </div>
+          <div className="text-xs text-blue-600 mt-2">
+            💡 POS-style: Scan barcode or type part info, then press Enter for instant add
+          </div>
+        </div>
+
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
             <Button
@@ -332,7 +443,7 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
               className="bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100"
             >
               <Package className="w-4 h-4 mr-2" />
-              From Inventory
+              Browse Inventory
             </Button>
             <Button
               onClick={() => addManualPart(warehouseType)}

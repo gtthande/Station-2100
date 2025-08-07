@@ -46,12 +46,41 @@ export function InventoryPartLookup({ isOpen, onClose, onSelectPart, warehouseTy
   const [searchTerm, setSearchTerm] = useState('');
   const [availableBatches, setAvailableBatches] = useState<InventoryBatch[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    const filtered = filteredBatches;
+    
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex(prev => Math.min(prev + 1, filtered.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex(prev => Math.max(prev - 1, 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (filtered[selectedIndex]) {
+        handleSelectPart(filtered[selectedIndex]);
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      onClose();
+    }
+  };
+
+  // Reset selected index when search changes
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setSelectedIndex(0);
+  };
 
   useEffect(() => {
     if (isOpen) {
       loadAvailableBatches();
+      setSearchTerm('');
+      setSelectedIndex(0);
     }
   }, [isOpen, user]);
 
@@ -157,10 +186,12 @@ export function InventoryPartLookup({ isOpen, onClose, onSelectPart, warehouseTy
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
               type="text"
-              placeholder="Search by part number, description, batch number, or serial number..."
+              placeholder="Search by part number, description, batch number, or serial number... (Use ↑↓ arrows to navigate, Enter to select)"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="pl-10 bg-background border-input text-foreground"
+              autoFocus
             />
           </div>
 
@@ -194,8 +225,14 @@ export function InventoryPartLookup({ isOpen, onClose, onSelectPart, warehouseTy
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredBatches.map((batch) => (
-                    <TableRow key={batch.id} className="hover:bg-muted/50">
+                  filteredBatches.map((batch, index) => (
+                    <TableRow 
+                      key={batch.id} 
+                      className={`hover:bg-muted/50 cursor-pointer ${
+                        index === selectedIndex ? 'bg-muted ring-2 ring-primary/50' : ''
+                      }`}
+                      onClick={() => handleSelectPart(batch)}
+                    >
                       <TableCell className="font-medium text-foreground">
                         {batch.inventory_products?.part_number}
                       </TableCell>
