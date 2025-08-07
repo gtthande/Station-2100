@@ -1,30 +1,40 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, CheckCircle, Clock, AlertCircle, FileText, Printer } from "lucide-react";
+import { Loader2, Save, CheckCircle, Clock, AlertCircle, FileText, Printer, User, Plane, Calendar } from "lucide-react";
 import { JobCardApprovalPanel } from "./JobCardApprovalPanel";
 import { JobCardReports } from "./JobCardReports";
+import { TabbedJobInterface } from "./TabbedJobInterface";
 
 interface JobCardFormData {
-  customername: string;
+  customer_id: string;
   aircraft_regno: string;
   date_opened: string;
   remarks: string;
   description: string;
-  custaddress?: string;
-  custphone?: string;
   category?: string;
+}
+
+interface Customer {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  aircraft_type?: string;
+  tail_number?: string;
 }
 
 interface JobCardPart {
@@ -69,16 +79,35 @@ export function JobCardInterface() {
 
   const form = useForm<JobCardFormData>({
     defaultValues: {
-      customername: "",
+      customer_id: "",
       aircraft_regno: "",
       date_opened: new Date().toISOString().split('T')[0],
       remarks: "",
       description: "",
-      custaddress: "",
-      custphone: "",
       category: ""
     }
   });
+
+  // Fetch customers for dropdown
+  const { data: customers, isLoading: customersLoading } = useQuery({
+    queryKey: ['customers', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('customers')
+        .select('id, name, email, phone, aircraft_type, tail_number')
+        .eq('user_id', user.id)
+        .order('name');
+
+      if (error) throw error;
+      return data as Customer[];
+    },
+    enabled: !!user?.id,
+  });
+
+  // Get selected customer details
+  const selectedCustomer = customers?.find(c => c.id === form.watch('customer_id'));
 
   const loadJobCardParts = async (jobCardId: number) => {
     try {
@@ -121,12 +150,27 @@ export function JobCardInterface() {
       return;
     }
 
+    if (!selectedCustomer) {
+      toast({
+        title: "Error", 
+        description: "Please select a customer",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const jobCardData = {
-        ...data,
-        user_id: user.id,
-        date_opened: new Date(data.date_opened).toISOString()
+        customername: selectedCustomer.name,
+        custaddress: '',
+        custphone: selectedCustomer.phone || '',
+        aircraft_regno: data.aircraft_regno,
+        date_opened: new Date(data.date_opened).toISOString(),
+        description: data.description,
+        remarks: data.remarks,
+        category: data.category,
+        user_id: user.id
       };
 
       if (currentJobCardId) {
@@ -450,6 +494,7 @@ export function JobCardInterface() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      {/* Header Section */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Job Card Management</h1>
@@ -459,201 +504,206 @@ export function JobCardInterface() {
         </div>
       </div>
 
-      {/* Job Card Form */}
+      {/* Job Card Details Form */}
       <Card>
         <CardHeader>
-          <CardTitle>Job Card Details</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            Job Card Details
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Customer Selection */}
+              <Card className="col-span-1">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Customer Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="customer_id">Select Customer</Label>
+                    <Select
+                      value={form.watch('customer_id')}
+                      onValueChange={(value) => form.setValue('customer_id', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose customer..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {customers?.map((customer) => (
+                          <SelectItem key={customer.id} value={customer.id}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{customer.name}</span>
+                              {customer.email && (
+                                <span className="text-xs text-muted-foreground">{customer.email}</span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {selectedCustomer && (
+                    <div className="space-y-2 text-sm bg-gray-50 p-3 rounded-md">
+                      <p><strong>Phone:</strong> {selectedCustomer.phone || 'N/A'}</p>
+                      <p><strong>Aircraft Type:</strong> {selectedCustomer.aircraft_type || 'N/A'}</p>
+                      <p><strong>Tail Number:</strong> {selectedCustomer.tail_number || 'N/A'}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Aircraft Information */}
+              <Card className="col-span-1">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Plane className="w-4 h-4" />
+                    Aircraft Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="aircraft_regno">Aircraft Registration</Label>
+                    <Input
+                      id="aircraft_regno"
+                      {...form.register("aircraft_regno", { required: "Aircraft registration is required" })}
+                      placeholder="Enter aircraft registration"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Input
+                      id="category"
+                      {...form.register("category")}
+                      placeholder="Enter maintenance category"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Job Information */}
+              <Card className="col-span-1">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    Job Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="date_opened">Date Opened</Label>
+                    <Input
+                      id="date_opened"
+                      type="date"
+                      {...form.register("date_opened", { required: "Date opened is required" })}
+                    />
+                  </div>
+
+                  {currentJobCardId && (
+                    <div className="text-sm bg-blue-50 p-3 rounded-md">
+                      <p><strong>Job Card ID:</strong> {currentJobCardId}</p>
+                      <Badge variant={
+                        jobStatus === 'closed' ? 'default' :
+                        jobStatus === 'fully_approved' ? 'default' :
+                        jobStatus === 'partially_approved' ? 'secondary' :
+                        jobStatus === 'submitted' ? 'outline' : 'secondary'
+                      }>
+                        {jobStatus === 'draft' && <Clock className="w-3 h-3 mr-1" />}
+                        {jobStatus === 'submitted' && <AlertCircle className="w-3 h-3 mr-1" />}
+                        {(jobStatus === 'fully_approved' || jobStatus === 'closed') && <CheckCircle className="w-3 h-3 mr-1" />}
+                        {jobStatus.replace('_', ' ').toUpperCase()}
+                      </Badge>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Description and Remarks */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="customername">Customer Name</Label>
-                <Input
-                  id="customername"
-                  {...form.register("customername", { required: "Customer name is required" })}
-                  placeholder="Enter customer name"
+                <Label htmlFor="description">Work Description</Label>
+                <Textarea
+                  id="description"
+                  {...form.register("description")}
+                  placeholder="Describe the maintenance work to be performed"
+                  rows={4}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="aircraft_regno">Aircraft Registration</Label>
-                <Input
-                  id="aircraft_regno"
-                  {...form.register("aircraft_regno", { required: "Aircraft registration is required" })}
-                  placeholder="Enter aircraft registration"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="date_opened">Date Opened</Label>
-                <Input
-                  id="date_opened"
-                  type="date"
-                  {...form.register("date_opened", { required: "Date opened is required" })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
-                <Input
-                  id="category"
-                  {...form.register("category")}
-                  placeholder="Enter category"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="custaddress">Customer Address</Label>
-                <Input
-                  id="custaddress"
-                  {...form.register("custaddress")}
-                  placeholder="Enter customer address"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="custphone">Customer Phone</Label>
-                <Input
-                  id="custphone"
-                  {...form.register("custphone")}
-                  placeholder="Enter customer phone"
+                <Label htmlFor="remarks">Remarks</Label>
+                <Textarea
+                  id="remarks"
+                  {...form.register("remarks")}
+                  placeholder="Additional notes or special instructions"
+                  rows={4}
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                {...form.register("description")}
-                placeholder="Enter job description"
-                rows={3}
-              />
-            </div>
+            <div className="flex gap-4">
+              <Button type="submit" disabled={isLoading || !selectedCustomer}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    {currentJobCardId ? 'Update Job Card' : 'Create Job Card'}
+                  </>
+                )}
+              </Button>
 
-            <div className="space-y-2">
-              <Label htmlFor="remarks">Remarks</Label>
-              <Textarea
-                id="remarks"
-                {...form.register("remarks")}
-                placeholder="Enter remarks"
-                rows={3}
-              />
-            </div>
-
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  {currentJobCardId ? 'Update Job Card' : 'Create Job Card'}
-                </>
+              {currentJobCardId && (
+                <div className="flex gap-2">
+                  {jobStatus === 'draft' && (
+                    <Button onClick={submitForApproval} disabled={isLoading} variant="outline">
+                      {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
+                      Submit for Approval
+                    </Button>
+                  )}
+                  
+                  {jobStatus === 'fully_approved' && (
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="invoice">Invoice Number:</Label>
+                        <Input
+                          id="invoice"
+                          value={invoiceNumber}
+                          onChange={(e) => setInvoiceNumber(e.target.value)}
+                          placeholder="Enter invoice number"
+                          className="w-48"
+                        />
+                      </div>
+                      <Button onClick={closeJob} disabled={isLoading || !invoiceNumber.trim()} variant="outline">
+                        {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
+                        Close Job
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {(jobStatus === 'closed' || jobStatus === 'fully_approved') && (
+                    <JobCardReports jobCardId={currentJobCardId} />
+                  )}
+                </div>
               )}
-            </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
 
-      {/* Job Status and Actions */}
+      {/* Warehouse Tabs - Parts Management */}
       {currentJobCardId && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Job Status</span>
-              <Badge variant={
-                jobStatus === 'closed' ? 'default' :
-                jobStatus === 'fully_approved' ? 'default' :
-                jobStatus === 'partially_approved' ? 'secondary' :
-                jobStatus === 'submitted' ? 'outline' : 'secondary'
-              }>
-                {jobStatus === 'draft' && <Clock className="w-3 h-3 mr-1" />}
-                {jobStatus === 'submitted' && <AlertCircle className="w-3 h-3 mr-1" />}
-                {(jobStatus === 'fully_approved' || jobStatus === 'closed') && <CheckCircle className="w-3 h-3 mr-1" />}
-                {jobStatus.replace('_', ' ').toUpperCase()}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-4">
-              {jobStatus === 'draft' && (
-                <Button onClick={submitForApproval} disabled={isLoading}>
-                  {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
-                  Submit for Approval
-                </Button>
-              )}
-              
-              {jobStatus === 'fully_approved' && (
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="invoice">Invoice Number:</Label>
-                    <Input
-                      id="invoice"
-                      value={invoiceNumber}
-                      onChange={(e) => setInvoiceNumber(e.target.value)}
-                      placeholder="Enter invoice number"
-                      className="w-48"
-                    />
-                  </div>
-                  <Button onClick={closeJob} disabled={isLoading || !invoiceNumber.trim()}>
-                    {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
-                    Close Job
-                  </Button>
-                </div>
-              )}
-              
-              {(jobStatus === 'closed' || jobStatus === 'fully_approved') && (
-                <JobCardReports jobCardId={currentJobCardId} />
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Parts Management Tabs */}
-      {currentJobCardId && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Job Card Parts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="warehouse_a" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="warehouse_a" className="relative">
-                  Warehouse A (Aircraft)
-                  {approvals.find(a => a.tab_name === 'warehouse_a')?.approved && 
-                    <CheckCircle className="w-4 h-4 ml-2 text-green-600" />}
-                </TabsTrigger>
-                <TabsTrigger value="warehouse_bc" className="relative">
-                  Warehouses B & C
-                  {approvals.find(a => a.tab_name === 'warehouse_bc')?.approved && 
-                    <CheckCircle className="w-4 h-4 ml-2 text-green-600" />}
-                </TabsTrigger>
-                <TabsTrigger value="owner_supplied" className="relative">
-                  Owner Supplied
-                  {approvals.find(a => a.tab_name === 'owner_supplied')?.approved && 
-                    <CheckCircle className="w-4 h-4 ml-2 text-green-600" />}
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="warehouse_a" className="space-y-4">
-                {renderPartsTable(aircraftParts, 'aircraft', 'warehouse_a')}
-              </TabsContent>
-
-              <TabsContent value="warehouse_bc" className="space-y-4">
-                {renderPartsTable(consumableParts, 'consumable', 'warehouse_bc')}
-              </TabsContent>
-
-              <TabsContent value="owner_supplied" className="space-y-4">
-                {renderPartsTable(ownerSuppliedParts, 'owner_supplied', 'owner_supplied')}
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+        <TabbedJobInterface jobId={currentJobCardId} />
       )}
     </div>
   );
