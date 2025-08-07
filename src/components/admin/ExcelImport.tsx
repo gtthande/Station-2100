@@ -556,49 +556,42 @@ export const ExcelImport = () => {
               return excelColumn ? row[excelColumn] : '';
             };
 
-            // Helper function to validate UUID format
-            const validateUUID = (value: any): string | null => {
-              if (!value || String(value).trim() === '') return null;
+            // Helper function to generate or validate UUID
+            const generateOrValidateUUID = (value: any): string => {
+              if (!value || String(value).trim() === '') {
+                // Generate a new UUID if no value provided
+                return crypto.randomUUID();
+              }
+              
               const str = String(value).trim();
               
-              // Enhanced UUID format validation
+              // Check if it's already a valid UUID
               const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-              if (!uuidRegex.test(str)) {
-                throw new Error(`Invalid UUID format: ${str}`);
+              if (uuidRegex.test(str)) {
+                return str;
               }
               
-              // Additional length validation
-              if (str.length !== 36) {
-                throw new Error(`Invalid UUID length: ${str.length}, expected 36`);
-              }
+              // If it's a number or other format, generate a deterministic UUID based on the value
+              // This ensures consistent IDs for the same input value
+              const hash = str.split('').reduce((a, b) => {
+                a = ((a << 5) - a) + b.charCodeAt(0);
+                return a & a;
+              }, 0);
               
-              return str;
+              // Create a UUID v4 format using the hash
+              const hex = Math.abs(hash).toString(16).padStart(8, '0');
+              return `${hex.substring(0, 8)}-${hex.substring(0, 4)}-4${hex.substring(1, 4)}-8${hex.substring(0, 3)}-${hex.padEnd(12, '0').substring(0, 12)}`;
             };
 
             const customerId = getMappedValue('customer_id');
             const customerName = String(getMappedValue('name') || '').trim();
-
-            if (!customerId) {
-              errors.push(`Row ${i + 1}: Customer ID is required`);
-              continue;
-            }
 
             if (!customerName) {
               errors.push(`Row ${i + 1}: Customer name is required`);
               continue;
             }
 
-            let validatedCustomerId: string;
-            try {
-              validatedCustomerId = validateUUID(customerId) || '';
-              if (!validatedCustomerId) {
-                errors.push(`Row ${i + 1}: Invalid customer ID format`);
-                continue;
-              }
-            } catch (error) {
-              errors.push(`Row ${i + 1}: ${error instanceof Error ? error.message : 'Invalid customer ID'}`);
-              continue;
-            }
+            const validatedCustomerId = generateOrValidateUUID(customerId);
 
             const customerData: any = {
               id: validatedCustomerId, // Use customer_id from spreadsheet as primary id
