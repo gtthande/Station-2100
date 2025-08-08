@@ -13,11 +13,12 @@ import { useToast } from '@/hooks/use-toast';
 import { JobPart, GrandTotals } from '@/hooks/useJobCalculations';
 
 interface JobCardReportsProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
   jobId?: number;
-  parts: JobPart[];
-  totals: GrandTotals;
+  jobCardId?: number;
+  parts?: JobPart[];
+  totals?: GrandTotals;
 }
 
 export function JobCardReports({ isOpen, onClose, jobId, parts, totals }: JobCardReportsProps) {
@@ -202,9 +203,9 @@ export function JobCardReports({ isOpen, onClose, jobId, parts, totals }: JobCar
 
         <div class="totals">
           <h3>Grand Totals</h3>
-          ${!isCustomerCopy ? `<p>Total Cost Price: $${totals.cost_total.toFixed(2)}</p>` : ''}
-          <p><strong>Total Fitting Price: $${totals.fitting_total.toFixed(2)}</strong></p>
-          <p>Total Parts: ${totals.parts_count}</p>
+          ${!isCustomerCopy ? `<p>Total Cost Price: $${totals.total_cost.toFixed(2)}</p>` : ''}
+          <p><strong>Total Fitting Price: $${totals.total_fitting.toFixed(2)}</strong></p>
+          <p>Total Parts: ${totals.total_parts}</p>
         </div>
 
         ${notes ? `

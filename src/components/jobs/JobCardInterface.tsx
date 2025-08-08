@@ -301,8 +301,7 @@ export function JobCardInterface() {
           </div>
           {jobStatus !== 'draft' && (
             <JobCardApprovalPanel
-              tabName={tabName as any}
-              jobCardId={currentJobCardId!}
+              jobId={currentJobCardId!}
               onApprovalChange={loadJobCardApprovals}
             />
           )}

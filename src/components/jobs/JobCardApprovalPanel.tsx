@@ -11,6 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 
 interface JobCardApprovalPanelProps {
   jobId?: number;
+  tabName?: string;
+  onApprovalChange?: () => Promise<void>;
 }
 
 interface ApprovalStatus {
@@ -26,7 +28,7 @@ interface ApprovalStatus {
   job_status: string;
 }
 
-export function JobCardApprovalPanel({ jobId }: JobCardApprovalPanelProps) {
+export function JobCardApprovalPanel({ jobId, tabName, onApprovalChange }: JobCardApprovalPanelProps) {
   const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
@@ -107,6 +109,9 @@ export function JobCardApprovalPanel({ jobId }: JobCardApprovalPanelProps) {
         });
 
       await loadApprovalStatus();
+      if (onApprovalChange) {
+        await onApprovalChange();
+      }
       
       toast({
         title: "Approval Successful",
