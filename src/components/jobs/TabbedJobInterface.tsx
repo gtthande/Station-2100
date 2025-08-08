@@ -1,34 +1,16 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Printer, Plus, Trash2, Calculator, Package } from "lucide-react";
-import { InventoryPartLookup } from "./InventoryPartLookup";
-
-interface JobPart {
-  id?: string;
-  partno: string;
-  description: string;
-  quantity: number;
-  cost_price: number;
-  fitting_price: number;
-  warehouse_type: 'warehouse_a' | 'warehouse_bc' | 'owner_supplied';
-  job_id?: number;
-  batch_id?: string;
-  batch_number?: string;
-}
-
-interface TabTotals {
-  warehouse_a: { cost_total: number; fitting_total: number; parts_count: number };
-  warehouse_bc: { cost_total: number; fitting_total: number; parts_count: number };
-  owner_supplied: { fitting_total: number; parts_count: number };
-}
+import { Printer, Calculator } from "lucide-react";
+import { JobPart, useJobCalculations } from "@/hooks/useJobCalculations";
+import { WarehouseATab } from "./WarehouseATab";
+import { WarehouseBCTab } from "./WarehouseBCTab";
+import { OwnerSuppliedTab } from "./OwnerSuppliedTab";
+import { JobTotalsCard } from "./JobTotalsCard";
+import { Button } from "@/components/ui/button";
 
 interface TabbedJobInterfaceProps {
   jobId?: number;
@@ -36,17 +18,13 @@ interface TabbedJobInterfaceProps {
 
 export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
   const [parts, setParts] = useState<JobPart[]>([]);
-  const [totals, setTotals] = useState<TabTotals>({
-    warehouse_a: { cost_total: 0, fitting_total: 0, parts_count: 0 },
-    warehouse_bc: { cost_total: 0, fitting_total: 0, parts_count: 0 },
-    owner_supplied: { fitting_total: 0, parts_count: 0 }
-  });
   const [isLoading, setIsLoading] = useState(false);
-  const [inventoryLookupOpen, setInventoryLookupOpen] = useState(false);
-  const [selectedWarehouseType, setSelectedWarehouseType] = useState<'warehouse_a' | 'warehouse_bc' | 'owner_supplied'>('warehouse_a');
   const [barcodeInput, setBarcodeInput] = useState('');
+  const [selectedWarehouseType, setSelectedWarehouseType] = useState<'warehouse_a' | 'warehouse_bc' | 'owner_supplied'>('warehouse_a');
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  const { totals, grandTotals } = useJobCalculations(parts);
 
   const loadParts = async () => {
     if (!jobId) return;
@@ -85,156 +63,6 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const calculateTotals = () => {
-    const newTotals: TabTotals = {
-      warehouse_a: { cost_total: 0, fitting_total: 0, parts_count: 0 },
-      warehouse_bc: { cost_total: 0, fitting_total: 0, parts_count: 0 },
-      owner_supplied: { fitting_total: 0, parts_count: 0 }
-    };
-
-    parts.forEach(part => {
-      const costTotal = part.cost_price * part.quantity;
-      const fittingTotal = part.fitting_price * part.quantity;
-
-      if (part.warehouse_type === 'warehouse_a') {
-        newTotals.warehouse_a.cost_total += costTotal;
-        newTotals.warehouse_a.fitting_total += fittingTotal;
-        newTotals.warehouse_a.parts_count += 1;
-      } else if (part.warehouse_type === 'warehouse_bc') {
-        newTotals.warehouse_bc.cost_total += costTotal;
-        newTotals.warehouse_bc.fitting_total += fittingTotal;
-        newTotals.warehouse_bc.parts_count += 1;
-      } else if (part.warehouse_type === 'owner_supplied') {
-        newTotals.owner_supplied.fitting_total += fittingTotal;
-        newTotals.owner_supplied.parts_count += 1;
-      }
-    });
-
-    setTotals(newTotals);
-  };
-
-  const scanForPart = async (scanValue: string) => {
-    if (!scanValue.trim() || !user) {
-      console.log('Scan cancelled: missing value or user');
-      return;
-    }
-
-    try {
-      console.log('Scanning for part:', scanValue);
-      
-      // Search for part by part number, batch number, or serial number
-      const { data, error } = await supabase
-        .from('inventory_batches')
-        .select(`
-          id,
-          batch_number,
-          quantity,
-          cost_per_unit,
-          selling_price,
-          serial_no,
-          inventory_products (
-            id,
-            part_number,
-            description,
-            unit_of_measure
-          )
-        `)
-        .eq('user_id', user.id)
-        .eq('approval_status', 'approved')
-        .eq('status', 'active')
-        .is('job_allocated_to', null)
-        .gt('quantity', 0);
-
-      console.log('Inventory search result:', { data, error });
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-
-      if (data && data.length > 0) {
-        // Filter results by the scan value
-        const filtered = data.filter(batch => 
-          batch.batch_number?.toLowerCase().includes(scanValue.toLowerCase()) ||
-          batch.serial_no?.toLowerCase().includes(scanValue.toLowerCase()) ||
-          batch.inventory_products?.part_number?.toLowerCase().includes(scanValue.toLowerCase())
-        );
-
-        console.log('Filtered results:', filtered);
-
-        if (filtered.length > 0) {
-          const batch = filtered[0]; // Take first match
-          console.log('Adding inventory part:', batch);
-          
-          addInventoryPart({
-            part_number: batch.inventory_products?.part_number || '',
-            description: batch.inventory_products?.description || '',
-            quantity: 1,
-            cost_price: batch.cost_per_unit || 0,
-            batch_id: batch.id,
-            batch_number: batch.batch_number
-          });
-          
-          try {
-            toast({
-              title: "Part Added",
-              description: `Added ${batch.inventory_products?.part_number} from scan`
-            });
-          } catch (toastError) {
-            console.error('Toast error:', toastError);
-          }
-        } else {
-          console.log('No matching parts found for:', scanValue);
-          try {
-            toast({
-              title: "No Match",
-              description: "No inventory found for scanned value",
-              variant: "destructive"
-            });
-          } catch (toastError) {
-            console.error('Toast error:', toastError);
-          }
-        }
-      } else {
-        console.log('No inventory data returned');
-        try {
-          toast({
-            title: "No Inventory",
-            description: "No inventory available",
-            variant: "destructive"
-          });
-        } catch (toastError) {
-          console.error('Toast error:', toastError);
-        }
-      }
-    } catch (error) {
-      console.error('Error scanning for part:', error);
-      try {
-        toast({
-          title: "Error",
-          description: `Failed to search inventory: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          variant: "destructive"
-        });
-      } catch (toastError) {
-        console.error('Toast error:', toastError);
-        alert(`Failed to search inventory: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
-    }
-  };
-
-  const handleBarcodeKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      scanForPart(barcodeInput);
-      setBarcodeInput('');
-    }
-  };
-
-  const addNewPart = (warehouse_type: 'warehouse_a' | 'warehouse_bc' | 'owner_supplied') => {
-    setSelectedWarehouseType(warehouse_type);
-    setInventoryLookupOpen(true);
   };
 
   const addManualPart = (warehouse_type: 'warehouse_a' | 'warehouse_bc' | 'owner_supplied') => {
@@ -290,14 +118,9 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
   };
 
   const savePart = async (part: JobPart) => {
-    if (!jobId || !user?.id) {
-      console.log('Save cancelled: missing jobId or user');
-      return;
-    }
+    if (!jobId || !user?.id) return;
 
     try {
-      console.log('Saving part:', part);
-      
       const categoryValue = part.warehouse_type === 'warehouse_a' ? 'spare' as const : 
                            part.warehouse_type === 'warehouse_bc' ? 'consumable' as const : 
                            'owner_supplied' as const;
@@ -314,444 +137,123 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
         category: categoryValue
       };
 
-      console.log('Part data to save:', partData);
-
       if (part.id?.startsWith('temp_')) {
-        // Insert new part
-        console.log('Inserting new part...');
         const { data, error } = await supabase
           .from('job_items')
           .insert(partData)
           .select()
           .single();
 
-        console.log('Insert result:', { data, error });
+        if (error) throw error;
 
-        if (error) {
-          console.error('Insert error:', error);
-          throw error;
-        }
-
-        // Update the part with the real ID
         setParts(parts.map(p => 
           p.id === part.id 
             ? { ...part, id: data.item_id?.toString() }
             : p
         ));
       } else {
-        // Update existing part
-        console.log('Updating existing part with ID:', part.id);
-        const updateData = partData;
-        
         const { error } = await supabase
           .from('job_items')
-          .update(updateData)
+          .update(partData)
           .eq('item_id', Number(part.id));
 
-        console.log('Update error:', error);
-
-        if (error) {
-          console.error('Update error:', error);
-          throw error;
-        }
+        if (error) throw error;
       }
 
-      try {
-        toast({
-          title: "Success",
-          description: "Part saved successfully"
-        });
-      } catch (toastError) {
-        console.error('Toast error:', toastError);
-      }
+      toast({
+        title: "Success",
+        description: "Part saved successfully"
+      });
     } catch (error) {
       console.error('Error saving part:', error);
-      try {
-        toast({
-          title: "Error",
-          description: `Failed to save part: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          variant: "destructive"
-        });
-      } catch (toastError) {
-        console.error('Toast error:', toastError);
-        alert(`Failed to save part: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
+      toast({
+        title: "Error",
+        description: "Failed to save part",
+        variant: "destructive"
+      });
     }
-  };
-
-  const printTab = (warehouseType: 'warehouse_a' | 'warehouse_bc' | 'owner_supplied') => {
-    const filteredParts = parts.filter(part => part.warehouse_type === warehouseType);
-    const tabTotals = totals[warehouseType];
-    const showCostPrice = warehouseType !== 'owner_supplied';
-    
-    const warehouseNames = {
-      warehouse_a: 'Warehouse A - Aircraft Spares',
-      warehouse_bc: 'Warehouses B & C - Consumables', 
-      owner_supplied: 'Owner-Supplied Items'
-    };
-
-    const printContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>${warehouseNames[warehouseType as keyof typeof warehouseNames]} - Job #${jobId}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            h1 { color: #333; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
-            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #f5f5f5; font-weight: bold; }
-            .totals { background-color: #e8f5e8; font-weight: bold; }
-            .text-right { text-align: right; }
-            @media print { body { margin: 0; } }
-          </style>
-        </head>
-        <body>
-          <h1>${warehouseNames[warehouseType as keyof typeof warehouseNames]}</h1>
-          <p><strong>Job ID:</strong> ${jobId}</p>
-          <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
-          
-          <table>
-            <thead>
-              <tr>
-                <th>Part No</th>
-                <th>Description</th>
-                <th>Quantity</th>
-                ${showCostPrice ? '<th>Cost Price</th>' : ''}
-                <th>Fitting Price</th>
-                ${showCostPrice ? '<th>Total Cost</th>' : ''}
-                <th>Total Fitting</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filteredParts.map(part => `
-                <tr>
-                  <td>${part.partno}</td>
-                  <td>${part.description}</td>
-                  <td class="text-right">${part.quantity}</td>
-                  ${showCostPrice ? `<td class="text-right">$${part.cost_price.toFixed(2)}</td>` : ''}
-                  <td class="text-right">$${part.fitting_price.toFixed(2)}</td>
-                  ${showCostPrice ? `<td class="text-right">$${(part.cost_price * part.quantity).toFixed(2)}</td>` : ''}
-                  <td class="text-right">$${(part.fitting_price * part.quantity).toFixed(2)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-            <tfoot>
-              <tr class="totals">
-                <td colspan="${showCostPrice ? '5' : '3'}">TOTALS:</td>
-                ${showCostPrice ? `<td class="text-right">$${('cost_total' in tabTotals ? tabTotals.cost_total : 0).toFixed(2)}</td>` : ''}
-                <td class="text-right">$${tabTotals.fitting_total.toFixed(2)}</td>
-              </tr>
-            </tfoot>
-          </table>
-          
-          <div style="margin-top: 30px;">
-            <p><strong>Parts Count:</strong> ${tabTotals.parts_count}</p>
-            ${showCostPrice ? `<p><strong>Total Cost Price:</strong> $${('cost_total' in tabTotals ? tabTotals.cost_total : 0).toFixed(2)}</p>` : ''}
-            <p><strong>Total Fitting Price:</strong> $${tabTotals.fitting_total.toFixed(2)}</p>
-            ${showCostPrice ? `<p><strong>Profit Margin:</strong> $${(tabTotals.fitting_total - ('cost_total' in tabTotals ? tabTotals.cost_total : 0)).toFixed(2)}</p>` : ''}
-          </div>
-        </body>
-      </html>
-    `;
-
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(printContent);
-      printWindow.document.close();
-      printWindow.print();
-    }
-  };
-
-  const renderPartsTable = (warehouseType: 'warehouse_a' | 'warehouse_bc' | 'owner_supplied') => {
-    const filteredParts = parts.filter(part => part.warehouse_type === warehouseType);
-    const showCostPrice = warehouseType !== 'owner_supplied';
-
-    return (
-      <div className="space-y-4">
-        {/* Quick Barcode Scanner */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center gap-4">
-            <Package className="w-5 h-5 text-blue-600" />
-            <div className="flex-1">
-              <Input
-                value={barcodeInput}
-                onChange={(e) => setBarcodeInput(e.target.value)}
-                onKeyDown={handleBarcodeKeyPress}
-                placeholder="Scan or type part number, batch number, or serial number and press Enter..."
-                className="bg-white border-blue-300 text-gray-900 placeholder:text-gray-500"
-              />
-            </div>
-            <Button
-              onClick={() => {
-                scanForPart(barcodeInput);
-                setBarcodeInput('');
-              }}
-              disabled={!barcodeInput.trim()}
-              size="sm"
-              variant="outline"
-              className="bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
-            >
-              Add Part
-            </Button>
-          </div>
-          <div className="text-xs text-blue-600 mt-2">
-            💡 POS-style: Scan barcode or type part info, then press Enter for instant add
-          </div>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <div className="flex gap-2">
-            <Button
-              onClick={() => addNewPart(warehouseType)}
-              size="sm"
-              variant="outline"
-              className="bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100"
-            >
-              <Package className="w-4 h-4 mr-2" />
-              Browse Inventory
-            </Button>
-            <Button
-              onClick={() => addManualPart(warehouseType)}
-              size="sm"
-              variant="outline"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Manual Entry
-            </Button>
-          </div>
-          <Button
-            onClick={() => printTab(warehouseType)}
-            size="sm"
-            variant="outline"
-          >
-            <Printer className="w-4 h-4 mr-2" />
-            Print Tab
-          </Button>
-        </div>
-
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Part No</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Quantity</TableHead>
-              {showCostPrice && <TableHead>Cost Price</TableHead>}
-              <TableHead>Fitting Price</TableHead>
-              {showCostPrice && <TableHead>Total Cost</TableHead>}
-              <TableHead>Total Fitting</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredParts.map((part) => (
-              <TableRow key={part.id}>
-                <TableCell>
-                  <div className="space-y-1">
-                    <Input
-                      value={part.partno}
-                      onChange={(e) => updatePart(part.id!, 'partno', e.target.value)}
-                      placeholder="Part number"
-                      className="w-32"
-                    />
-                    {part.batch_number && (
-                      <div className="text-xs text-blue-600 font-mono">
-                        Batch: {part.batch_number}
-                      </div>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Input
-                    value={part.description}
-                    onChange={(e) => updatePart(part.id!, 'description', e.target.value)}
-                    placeholder="Description"
-                    className="w-48"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Input
-                    type="number"
-                    value={part.quantity}
-                    onChange={(e) => updatePart(part.id!, 'quantity', e.target.value)}
-                    className="w-20"
-                    min="0"
-                  />
-                </TableCell>
-                {showCostPrice && (
-                  <TableCell>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={part.cost_price}
-                      onChange={(e) => updatePart(part.id!, 'cost_price', e.target.value)}
-                      className="w-24"
-                      min="0"
-                    />
-                  </TableCell>
-                )}
-                <TableCell>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={part.fitting_price}
-                    onChange={(e) => updatePart(part.id!, 'fitting_price', e.target.value)}
-                    className="w-24"
-                    min="0"
-                  />
-                </TableCell>
-                {showCostPrice && (
-                  <TableCell className="font-medium">
-                    ${(part.cost_price * part.quantity).toFixed(2)}
-                  </TableCell>
-                )}
-                <TableCell className="font-medium">
-                  ${(part.fitting_price * part.quantity).toFixed(2)}
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => savePart(part)}
-                      disabled={!part.partno || !part.description}
-                    >
-                      Save
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => deletePart(part.id!)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-            {filteredParts.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={showCostPrice ? 8 : 6} className="text-center text-muted-foreground py-8">
-                  No parts added yet. Click "Add Part" to get started.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-
-        {/* Tab Totals */}
-        <Card className="bg-gray-50">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Calculator className="w-5 h-5 text-blue-600" />
-                <span className="font-semibold">Tab Totals</span>
-              </div>
-              <div className="flex gap-6 text-sm">
-                <div>
-                  <span className="text-gray-600">Parts: </span>
-                  <Badge variant="secondary">{totals[warehouseType].parts_count}</Badge>
-                </div>
-                {showCostPrice && (
-                  <div>
-                    <span className="text-gray-600">Total Cost: </span>
-                    <Badge variant="outline">${('cost_total' in totals[warehouseType] ? totals[warehouseType].cost_total : 0).toFixed(2)}</Badge>
-                  </div>
-                )}
-                <div>
-                  <span className="text-gray-600">Total Fitting: </span>
-                  <Badge variant="default">${totals[warehouseType].fitting_total.toFixed(2)}</Badge>
-                </div>
-                {showCostPrice && (
-                  <div>
-                    <span className="text-gray-600">Profit: </span>
-                    <Badge variant="default" className="bg-green-100 text-green-700">
-                      ${(totals[warehouseType].fitting_total - ('cost_total' in totals[warehouseType] ? totals[warehouseType].cost_total : 0)).toFixed(2)}
-                    </Badge>
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
   };
 
   useEffect(() => {
-    if (jobId) {
-      loadParts();
-    }
+    loadParts();
   }, [jobId]);
 
-  useEffect(() => {
-    calculateTotals();
-  }, [parts]);
-
-  if (!jobId) {
-    return (
-      <Card>
-        <CardContent className="p-8 text-center">
-          <p className="text-muted-foreground">Please select a job to manage parts</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Job Parts Management - Job #{jobId}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="warehouse_a" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="warehouse_a" className="relative">
-              Warehouse A - Aircraft Spares
-              {totals.warehouse_a.parts_count > 0 && (
-                <Badge variant="secondary" className="ml-2 text-xs">
-                  {totals.warehouse_a.parts_count}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="warehouse_bc" className="relative">
-              Warehouses B & C - Consumables
-              {totals.warehouse_bc.parts_count > 0 && (
-                <Badge variant="secondary" className="ml-2 text-xs">
-                  {totals.warehouse_bc.parts_count}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="owner_supplied" className="relative">
-              Owner-Supplied Items
-              {totals.owner_supplied.parts_count > 0 && (
-                <Badge variant="secondary" className="ml-2 text-xs">
-                  {totals.owner_supplied.parts_count}
-                </Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Calculator className="w-6 h-6" />
+              <span>Job Parts & Pricing Management</span>
+              {jobId && <span className="text-muted-foreground">- Job #{jobId}</span>}
+            </div>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Printer className="w-4 h-4" />
+              Print Complete Job
+            </Button>
+          </CardTitle>
+        </CardHeader>
+      </Card>
 
-          <TabsContent value="warehouse_a" className="space-y-4">
-            {renderPartsTable('warehouse_a')}
-          </TabsContent>
+      <JobTotalsCard totals={totals} grandTotals={grandTotals} />
 
-          <TabsContent value="warehouse_bc" className="space-y-4">
-            {renderPartsTable('warehouse_bc')}
-          </TabsContent>
+      <Tabs defaultValue="warehouse_a" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="warehouse_a">Warehouse A ({totals.warehouse_a.parts_count})</TabsTrigger>
+          <TabsTrigger value="warehouse_bc">Warehouses B&C ({totals.warehouse_bc.parts_count})</TabsTrigger>
+          <TabsTrigger value="owner_supplied">Owner Supplied ({totals.owner_supplied.parts_count})</TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="owner_supplied" className="space-y-4">
-            {renderPartsTable('owner_supplied')}
-          </TabsContent>
-        </Tabs>
+        <TabsContent value="warehouse_a">
+          <WarehouseATab
+            parts={parts}
+            totals={totals.warehouse_a}
+            jobId={jobId}
+            onAddInventoryPart={addInventoryPart}
+            onAddManualPart={() => addManualPart('warehouse_a')}
+            onUpdatePart={updatePart}
+            onDeletePart={deletePart}
+            onSavePart={savePart}
+            onPrint={() => {}}
+            barcodeInput={barcodeInput}
+            setBarcodeInput={setBarcodeInput}
+            onBarcodeKeyPress={() => {}}
+            onScanForPart={() => {}}
+          />
+        </TabsContent>
 
-        <InventoryPartLookup
-          isOpen={inventoryLookupOpen}
-          onClose={() => setInventoryLookupOpen(false)}
-          onSelectPart={addInventoryPart}
-          warehouseType={selectedWarehouseType}
-        />
-      </CardContent>
-    </Card>
+        <TabsContent value="warehouse_bc">
+          <WarehouseBCTab
+            parts={parts}
+            totals={totals.warehouse_bc}
+            jobId={jobId}
+            onAddInventoryPart={addInventoryPart}
+            onAddManualPart={() => addManualPart('warehouse_bc')}
+            onUpdatePart={updatePart}
+            onDeletePart={deletePart}
+            onSavePart={savePart}
+            onPrint={() => {}}
+            barcodeInput={barcodeInput}
+            setBarcodeInput={setBarcodeInput}
+            onBarcodeKeyPress={() => {}}
+            onScanForPart={() => {}}
+          />
+        </TabsContent>
+
+        <TabsContent value="owner_supplied">
+          <OwnerSuppliedTab
+            parts={parts}
+            totals={totals.owner_supplied}
+            jobId={jobId}
+            onAddManualPart={() => addManualPart('owner_supplied')}
+            onUpdatePart={updatePart}
+            onDeletePart={deletePart}
+            onSavePart={savePart}
+            onPrint={() => {}}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
