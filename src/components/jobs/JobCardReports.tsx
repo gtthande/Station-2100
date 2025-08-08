@@ -1,307 +1,323 @@
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { FileText, Printer, Download } from "lucide-react";
+import { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FileText, Printer, Receipt, DollarSign } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+import { JobPart, GrandTotals } from '@/hooks/useJobCalculations';
 
 interface JobCardReportsProps {
-  jobCardId: number;
+  isOpen: boolean;
+  onClose: () => void;
+  jobId?: number;
+  parts: JobPart[];
+  totals: GrandTotals;
 }
 
-interface JobCardData {
-  customername: string;
-  aircraft_regno: string;
-  date_opened: string;
-  description: string;
-  close_invoice: string;
-  parts: Array<{
-    partno: number;
-    description: string;
-    quantity: number;
-    cost_price: number;
-    fitting_cost: number;
-    type: string;
-  }>;
-}
-
-export function JobCardReports({ jobCardId }: JobCardReportsProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [jobData, setJobData] = useState<JobCardData | null>(null);
+export function JobCardReports({ isOpen, onClose, jobId, parts, totals }: JobCardReportsProps) {
+  const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [notes, setNotes] = useState('');
+  const [finalizing, setFinalizing] = useState(false);
+  const [reportType, setReportType] = useState<'customer' | 'internal'>('customer');
+  const { user } = useAuth();
   const { toast } = useToast();
 
-  const loadJobData = async () => {
-    setIsLoading(true);
-    try {
-      const { data: jobCard, error: jobError } = await supabase
-        .from('job_cards')
-        .select('*')
-        .eq('jobcardid', jobCardId)
-        .single();
-
-      if (jobError) throw jobError;
-
-      const { data: parts, error: partsError } = await supabase
-        .from('jobcard_parts')
-        .select('*')
-        .eq('jobcardid', jobCardId);
-
-      if (partsError) throw partsError;
-
-      setJobData({
-        ...jobCard,
-        parts: (parts || []).map(part => ({
-          partno: Number(part.partno),
-          description: part.description || '',
-          quantity: Number(part.quantity) || 0,
-          cost_price: Number(part.buying_price) || 0,
-          fitting_cost: Number(part.fitting_price) || 0,
-          type: part.type || 'aircraft'
-        }))
-      });
-    } catch (error) {
-      console.error('Error loading job data:', error);
+  const handleFinalizeJob = async () => {
+    if (!jobId || !user || !invoiceNumber.trim()) {
       toast({
         title: "Error",
-        description: "Failed to load job data",
+        description: "Invoice number is required to finalize the job",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setFinalizing(true);
+    try {
+      const { error } = await supabase
+        .from('job_cards')
+        .update({
+          job_status: 'completed',
+          invoice_number: invoiceNumber,
+          finalized_at: new Date().toISOString(),
+          finalized_by: user.id,
+          closed: true,
+          date_closed: new Date().toISOString()
+        })
+        .eq('jobcardid', jobId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Job Finalized",
+        description: `Job #${jobId} has been completed with invoice ${invoiceNumber}`
+      });
+
+      onClose();
+
+    } catch (error) {
+      console.error('Error finalizing job:', error);
+      toast({
+        title: "Error",
+        description: "Failed to finalize job",
         variant: "destructive"
       });
     } finally {
-      setIsLoading(false);
+      setFinalizing(false);
     }
   };
 
-  const generateCustomerReport = () => {
-    if (!jobData) return;
-
-    const customerParts = jobData.parts.filter(p => p.type !== 'owner_supplied');
-    const totalFittingCost = customerParts.reduce((sum, part) => 
-      sum + ((part.fitting_cost || 0) * (part.quantity || 0)), 0
-    );
-
-    return (
-      <div className="p-6 bg-white text-black">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold">Job Card Report - Customer Copy</h1>
-          <p className="text-sm text-gray-600">Invoice #{jobData.close_invoice}</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div>
-            <p><strong>Customer:</strong> {jobData.customername}</p>
-            <p><strong>Aircraft:</strong> {jobData.aircraft_regno}</p>
-          </div>
-          <div>
-            <p><strong>Date Opened:</strong> {new Date(jobData.date_opened).toLocaleDateString()}</p>
-            <p><strong>Job ID:</strong> {jobCardId}</p>
-          </div>
-        </div>
-
-        <div className="mb-6">
-          <p><strong>Description:</strong> {jobData.description}</p>
-        </div>
-
-        <table className="w-full border-collapse border border-gray-300 mb-6">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border border-gray-300 p-2 text-left">Part No</th>
-              <th className="border border-gray-300 p-2 text-left">Description</th>
-              <th className="border border-gray-300 p-2 text-center">Qty</th>
-              <th className="border border-gray-300 p-2 text-right">Fitting Price</th>
-              <th className="border border-gray-300 p-2 text-right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {customerParts.map((part, index) => (
-              <tr key={index}>
-                <td className="border border-gray-300 p-2">{part.partno}</td>
-                <td className="border border-gray-300 p-2">{part.description}</td>
-                <td className="border border-gray-300 p-2 text-center">{part.quantity}</td>
-                <td className="border border-gray-300 p-2 text-right">
-                  ${(part.fitting_cost || 0).toFixed(2)}
-                </td>
-                <td className="border border-gray-300 p-2 text-right">
-                  ${((part.fitting_cost || 0) * (part.quantity || 0)).toFixed(2)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr className="bg-gray-100 font-bold">
-              <td colSpan={4} className="border border-gray-300 p-2 text-right">Total:</td>
-              <td className="border border-gray-300 p-2 text-right">${totalFittingCost.toFixed(2)}</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    );
-  };
-
-  const generateInternalReport = () => {
-    if (!jobData) return;
-
-    const allParts = jobData.parts;
-    const totalCostPrice = allParts.reduce((sum, part) => 
-      sum + ((part.cost_price || 0) * (part.quantity || 0)), 0
-    );
-    const totalFittingCost = allParts.reduce((sum, part) => 
-      sum + ((part.fitting_cost || 0) * (part.quantity || 0)), 0
-    );
-
-    return (
-      <div className="p-6 bg-white text-black">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold">Job Card Report - Internal Copy</h1>
-          <p className="text-sm text-gray-600">Invoice #{jobData.close_invoice}</p>
-          <Badge variant="secondary" className="mt-2">CONFIDENTIAL - INTERNAL USE ONLY</Badge>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div>
-            <p><strong>Customer:</strong> {jobData.customername}</p>
-            <p><strong>Aircraft:</strong> {jobData.aircraft_regno}</p>
-          </div>
-          <div>
-            <p><strong>Date Opened:</strong> {new Date(jobData.date_opened).toLocaleDateString()}</p>
-            <p><strong>Job ID:</strong> {jobCardId}</p>
-          </div>
-        </div>
-
-        <div className="mb-6">
-          <p><strong>Description:</strong> {jobData.description}</p>
-        </div>
-
-        <table className="w-full border-collapse border border-gray-300 mb-6">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border border-gray-300 p-2 text-left">Part No</th>
-              <th className="border border-gray-300 p-2 text-left">Description</th>
-              <th className="border border-gray-300 p-2 text-center">Qty</th>
-              <th className="border border-gray-300 p-2 text-right">Cost Price</th>
-              <th className="border border-gray-300 p-2 text-right">Fitting Price</th>
-              <th className="border border-gray-300 p-2 text-left">Type</th>
-              <th className="border border-gray-300 p-2 text-right">Total Cost</th>
-            </tr>
-          </thead>
-          <tbody>
-            {allParts.map((part, index) => (
-              <tr key={index}>
-                <td className="border border-gray-300 p-2">{part.partno}</td>
-                <td className="border border-gray-300 p-2">{part.description}</td>
-                <td className="border border-gray-300 p-2 text-center">{part.quantity}</td>
-                <td className="border border-gray-300 p-2 text-right">
-                  ${(part.cost_price || 0).toFixed(2)}
-                </td>
-                <td className="border border-gray-300 p-2 text-right">
-                  ${(part.fitting_cost || 0).toFixed(2)}
-                </td>
-                <td className="border border-gray-300 p-2 capitalize">{part.type}</td>
-                <td className="border border-gray-300 p-2 text-right">
-                  ${((part.cost_price || 0) * (part.quantity || 0)).toFixed(2)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr className="bg-gray-100 font-bold">
-              <td colSpan={6} className="border border-gray-300 p-2 text-right">Total Cost:</td>
-              <td className="border border-gray-300 p-2 text-right">${totalCostPrice.toFixed(2)}</td>
-            </tr>
-            <tr className="bg-blue-100 font-bold">
-              <td colSpan={6} className="border border-gray-300 p-2 text-right">Total Fitting:</td>
-              <td className="border border-gray-300 p-2 text-right">${totalFittingCost.toFixed(2)}</td>
-            </tr>
-            <tr className="bg-green-100 font-bold">
-              <td colSpan={6} className="border border-gray-300 p-2 text-right">Profit Margin:</td>
-              <td className="border border-gray-300 p-2 text-right">
-                ${(totalFittingCost - totalCostPrice).toFixed(2)}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    );
-  };
-
-  const handlePrint = (content: React.ReactNode) => {
+  const generateReport = () => {
+    const reportContent = generateReportContent();
     const printWindow = window.open('', '_blank');
     if (printWindow) {
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Job Card Report</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-              @media print { 
-                body { margin: 0; }
-                .no-print { display: none; }
-              }
-            </style>
-          </head>
-          <body>
-            ${printWindow.document.createElement('div').innerHTML}
-          </body>
-        </html>
-      `);
+      printWindow.document.write(reportContent);
       printWindow.document.close();
       printWindow.print();
     }
   };
 
-  return (
-    <div className="flex gap-2">
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button variant="outline" onClick={loadJobData} disabled={isLoading}>
-            <FileText className="w-4 h-4 mr-2" />
-            Customer Report
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              Customer Report
-              <Button 
-                size="sm" 
-                onClick={() => handlePrint(generateCustomerReport())}
-                className="no-print"
-              >
-                <Printer className="w-4 h-4 mr-2" />
-                Print
-              </Button>
-            </DialogTitle>
-          </DialogHeader>
-          {generateCustomerReport()}
-        </DialogContent>
-      </Dialog>
+  const generateReportContent = () => {
+    const isCustomerCopy = reportType === 'customer';
+    
+    const warehouseAParts = parts.filter(p => p.warehouse_type === 'warehouse_a');
+    const warehouseBCParts = parts.filter(p => p.warehouse_type === 'warehouse_bc');
+    const ownerSuppliedParts = parts.filter(p => p.warehouse_type === 'owner_supplied');
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Job Card Report #${jobId} - ${isCustomerCopy ? 'Customer Copy' : 'Internal Copy'}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
+          .section { margin: 20px 0; }
+          .parts-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+          .parts-table th, .parts-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          .parts-table th { background-color: #f2f2f2; }
+          .totals { background-color: #f9f9f9; padding: 15px; border-radius: 5px; }
+          .footer { margin-top: 40px; font-size: 12px; color: #666; }
+          @media print { body { margin: 0; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Job Card Report #${jobId}</h1>
+          <h2>${isCustomerCopy ? 'Customer Copy' : 'Internal Copy'}</h2>
+          <p>Generated: ${new Date().toLocaleString()}</p>
+          ${invoiceNumber ? `<p>Invoice: ${invoiceNumber}</p>` : ''}
+        </div>
 
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button variant="outline" onClick={loadJobData} disabled={isLoading}>
-            <Download className="w-4 h-4 mr-2" />
-            Internal Report
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-5xl max-h-[80vh] overflow-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              Internal Report
+        <div class="section">
+          <h3>Warehouse A - Aircraft Spares</h3>
+          <table class="parts-table">
+            <thead>
+              <tr>
+                <th>Part Number</th>
+                <th>Description</th>
+                <th>Quantity</th>
+                ${!isCustomerCopy ? '<th>Cost Price</th>' : ''}
+                <th>Fitting Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${warehouseAParts.map(part => `
+                <tr>
+                  <td>${part.partno}</td>
+                  <td>${part.description}</td>
+                  <td>${part.quantity}</td>
+                  ${!isCustomerCopy ? `<td>$${part.cost_price.toFixed(2)}</td>` : ''}
+                  <td>$${part.fitting_price.toFixed(2)}</td>
+                  <td>$${(part.fitting_price * part.quantity).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="section">
+          <h3>Warehouses B&C - Consumables</h3>
+          <table class="parts-table">
+            <thead>
+              <tr>
+                <th>Part Number</th>
+                <th>Description</th>
+                <th>Quantity</th>
+                ${!isCustomerCopy ? '<th>Cost Price</th>' : ''}
+                <th>Fitting Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${warehouseBCParts.map(part => `
+                <tr>
+                  <td>${part.partno}</td>
+                  <td>${part.description}</td>
+                  <td>${part.quantity}</td>
+                  ${!isCustomerCopy ? `<td>$${part.cost_price.toFixed(2)}</td>` : ''}
+                  <td>$${part.fitting_price.toFixed(2)}</td>
+                  <td>$${(part.fitting_price * part.quantity).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="section">
+          <h3>Owner Supplied Items</h3>
+          <table class="parts-table">
+            <thead>
+              <tr>
+                <th>Part Number</th>
+                <th>Description</th>
+                <th>Quantity</th>
+                ${!isCustomerCopy ? '<th>Cost Price</th>' : ''}
+                <th>Fitting Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${ownerSuppliedParts.map(part => `
+                <tr>
+                  <td>${part.partno}</td>
+                  <td>${part.description}</td>
+                  <td>${part.quantity}</td>
+                  ${!isCustomerCopy ? `<td>$${part.cost_price.toFixed(2)}</td>` : ''}
+                  <td>$${part.fitting_price.toFixed(2)}</td>
+                  <td>$${(part.fitting_price * part.quantity).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="totals">
+          <h3>Grand Totals</h3>
+          ${!isCustomerCopy ? `<p>Total Cost Price: $${totals.cost_total.toFixed(2)}</p>` : ''}
+          <p><strong>Total Fitting Price: $${totals.fitting_total.toFixed(2)}</strong></p>
+          <p>Total Parts: ${totals.parts_count}</p>
+        </div>
+
+        ${notes ? `
+        <div class="section">
+          <h3>Notes</h3>
+          <p>${notes}</p>
+        </div>
+        ` : ''}
+
+        <div class="footer">
+          <p>This is a ${isCustomerCopy ? 'customer' : 'internal'} copy of the job card report.</p>
+          <p>Generated by: ${user?.email}</p>
+        </div>
+      </body>
+      </html>
+    `;
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            Job Card Finalization & Reports - Job #{jobId}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Finalization Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Receipt className="w-5 h-5" />
+                Finalize Job Card
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="invoiceNumber">Invoice Number *</Label>
+                <Input
+                  id="invoiceNumber"
+                  placeholder="Enter invoice number"
+                  value={invoiceNumber}
+                  onChange={(e) => setInvoiceNumber(e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="notes">Additional Notes</Label>
+                <Textarea
+                  id="notes"
+                  placeholder="Optional completion notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={3}
+                />
+              </div>
+
               <Button 
-                size="sm" 
-                onClick={() => handlePrint(generateInternalReport())}
-                className="no-print"
+                onClick={handleFinalizeJob} 
+                disabled={!invoiceNumber.trim() || finalizing}
+                className="w-full"
               >
-                <Printer className="w-4 h-4 mr-2" />
-                Print
+                <DollarSign className="w-4 h-4 mr-2" />
+                {finalizing ? 'Finalizing...' : 'Finalize Job Card'}
               </Button>
-            </DialogTitle>
-          </DialogHeader>
-          {generateInternalReport()}
-        </DialogContent>
-      </Dialog>
-    </div>
+            </CardContent>
+          </Card>
+
+          {/* Reports Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Printer className="w-5 h-5" />
+                Generate Reports
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs value={reportType} onValueChange={(value) => setReportType(value as 'customer' | 'internal')}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="customer">Customer Copy</TabsTrigger>
+                  <TabsTrigger value="internal">Internal Copy</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="customer" className="mt-4">
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Customer copy includes fitting prices only, without cost prices.
+                    </p>
+                    <Button onClick={generateReport} className="w-full">
+                      <Printer className="w-4 h-4 mr-2" />
+                      Print Customer Report
+                    </Button>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="internal" className="mt-4">
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Internal copy includes both cost prices and fitting prices for complete analysis.
+                    </p>
+                    <Button onClick={generateReport} className="w-full">
+                      <Printer className="w-4 h-4 mr-2" />
+                      Print Internal Report
+                    </Button>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

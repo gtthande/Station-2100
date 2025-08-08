@@ -245,6 +245,7 @@ export function WarehouseBCTab({
         isOpen={inventoryLookupOpen}
         onClose={() => setInventoryLookupOpen(false)}
         onSelectPart={onAddInventoryPart}
+        warehouseType="warehouse_bc"
       />
     </div>
   );

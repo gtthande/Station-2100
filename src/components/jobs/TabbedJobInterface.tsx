@@ -3,14 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Printer, Calculator } from "lucide-react";
+import { Printer, Calculator, FileText, Users } from "lucide-react";
 import { JobPart, useJobCalculations } from "@/hooks/useJobCalculations";
 import { WarehouseATab } from "./WarehouseATab";
 import { WarehouseBCTab } from "./WarehouseBCTab";
 import { OwnerSuppliedTab } from "./OwnerSuppliedTab";
 import { JobTotalsCard } from "./JobTotalsCard";
-import { Button } from "@/components/ui/button";
+import { StaffAuthDialog } from "./StaffAuthDialog";
+import { JobCardApprovalPanel } from "./JobCardApprovalPanel";
+import { JobCardReports } from "./JobCardReports";
 
 interface TabbedJobInterfaceProps {
   jobId?: number;
@@ -21,6 +24,10 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [barcodeInput, setBarcodeInput] = useState('');
   const [selectedWarehouseType, setSelectedWarehouseType] = useState<'warehouse_a' | 'warehouse_bc' | 'owner_supplied'>('warehouse_a');
+  const [showStaffAuth, setShowStaffAuth] = useState(false);
+  const [staffAuthAction, setStaffAuthAction] = useState<'receive' | 'issue'>('receive');
+  const [staffAuthJobItemId, setStaffAuthJobItemId] = useState<number>();
+  const [showReports, setShowReports] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -174,12 +181,42 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
     }
   };
 
+  const handleStaffAuth = (action: 'receive' | 'issue', jobItemId?: number) => {
+    setStaffAuthAction(action);
+    setStaffAuthJobItemId(jobItemId);
+    setShowStaffAuth(true);
+  };
+
+  const handleStaffAuthenticated = async (staff: any) => {
+    // Update the job item with staff information
+    if (staffAuthJobItemId) {
+      const updateField = staffAuthAction === 'receive' ? 
+        { received_by_staff_id: staff.id, received_at: new Date().toISOString() } :
+        { issued_by_staff_id: staff.id, issued_at: new Date().toISOString() };
+
+      try {
+        await supabase
+          .from('job_items')
+          .update(updateField)
+          .eq('item_id', staffAuthJobItemId);
+
+        toast({
+          title: "Staff Logged",
+          description: `${staff.full_name || staff.email} logged for ${staffAuthAction}`
+        });
+      } catch (error) {
+        console.error('Error updating staff info:', error);
+      }
+    }
+  };
+
   useEffect(() => {
     loadParts();
   }, [jobId]);
 
   return (
     <div className="space-y-6">
+      {/* Job Card Header */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
@@ -188,16 +225,39 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
               <span>Job Parts & Pricing Management</span>
               {jobId && <span className="text-muted-foreground">- Job #{jobId}</span>}
             </div>
-            <Button variant="outline" className="flex items-center gap-2">
-              <Printer className="w-4 h-4" />
-              Print Complete Job
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => handleStaffAuth('receive')}
+                className="flex items-center gap-2"
+              >
+                <Users className="w-4 h-4" />
+                Staff Auth
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowReports(true)}
+                className="flex items-center gap-2"
+              >
+                <FileText className="w-4 h-4" />
+                Reports & Finalize
+              </Button>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Printer className="w-4 h-4" />
+                Print Complete Job
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
       </Card>
 
+      {/* Approval Panel */}
+      <JobCardApprovalPanel jobId={jobId} />
+
+      {/* Totals Card */}
       <JobTotalsCard totals={totals} grandTotals={grandTotals} />
 
+      {/* Tabbed Interface */}
       <Tabs defaultValue="warehouse_a" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="warehouse_a">Warehouse A ({totals.warehouse_a.parts_count})</TabsTrigger>
@@ -254,6 +314,24 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
           />
         </TabsContent>
       </Tabs>
+
+      {/* Staff Authentication Dialog */}
+      <StaffAuthDialog
+        isOpen={showStaffAuth}
+        onClose={() => setShowStaffAuth(false)}
+        onStaffAuthenticated={handleStaffAuthenticated}
+        action={staffAuthAction}
+        jobItemId={staffAuthJobItemId}
+      />
+
+      {/* Reports and Finalization Dialog */}
+      <JobCardReports
+        isOpen={showReports}
+        onClose={() => setShowReports(false)}
+        jobId={jobId}
+        parts={parts}
+        totals={grandTotals}
+      />
     </div>
   );
 }

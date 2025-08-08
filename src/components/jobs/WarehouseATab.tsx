@@ -245,6 +245,7 @@ export function WarehouseATab({
         isOpen={inventoryLookupOpen}
         onClose={() => setInventoryLookupOpen(false)}
         onSelectPart={onAddInventoryPart}
+        warehouseType="warehouse_a"
       />
     </div>
   );

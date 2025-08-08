@@ -380,6 +380,71 @@ export type Database = {
         }
         Relationships: []
       }
+      job_approval_notifications: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          created_at: string | null
+          created_by: string
+          id: string
+          job_id: number
+          message: string
+          tab_type: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          created_at?: string | null
+          created_by: string
+          id?: string
+          job_id: number
+          message: string
+          tab_type: string
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          job_id?: number
+          message?: string
+          tab_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_approval_notifications_acknowledged_by_fkey"
+            columns: ["acknowledged_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_approval_notifications_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_approval_notifications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "job_cards"
+            referencedColumns: ["jobcardid"]
+          },
+          {
+            foreignKeyName: "job_approval_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_authorisations: {
         Row: {
           ac_approved: boolean | null
@@ -460,8 +525,12 @@ export type Database = {
           dateforwarded: string | null
           description: string | null
           empid: number | null
+          finalized_at: string | null
+          finalized_by: string | null
+          invoice_number: string | null
           issuedby: number | null
           issueddate: string | null
+          job_status: string | null
           jobcardid: number
           manual_jobno: number | null
           oss_approved: boolean | null
@@ -469,6 +538,9 @@ export type Database = {
           oss_approvedate: string | null
           oss_forwarddate: string | null
           oss_no: number | null
+          owner_supplied_approved: boolean | null
+          owner_supplied_approved_at: string | null
+          owner_supplied_approved_by: string | null
           parts_cost: unknown | null
           parts_price: unknown | null
           prepaid: boolean | null
@@ -486,6 +558,12 @@ export type Database = {
           stockcardposteddate: string | null
           subjobcardid: string | null
           user_id: string | null
+          warehouse_a_approved: boolean | null
+          warehouse_a_approved_at: string | null
+          warehouse_a_approved_by: string | null
+          warehouse_bc_approved: boolean | null
+          warehouse_bc_approved_at: string | null
+          warehouse_bc_approved_by: string | null
           whb_approvedate: string | null
           whb_aproved: boolean | null
           whb_aproved_by: string | null
@@ -523,8 +601,12 @@ export type Database = {
           dateforwarded?: string | null
           description?: string | null
           empid?: number | null
+          finalized_at?: string | null
+          finalized_by?: string | null
+          invoice_number?: string | null
           issuedby?: number | null
           issueddate?: string | null
+          job_status?: string | null
           jobcardid?: number
           manual_jobno?: number | null
           oss_approved?: boolean | null
@@ -532,6 +614,9 @@ export type Database = {
           oss_approvedate?: string | null
           oss_forwarddate?: string | null
           oss_no?: number | null
+          owner_supplied_approved?: boolean | null
+          owner_supplied_approved_at?: string | null
+          owner_supplied_approved_by?: string | null
           parts_cost?: unknown | null
           parts_price?: unknown | null
           prepaid?: boolean | null
@@ -549,6 +634,12 @@ export type Database = {
           stockcardposteddate?: string | null
           subjobcardid?: string | null
           user_id?: string | null
+          warehouse_a_approved?: boolean | null
+          warehouse_a_approved_at?: string | null
+          warehouse_a_approved_by?: string | null
+          warehouse_bc_approved?: boolean | null
+          warehouse_bc_approved_at?: string | null
+          warehouse_bc_approved_by?: string | null
           whb_approvedate?: string | null
           whb_aproved?: boolean | null
           whb_aproved_by?: string | null
@@ -586,8 +677,12 @@ export type Database = {
           dateforwarded?: string | null
           description?: string | null
           empid?: number | null
+          finalized_at?: string | null
+          finalized_by?: string | null
+          invoice_number?: string | null
           issuedby?: number | null
           issueddate?: string | null
+          job_status?: string | null
           jobcardid?: number
           manual_jobno?: number | null
           oss_approved?: boolean | null
@@ -595,6 +690,9 @@ export type Database = {
           oss_approvedate?: string | null
           oss_forwarddate?: string | null
           oss_no?: number | null
+          owner_supplied_approved?: boolean | null
+          owner_supplied_approved_at?: string | null
+          owner_supplied_approved_by?: string | null
           parts_cost?: unknown | null
           parts_price?: unknown | null
           prepaid?: boolean | null
@@ -612,6 +710,12 @@ export type Database = {
           stockcardposteddate?: string | null
           subjobcardid?: string | null
           user_id?: string | null
+          warehouse_a_approved?: boolean | null
+          warehouse_a_approved_at?: string | null
+          warehouse_a_approved_by?: string | null
+          warehouse_bc_approved?: boolean | null
+          warehouse_bc_approved_at?: string | null
+          warehouse_bc_approved_by?: string | null
           whb_approvedate?: string | null
           whb_aproved?: boolean | null
           whb_aproved_by?: string | null
@@ -620,7 +724,36 @@ export type Database = {
           whbnc_fitting?: unknown | null
           whbnc_no?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "job_cards_finalized_by_fkey"
+            columns: ["finalized_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_cards_owner_supplied_approved_by_fkey"
+            columns: ["owner_supplied_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_cards_warehouse_a_approved_by_fkey"
+            columns: ["warehouse_a_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_cards_warehouse_bc_approved_by_fkey"
+            columns: ["warehouse_bc_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       job_items: {
         Row: {
@@ -629,13 +762,17 @@ export type Database = {
           created_at: string | null
           description: string | null
           fitting_price: number | null
+          issued_at: string | null
           issued_by_code: string | null
+          issued_by_staff_id: string | null
           item_date: string | null
           item_id: number
           job_id: number
           prepaid: boolean | null
           qty: number
+          received_at: string | null
           received_by: string | null
+          received_by_staff_id: string | null
           stock_card_no: string | null
           total_cost: number | null
           unit_cost: number | null
@@ -651,13 +788,17 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           fitting_price?: number | null
+          issued_at?: string | null
           issued_by_code?: string | null
+          issued_by_staff_id?: string | null
           item_date?: string | null
           item_id?: number
           job_id: number
           prepaid?: boolean | null
           qty: number
+          received_at?: string | null
           received_by?: string | null
+          received_by_staff_id?: string | null
           stock_card_no?: string | null
           total_cost?: number | null
           unit_cost?: number | null
@@ -673,13 +814,17 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           fitting_price?: number | null
+          issued_at?: string | null
           issued_by_code?: string | null
+          issued_by_staff_id?: string | null
           item_date?: string | null
           item_id?: number
           job_id?: number
           prepaid?: boolean | null
           qty?: number
+          received_at?: string | null
           received_by?: string | null
+          received_by_staff_id?: string | null
           stock_card_no?: string | null
           total_cost?: number | null
           unit_cost?: number | null
@@ -691,11 +836,25 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "job_items_issued_by_staff_id_fkey"
+            columns: ["issued_by_staff_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "job_items_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
             referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "job_items_received_by_staff_id_fkey"
+            columns: ["received_by_staff_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -841,30 +1000,68 @@ export type Database = {
       }
       profiles: {
         Row: {
+          badge_id: string | null
+          biometric_data: string | null
           created_at: string | null
+          department_id: string | null
           email: string
           full_name: string | null
           id: string
+          is_staff: boolean | null
+          phone: string | null
+          pin_code: string | null
+          position: string | null
+          profile_image_url: string | null
           role: string | null
+          staff_active: boolean | null
+          staff_code: string | null
           updated_at: string | null
         }
         Insert: {
+          badge_id?: string | null
+          biometric_data?: string | null
           created_at?: string | null
+          department_id?: string | null
           email: string
           full_name?: string | null
           id: string
+          is_staff?: boolean | null
+          phone?: string | null
+          pin_code?: string | null
+          position?: string | null
+          profile_image_url?: string | null
           role?: string | null
+          staff_active?: boolean | null
+          staff_code?: string | null
           updated_at?: string | null
         }
         Update: {
+          badge_id?: string | null
+          biometric_data?: string | null
           created_at?: string | null
+          department_id?: string | null
           email?: string
           full_name?: string | null
           id?: string
+          is_staff?: boolean | null
+          phone?: string | null
+          pin_code?: string | null
+          position?: string | null
+          profile_image_url?: string | null
           role?: string | null
+          staff_active?: boolean | null
+          staff_code?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       role_audit_log: {
         Row: {
@@ -919,6 +1116,113 @@ export type Database = {
           status?: string | null
         }
         Relationships: []
+      }
+      staff_auth_log: {
+        Row: {
+          action: string
+          auth_data: string | null
+          auth_method: string
+          created_at: string | null
+          id: string
+          job_item_id: number | null
+          staff_id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          auth_data?: string | null
+          auth_method: string
+          created_at?: string | null
+          id?: string
+          job_item_id?: number | null
+          staff_id: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          auth_data?: string | null
+          auth_method?: string
+          created_at?: string | null
+          id?: string
+          job_item_id?: number | null
+          staff_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_auth_log_job_item_id_fkey"
+            columns: ["job_item_id"]
+            isOneToOne: false
+            referencedRelation: "job_items"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "staff_auth_log_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_auth_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_permissions: {
+        Row: {
+          granted: boolean | null
+          granted_at: string | null
+          granted_by: string
+          id: string
+          permission: string
+          staff_id: string
+          user_id: string
+        }
+        Insert: {
+          granted?: boolean | null
+          granted_at?: string | null
+          granted_by: string
+          id?: string
+          permission: string
+          staff_id: string
+          user_id: string
+        }
+        Update: {
+          granted?: boolean | null
+          granted_at?: string | null
+          granted_by?: string
+          id?: string
+          permission?: string
+          staff_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_permissions_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_permissions_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stock_categories: {
         Row: {
