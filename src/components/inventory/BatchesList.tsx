@@ -10,6 +10,7 @@ import { Search, Package2, MapPin, Calendar, Truck, Building2, DollarSign, Edit 
 import { Tables } from '@/integrations/supabase/types';
 import { format } from 'date-fns';
 import { EditBatchDialog } from './EditBatchDialog';
+import { BatchListReport } from '@/components/reports/BatchListReport';
 
 // Extend the inventory batch type to include warehouse_id and relationships
 type ExtendedInventoryBatch = Tables<'inventory_batches'> & {
@@ -159,6 +160,9 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
 
   return (
     <div className="space-y-6">
+      {/* Batch List Report */}
+      <BatchListReport />
+      
       {/* Search */}
       <GlassCard>
         <GlassCardContent className="p-6">

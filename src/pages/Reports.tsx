@@ -4,6 +4,9 @@ import { Link } from 'react-router-dom';
 import { FileText, AlertTriangle, Plus, ChevronDown } from 'lucide-react';
 import { UnapprovedBatchesReport } from '@/components/inventory/UnapprovedBatchesReport';
 import ReorderReportCard from '@/components/reports/ReorderReportCard';
+import { BatchApprovalReport } from '@/components/reports/BatchApprovalReport';
+import { ProductMovementReport } from '@/components/reports/ProductMovementReport';
+import { BatchListReport } from '@/components/reports/BatchListReport';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useState } from 'react';
@@ -13,7 +16,10 @@ const Reports = () => {
 
   const reportOptions = [
     { value: 'reminders', label: 'Unapproved Batches - Reminders', icon: AlertTriangle },
-    { value: 'reorder', label: 'Reorder Report - Low Stock Items', icon: FileText }
+    { value: 'reorder', label: 'Reorder Report - Low Stock Items', icon: FileText },
+    { value: 'approval', label: 'Batch Approval Report', icon: AlertTriangle },
+    { value: 'movement', label: 'Product Movement Chart', icon: FileText },
+    { value: 'batches', label: 'Batch List Report', icon: FileText }
   ];
 
   const renderSelectedReport = () => {
@@ -22,6 +28,12 @@ const Reports = () => {
         return <UnapprovedBatchesReport />;
       case 'reorder':
         return <ReorderReportCard />;
+      case 'approval':
+        return <BatchApprovalReport />;
+      case 'movement':
+        return <ProductMovementReport />;
+      case 'batches':
+        return <BatchListReport />;
       default:
         return <UnapprovedBatchesReport />;
     }

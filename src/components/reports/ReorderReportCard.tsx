@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Download, Printer, Package, AlertTriangle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface LowStockItem {
   id: string;
@@ -25,6 +26,7 @@ interface LowStockItem {
 
 const ReorderReportCard = () => {
   const { user } = useAuth();
+  const { formatCurrency } = useCurrency();
   const [isOpen, setIsOpen] = useState(false);
 
   const { data: lowStockItems, isLoading } = useQuery({
@@ -63,8 +65,8 @@ const ReorderReportCard = () => {
           // Find stock category name
           const stockCategory = stockCategories?.find(cat => cat.id === product.stock_category);
 
-          // Return only if below reorder quantity
-          if (totalStock < (product.reorder_qty || 0)) {
+          // Return only if below minimum stock (changed to use minimum_stock instead of reorder_qty)
+          if (totalStock <= (product.minimum_stock || 0)) {
             return {
               id: product.id,
               part_number: product.part_number,
@@ -105,11 +107,11 @@ const ReorderReportCard = () => {
         'Minimum Stock': item.minimum_stock || 0,
         'Reorder Point': item.reorder_point || 0,
         'Suggested Reorder Qty': item.reorder_qty || 0,
-        'Unit Cost': item.unit_cost ? `$${parseFloat(item.unit_cost.toString()).toFixed(2)}` : 'N/A',
+        'Unit Cost': item.unit_cost ? formatCurrency(parseFloat(item.unit_cost.toString())) : 'N/A',
         'UOM': item.unit_of_measure || 'each',
         'Shortage': Math.max(0, (item.minimum_stock || 0) - (item.total_quantity || 0)),
         'Estimated Cost': item.unit_cost && item.reorder_qty ? 
-          `$${(parseFloat(item.unit_cost.toString()) * (item.reorder_qty || 0)).toFixed(2)}` : 'N/A'
+          formatCurrency(parseFloat(item.unit_cost.toString()) * (item.reorder_qty || 0)) : 'N/A'
       }))
     );
 
@@ -205,7 +207,7 @@ const ReorderReportCard = () => {
                         </div>
                         <div>
                           <span className="text-white/60 print:text-gray-600">Estimated Reorder Cost: </span>
-                          <span className="font-semibold text-white print:text-black">${totalEstimatedCost.toFixed(2)}</span>
+                          <span className="font-semibold text-white print:text-black">{formatCurrency(totalEstimatedCost)}</span>
                         </div>
                         <div>
                           <span className="text-white/60 print:text-gray-600">Report Date: </span>
@@ -261,10 +263,10 @@ const ReorderReportCard = () => {
                                   {shortage}
                                 </td>
                                 <td className="py-3 px-2 text-right text-white/80 print:text-gray-700">
-                                  {item.unit_cost ? `$${parseFloat(item.unit_cost.toString()).toFixed(2)}` : 'N/A'}
+                                  {item.unit_cost ? formatCurrency(parseFloat(item.unit_cost.toString())) : 'N/A'}
                                 </td>
                                 <td className="py-3 px-2 text-right font-medium text-white print:text-black">
-                                  {estimatedCost > 0 ? `$${estimatedCost.toFixed(2)}` : 'N/A'}
+                                  {estimatedCost > 0 ? formatCurrency(estimatedCost) : 'N/A'}
                                 </td>
                               </tr>
                             );
@@ -276,7 +278,7 @@ const ReorderReportCard = () => {
                               Total Estimated Cost:
                             </td>
                             <td className="py-3 px-2 text-right font-bold text-white print:text-black">
-                              ${totalEstimatedCost.toFixed(2)}
+                              {formatCurrency(totalEstimatedCost)}
                             </td>
                           </tr>
                         </tfoot>
