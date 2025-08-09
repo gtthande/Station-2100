@@ -80,8 +80,8 @@
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 90%;
-    --input: 220 15% 90%;
+    --border: 220 15% 80%;
+    --input: 220 15% 80%;
     --ring: 212 100% 44%;
 
     --sidebar-background: 0 0% 98%;
@@ -90,7 +90,7 @@
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 5% 96%;
     --sidebar-accent-foreground: 240 6% 10%;
-    --sidebar-border: 220 13% 91%;
+    --sidebar-border: 220 13% 80%;
     --sidebar-ring: 212 100% 44%;
 
     /* Adjust custom tokens for light */
@@ -128,7 +128,9 @@
   }
 
   .glass-card {
-    @apply backdrop-blur-sm bg-white/5 border border-white/10;
+    @apply backdrop-blur-sm border;
+    background-color: hsl(var(--card) / 0.6);
+    border-color: hsl(var(--border));
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   }
 
