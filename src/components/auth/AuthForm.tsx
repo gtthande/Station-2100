@@ -7,6 +7,9 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Shield } from 'lucide-react';
+import ThemeToggle from '@/components/theme/ThemeToggle';
+
+const ThemeToggleWrapper = () => <ThemeToggle />;
 
 export const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -105,6 +108,10 @@ export const AuthForm = () => {
   return (
     <div className="min-h-screen bg-surface-dark flex items-center justify-center p-6">
       <div className="w-full max-w-md">
+        <div className="flex justify-end mb-4">
+          {/* Theme toggle available on login */}
+          <ThemeToggleWrapper />
+        </div>
         <GlassCard className="p-8">
           <GlassCardHeader className="text-center space-y-4">
             <div className="w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center mx-auto">
