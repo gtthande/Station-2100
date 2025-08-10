@@ -52,8 +52,9 @@
     --accent-orange: 23 100% 50%; /* #FF6D00 */
     --text-primary: 0 0% 100%; /* #FFFFFF */
     --surface-dark: 0 0% 6%; /* #0F0F0F */
+    /* App background (can be a solid color or gradient) */
+    --app-background: hsl(var(--surface-dark));
   }
-
   /* VS Code Light Modern */
   [data-theme="light"] {
     --background: 0 0% 100%;
@@ -96,6 +97,12 @@
     /* Adjust custom tokens for light */
     --text-primary: 220 13% 18%;
     --surface-dark: 0 0% 100%;
+
+    /* Light Modern background gradient tokens */
+    --light-bg-from: 210 100% 97%;
+    --light-bg-to: 222 100% 92%;
+    /* Use gradient as app background in Light mode */
+    --app-background: linear-gradient(180deg, hsl(var(--light-bg-from)) 0%, hsl(var(--light-bg-to)) 100%);
   }
 }
 
@@ -106,7 +113,7 @@
 
   body {
     @apply bg-background text-foreground font-manrope;
-    background: hsl(var(--surface-dark));
+    background: var(--app-background);
     color: hsl(var(--text-primary));
   }
 
