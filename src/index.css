@@ -141,6 +141,16 @@
     border-color: hsl(var(--border));
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   }
+ 
+  /* Light theme compatibility overrides for legacy hardcoded whites */
+  [data-theme="light"] .text-white { color: hsl(var(--foreground)) !important; }
+  [data-theme="light"] [class*="text-white/"] { color: hsl(var(--muted-foreground)) !important; }
+  [data-theme="light"] .border-white, 
+  [data-theme="light"] [class*="border-white/"] { border-color: hsl(var(--border)) !important; }
+  [data-theme="light"] .bg-white, 
+  [data-theme="light"] [class*="bg-white/"] { background-color: hsl(var(--card)) !important; }
+  [data-theme="light"] input::placeholder,
+  [data-theme="light"] textarea::placeholder { color: hsl(var(--muted-foreground)) !important; }
 
   .section-ornament {
     position: relative;
