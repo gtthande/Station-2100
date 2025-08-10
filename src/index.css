@@ -55,6 +55,7 @@
     /* App background (can be a solid color or gradient) */
     --app-background: hsl(var(--surface-dark));
   }
+
   /* VS Code Light Modern */
   [data-theme="light"] {
     --background: 0 0% 100%;
