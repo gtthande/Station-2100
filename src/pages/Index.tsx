@@ -191,6 +191,26 @@ const Index = () => {
               </GlassCardContent>
             </GlassCard>
           </Link>
+
+          <Link to="/stock-movements">
+            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
+              <GlassCardHeader>
+                <GlassCardTitle className="flex items-center gap-3">
+                  <BarChart3 className="w-6 h-6" />
+                  Stock Movement & Valuation
+                </GlassCardTitle>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <p className="text-white/70 mb-4">
+                  Track stock movements, calculate valuations, and generate comprehensive reports.
+                </p>
+                <div className="flex items-center text-blue-400 font-medium">
+                  View Stock Reports
+                  <BarChart3 className="w-4 h-4 ml-2" />
+                </div>
+              </GlassCardContent>
+            </GlassCard>
+          </Link>
         </div>
 
         {/* System Status */}

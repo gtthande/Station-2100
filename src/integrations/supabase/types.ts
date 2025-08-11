@@ -1248,6 +1248,76 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_movements: {
+        Row: {
+          batch_id: string | null
+          created_at: string | null
+          created_by: string
+          department_id: string | null
+          event_type: Database["public"]["Enums"]["stock_movement_event"]
+          id: string
+          movement_date: string
+          notes: string | null
+          product_id: string
+          quantity: number
+          source_ref: string
+          unit_cost: number
+          user_id: string
+        }
+        Insert: {
+          batch_id?: string | null
+          created_at?: string | null
+          created_by: string
+          department_id?: string | null
+          event_type: Database["public"]["Enums"]["stock_movement_event"]
+          id?: string
+          movement_date: string
+          notes?: string | null
+          product_id: string
+          quantity: number
+          source_ref: string
+          unit_cost?: number
+          user_id: string
+        }
+        Update: {
+          batch_id?: string | null
+          created_at?: string | null
+          created_by?: string
+          department_id?: string | null
+          event_type?: Database["public"]["Enums"]["stock_movement_event"]
+          id?: string
+          movement_date?: string
+          notes?: string | null
+          product_id?: string
+          quantity?: number
+          source_ref?: string
+          unit_cost?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_batch_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_department_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_product_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           address: string | null
@@ -1369,6 +1439,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_batch_breakdown_report: {
+        Args: { _user_id: string; _product_id?: string; _as_of_date?: string }
+        Returns: {
+          product_id: string
+          part_number: string
+          batch_id: string
+          batch_number: string
+          quantity_on_hand: number
+          weighted_avg_cost: number
+          total_value: number
+          date_received: string
+        }[]
+      }
       get_inventory_summary: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1379,6 +1462,32 @@ export type Database = {
           allocated_quantity: number
           available_quantity: number
           reorder_point: number
+        }[]
+      }
+      get_stock_on_hand: {
+        Args: {
+          _user_id: string
+          _product_id: string
+          _as_of_date?: string
+          _batch_id?: string
+        }
+        Returns: {
+          product_id: string
+          batch_id: string
+          quantity_on_hand: number
+          weighted_avg_cost: number
+          total_value: number
+        }[]
+      }
+      get_stock_valuation_report: {
+        Args: { _user_id: string; _as_of_date?: string }
+        Returns: {
+          product_id: string
+          part_number: string
+          description: string
+          quantity_on_hand: number
+          weighted_avg_cost: number
+          total_value: number
         }[]
       }
       get_user_roles_with_profiles: {
@@ -1412,6 +1521,12 @@ export type Database = {
         | "supervisor"
       item_category: "spare" | "consumable" | "owner_supplied"
       job_status: "open" | "awaiting_auth" | "closed"
+      stock_movement_event:
+        | "OPEN_BALANCE"
+        | "BATCH_RECEIPT"
+        | "JOB_CARD_ISSUE"
+        | "ADJUSTMENT_IN"
+        | "ADJUSTMENT_OUT"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1548,6 +1663,13 @@ export const Constants = {
       ],
       item_category: ["spare", "consumable", "owner_supplied"],
       job_status: ["open", "awaiting_auth", "closed"],
+      stock_movement_event: [
+        "OPEN_BALANCE",
+        "BATCH_RECEIPT",
+        "JOB_CARD_ISSUE",
+        "ADJUSTMENT_IN",
+        "ADJUSTMENT_OUT",
+      ],
     },
   },
 } as const

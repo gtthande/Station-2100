@@ -19,6 +19,7 @@ import Admin from "./pages/Admin";
 import BatchSubmission from "./pages/BatchSubmission";
 import Reports from "./pages/Reports";
 import JobCards from "./pages/JobCards";
+import StockMovements from "./pages/StockMovements";
 
 const queryClient = new QueryClient();
 
@@ -105,6 +106,14 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <Admin />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/stock-movements" 
+                  element={
+                    <ProtectedRoute>
+                      <StockMovements />
                     </ProtectedRoute>
                   } 
                 />
