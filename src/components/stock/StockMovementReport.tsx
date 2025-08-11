@@ -80,8 +80,8 @@ export function StockMovementReport() {
     if (!user?.id) return;
     setIsLoading(true);
     try {
-      const from = fromDate.toISOString().split('T')[0];
-      const to = toDate.toISOString().split('T')[0]; // end-of-day implied by DATE type
+      const from = format(fromDate, 'yyyy-MM-dd');
+      const to = format(toDate, 'yyyy-MM-dd'); // end-of-day implied by DATE type
 
       let query = supabase
         .from('stock_movements')
