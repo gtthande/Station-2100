@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OpeningBalanceDialog } from '@/components/stock/OpeningBalanceDialog';
 import { StockAdjustmentDialog } from '@/components/stock/StockAdjustmentDialog';
-import { StockMovementsList } from '@/components/stock/StockMovementsList';
+import { StockMovementReport } from '@/components/stock/StockMovementReport';
 import { StockValuationReport } from '@/components/stock/StockValuationReport';
 import { BatchBreakdownReport } from '@/components/stock/BatchBreakdownReport';
 

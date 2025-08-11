@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { useStockMovements, StockValuation, BatchBreakdown } from '@/hooks/useStockMovements';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useQuery } from '@tanstack/react-query';
@@ -29,7 +30,13 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 
-export function StockValuationReport() {
+type ValuationProps = {
+  initialAsOfDate?: Date;
+  initialProductId?: string;
+  initialDepartmentId?: string;
+  periodContext?: { fromDate: Date; toDate: Date; productId?: string; departmentId?: string };
+};
+export function StockValuationReport(props?: ValuationProps) {
   const { getStockValuation, getBatchBreakdown } = useStockMovements();
   const { formatCurrency } = useCurrency();
 

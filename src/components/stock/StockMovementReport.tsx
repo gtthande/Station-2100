@@ -14,8 +14,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from '@/components/ui/select';
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { CalendarIcon, Download, Search, Filter } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 interface MovementRow {
   id: string;
@@ -28,7 +30,9 @@ interface MovementRow {
   inventory_batches?: { batch_number: string | null } | null;
 }
 
-export function StockMovementReport() {
+type OpenValuationParams = { asOfDate: Date; productId?: string; departmentId?: string; fromDate: Date; toDate: Date; };
+
+export function StockMovementReport({ onOpenValuation }: { onOpenValuation?: (p: OpenValuationParams) => void }) {
   const { user } = useAuth();
   const { formatCurrency } = useCurrency();
 
@@ -43,6 +47,9 @@ export function StockMovementReport() {
   const [search, setSearch] = useState('');
   const [rows, setRows] = useState<MovementRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
+  const [totalCount, setTotalCount] = useState(0);
 
   // Load products
   const { data: products = [] } = useQuery({
@@ -76,12 +83,19 @@ export function StockMovementReport() {
     enabled: !!user?.id,
   });
 
-  const runReport = async () => {
+  const runReport = async (targetPage = 1) => {
     if (!user?.id) return;
+    if (fromDate > toDate) {
+      toast.error('From date cannot be after To date');
+      return;
+    }
     setIsLoading(true);
     try {
       const from = format(fromDate, 'yyyy-MM-dd');
-      const to = format(toDate, 'yyyy-MM-dd'); // end-of-day implied by DATE type
+      const to = format(toDate, 'yyyy-MM-dd'); // inclusive end-of-day via DATE type
+
+      const fromIndex = (targetPage - 1) * pageSize;
+      const toIndex = fromIndex + pageSize - 1;
 
       let query = supabase
         .from('stock_movements')
@@ -94,28 +108,23 @@ export function StockMovementReport() {
           event_type,
           inventory_products(part_number, description),
           inventory_batches(batch_number)
-        `)
+        `, { count: 'exact' })
         .eq('user_id', user.id)
         .gte('movement_date', from)
         .lte('movement_date', to)
-        .order('movement_date', { ascending: true });
+        .order('movement_date', { ascending: true })
+        .order('part_number', { ascending: true, foreignTable: 'inventory_products' })
+        .range(fromIndex, toIndex);
 
       if (productId) query = query.eq('product_id', productId);
       if (departmentId) query = query.eq('department_id', departmentId);
 
-      const { data, error } = await query;
+      const { data, error, count } = await query;
       if (error) throw error;
 
-      // Sort by part_number after date for stability
-      const sorted = (data as MovementRow[]).sort((a, b) => {
-        const dateCmp = a.movement_date.localeCompare(b.movement_date);
-        if (dateCmp !== 0) return dateCmp;
-        return (a.inventory_products?.part_number || '').localeCompare(
-          b.inventory_products?.part_number || ''
-        );
-      });
-
-      setRows(sorted);
+      setRows((data || []) as MovementRow[]);
+      setTotalCount(count || 0);
+      setPage(targetPage);
     } catch (err) {
       console.error('Failed to load stock movement report:', err);
     } finally {
@@ -140,25 +149,62 @@ export function StockMovementReport() {
     return { quantity, value };
   }, [filtered]);
 
-  const exportCsv = () => {
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
+  const exportCsv = async () => {
+    if (!user?.id) return;
+    const from = format(fromDate, 'yyyy-MM-dd');
+    const to = format(toDate, 'yyyy-MM-dd');
+
+    let query = supabase
+      .from('stock_movements')
+      .select(`
+        id,
+        movement_date,
+        quantity,
+        unit_cost,
+        source_ref,
+        event_type,
+        inventory_products(part_number, description),
+        inventory_batches(batch_number)
+      `)
+      .eq('user_id', user.id)
+      .gte('movement_date', from)
+      .lte('movement_date', to)
+      .order('movement_date', { ascending: true })
+      .order('part_number', { ascending: true, foreignTable: 'inventory_products' });
+
+    if (productId) query = query.eq('product_id', productId);
+    if (departmentId) query = query.eq('department_id', departmentId);
+
+    const { data, error } = await query;
+    if (error) {
+      console.error('Failed to export stock movement report:', error);
+      return;
+    }
+
+    const allRows = (data || []) as MovementRow[];
     const headers = ['Date','Part Number','Description','Batch','Event','Quantity','Unit Cost','Line Value','Source Ref'];
     const csv = [
       headers.join(','),
-      ...filtered.map((r) => [
-        `"${r.movement_date}"`,
+      ...allRows.map((r) => [
+        `"${format(new Date(r.movement_date), 'yyyy-MM-dd')}"`,
         `"${r.inventory_products?.part_number || ''}"`,
         `"${r.inventory_products?.description || ''}"`,
         `"${r.inventory_batches?.batch_number || ''}"`,
         `"${r.event_type}"`,
         r.quantity,
         r.unit_cost,
-        r.quantity * r.unit_cost,
+        Number(r.quantity) * Number(r.unit_cost),
         `"${r.source_ref}"`,
       ].join(',')),
-      ['TOTAL','','','','', totals.quantity, '', totals.value, ''].join(','),
     ].join('\n');
 
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const totalQty = allRows.reduce((s, r) => s + Number(r.quantity || 0), 0);
+    const totalVal = allRows.reduce((s, r) => s + Number(r.quantity || 0) * Number(r.unit_cost || 0), 0);
+    const csvWithTotals = csv + `\nTOTAL,,,,,${totalQty},,${totalVal},`;
+
+    const blob = new Blob([csvWithTotals], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -180,7 +226,7 @@ export function StockMovementReport() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className="pl-9 w-64" />
             </div>
-            <Button variant="outline" onClick={exportCsv} disabled={filtered.length === 0}> 
+            <Button variant="outline" onClick={exportCsv} disabled={rows.length === 0}> 
               <Download className="w-4 h-4 mr-2" /> Export CSV
             </Button>
           </div>
@@ -238,7 +284,10 @@ export function StockMovementReport() {
         </div>
 
         <div className="flex gap-3 mb-4">
-          <Button onClick={runReport} disabled={isLoading}>{isLoading ? 'Loading...' : 'Run Report'}</Button>
+          <Button onClick={() => runReport(1)} disabled={isLoading}>{isLoading ? 'Loading...' : 'Run Report'}</Button>
+          <Button variant="secondary" onClick={() => onOpenValuation?.({ asOfDate: toDate, productId: productId || undefined, departmentId: departmentId || undefined, fromDate, toDate })}>
+            Total Stock
+          </Button>
         </div>
 
         <div className="rounded-md border">
@@ -284,6 +333,19 @@ export function StockMovementReport() {
               </TableRow>
             </TableFooter>
           </Table>
+        </div>
+        <div className="mt-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious href="#" className={page <= 1 ? 'pointer-events-none opacity-50' : ''} onClick={(e) => { e.preventDefault(); if (page > 1) runReport(page - 1); }} />
+              </PaginationItem>
+              <span className="px-3 text-sm text-muted-foreground">Page {page} of {totalPages}</span>
+              <PaginationItem>
+                <PaginationNext href="#" className={page >= totalPages ? 'pointer-events-none opacity-50' : ''} onClick={(e) => { e.preventDefault(); if (page < totalPages) runReport(page + 1); }} />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       </CardContent>
     </Card>
