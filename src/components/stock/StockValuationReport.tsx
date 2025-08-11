@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useStockMovements, StockValuation } from '@/hooks/useStockMovements';
+import { useState, useEffect, useMemo } from 'react';
+import { useStockMovements, StockValuation, BatchBreakdown } from '@/hooks/useStockMovements';
 import { useCurrency } from '@/hooks/useCurrency';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Table,
   TableBody,
@@ -16,21 +18,58 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
+} from '@/components/ui/select';
+import { 
   Search, 
   CalendarIcon,
   Download,
-  TrendingUp
+  TrendingUp,
+  Package
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
 
 export function StockValuationReport() {
-  const { getStockValuation } = useStockMovements();
+  const { getStockValuation, getBatchBreakdown } = useStockMovements();
   const { formatCurrency } = useCurrency();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [asOfDate, setAsOfDate] = useState<Date>(new Date());
   const [valuationData, setValuationData] = useState<StockValuation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Scope filtering
+  const [scope, setScope] = useState<'all' | 'product' | 'department'>('all');
+  const [selectedProductId, setSelectedProductId] = useState<string>('');
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>('');
+
+  // Batch detail (optional) when product scope selected
+  const [showBatchDetail, setShowBatchDetail] = useState(false);
+  const [batchDetail, setBatchDetail] = useState<BatchBreakdown[]>([]);
+  const [isLoadingBatch, setIsLoadingBatch] = useState(false);
+
+  // Load reference data for filtering
+  const { data: products = [] } = useQuery({
+    queryKey: ['valuation-products'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('inventory_products')
+        .select('id, part_number, description, department_id');
+      if (error) throw error;
+      return data as { id: string; part_number: string; description: string | null; department_id: string | null }[];
+    },
+  });
+
+  const { data: departments = [] } = useQuery({
+    queryKey: ['valuation-departments'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('departments')
+        .select('id, department_name');
+      if (error) throw error;
+      return data as { id: string; department_name: string }[];
+    },
+  });
 
   useEffect(() => {
     loadValuationData();
@@ -39,7 +78,7 @@ export function StockValuationReport() {
   const loadValuationData = async () => {
     setIsLoading(true);
     try {
-      const data = await getStockValuation(asOfDate.toISOString().split('T')[0]);
+      const data = await getStockValuation(asOfDate.toISOString().split('T')[0]); // treated as end-of-day
       setValuationData(data);
     } catch (error) {
       console.error('Failed to load valuation data:', error);
@@ -48,19 +87,32 @@ export function StockValuationReport() {
     }
   };
 
-  const filteredData = valuationData.filter(item =>
+  const filteredByScope = useMemo(() => {
+    if (scope === 'product' && selectedProductId) {
+      return valuationData.filter(v => v.product_id === selectedProductId);
+    }
+    if (scope === 'department' && selectedDepartmentId) {
+      const productIds = new Set(
+        products.filter(p => p.department_id === selectedDepartmentId).map(p => p.id)
+      );
+      return valuationData.filter(v => productIds.has(v.product_id));
+    }
+    return valuationData;
+  }, [valuationData, scope, selectedProductId, selectedDepartmentId, products]);
+
+  const filteredSearch = filteredByScope.filter(item =>
     item.part_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalValue = filteredData.reduce((sum, item) => sum + item.total_value, 0);
-  const totalQuantity = filteredData.reduce((sum, item) => sum + item.quantity_on_hand, 0);
+  const totalValue = filteredSearch.reduce((sum, item) => sum + item.total_value, 0);
+  const totalQuantity = filteredSearch.reduce((sum, item) => sum + item.quantity_on_hand, 0);
 
   const exportToCsv = () => {
     const headers = ['Part Number', 'Description', 'Quantity on Hand', 'Weighted Avg Cost', 'Total Value'];
     const csvContent = [
       headers.join(','),
-      ...filteredData.map(item => [
+      ...filteredSearch.map(item => [
         `"${item.part_number}"`,
         `"${item.description || ''}"`,
         item.quantity_on_hand,
@@ -76,6 +128,24 @@ export function StockValuationReport() {
     link.download = `stock-valuation-${format(asOfDate, 'yyyy-MM-dd')}.csv`;
     link.click();
     window.URL.revokeObjectURL(url);
+  };
+
+  const toggleBatchDetail = async () => {
+    if (scope !== 'product' || !selectedProductId) return;
+    if (showBatchDetail) {
+      setShowBatchDetail(false);
+      return;
+    }
+    setIsLoadingBatch(true);
+    try {
+      const data = await getBatchBreakdown(selectedProductId, asOfDate.toISOString().split('T')[0]);
+      setBatchDetail(data);
+      setShowBatchDetail(true);
+    } catch (e) {
+      console.error('Failed to load batch breakdown', e);
+    } finally {
+      setIsLoadingBatch(false);
+    }
   };
 
   return (
@@ -115,7 +185,7 @@ export function StockValuationReport() {
                 />
               </PopoverContent>
             </Popover>
-            <Button variant="outline" onClick={exportToCsv} disabled={filteredData.length === 0}>
+            <Button variant="outline" onClick={exportToCsv} disabled={filteredSearch.length === 0}>
               <Download className="w-4 h-4 mr-2" />
               Export CSV
             </Button>
@@ -123,11 +193,52 @@ export function StockValuationReport() {
         </div>
       </CardHeader>
       <CardContent>
+        {/* Scope selectors */}
+        <div className="grid md:grid-cols-3 gap-3 mb-4">
+          <Select value={scope} onValueChange={(v: any) => { setScope(v); setSelectedProductId(''); setSelectedDepartmentId(''); setShowBatchDetail(false); }}>
+            <SelectTrigger>
+              <SelectValue placeholder="Scope" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All products</SelectItem>
+              <SelectItem value="product">Single product</SelectItem>
+              <SelectItem value="department">By department</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {scope === 'product' && (
+            <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select product" />
+              </SelectTrigger>
+              <SelectContent>
+                {products.map(p => (
+                  <SelectItem key={p.id} value={p.id}>{p.part_number}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {scope === 'department' && (
+            <Select value={selectedDepartmentId} onValueChange={setSelectedDepartmentId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select department" />
+              </SelectTrigger>
+              <SelectContent>
+                {departments.map(d => (
+                  <SelectItem key={d.id} value={d.id}>{d.department_name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
+        {/* Data */}
         {isLoading ? (
           <div className="text-center text-muted-foreground py-8">
             Loading valuation data...
           </div>
-        ) : filteredData.length === 0 ? (
+        ) : filteredSearch.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
             {searchTerm ? 'No products match your search.' : 'No stock valuation data available.'}
           </div>
@@ -138,7 +249,7 @@ export function StockValuationReport() {
               <Card>
                 <CardContent className="p-4">
                   <div className="text-sm text-muted-foreground">Total Products</div>
-                  <div className="text-2xl font-bold">{filteredData.length}</div>
+                  <div className="text-2xl font-bold">{filteredSearch.length}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -156,7 +267,7 @@ export function StockValuationReport() {
             </div>
 
             {/* Data Table */}
-            <div className="rounded-md border">
+            <div className="rounded-md border mb-4">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -168,7 +279,7 @@ export function StockValuationReport() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredData.map((item) => (
+                  {filteredSearch.map((item) => (
                     <TableRow key={item.product_id}>
                       <TableCell className="font-medium">
                         {item.part_number}
@@ -191,7 +302,7 @@ export function StockValuationReport() {
                 <TableFooter>
                   <TableRow>
                     <TableCell colSpan={2} className="font-medium">
-                      Total ({filteredData.length} products)
+                      Total ({filteredSearch.length} products)
                     </TableCell>
                     <TableCell className="text-right font-bold">
                       {totalQuantity.toFixed(2)}
@@ -204,6 +315,42 @@ export function StockValuationReport() {
                 </TableFooter>
               </Table>
             </div>
+
+            {/* Optional batch detail when product scope */}
+            {scope === 'product' && selectedProductId && (
+              <div className="space-y-3">
+                <Button variant="outline" onClick={toggleBatchDetail} disabled={isLoadingBatch}>
+                  <Package className="w-4 h-4 mr-2" />
+                  {showBatchDetail ? 'Hide Batch Detail' : 'Show Batch Detail'}
+                </Button>
+                {showBatchDetail && (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Batch Number</TableHead>
+                          <TableHead>Date Received</TableHead>
+                          <TableHead className="text-right">Quantity</TableHead>
+                          <TableHead className="text-right">Weighted Avg Cost</TableHead>
+                          <TableHead className="text-right">Total Value</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {batchDetail.map(b => (
+                          <TableRow key={`${b.product_id}-${b.batch_id}`}>
+                            <TableCell>{b.batch_number}</TableCell>
+                            <TableCell>{format(new Date(b.date_received), 'yyyy-MM-dd')}</TableCell>
+                            <TableCell className="text-right">{b.quantity_on_hand.toFixed(2)}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(b.weighted_avg_cost)}</TableCell>
+                            <TableCell className="text-right font-medium">{formatCurrency(b.total_value)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </CardContent>
