@@ -20,6 +20,7 @@ import BatchSubmission from "./pages/BatchSubmission";
 import Reports from "./pages/Reports";
 import JobCards from "./pages/JobCards";
 import StockMovements from "./pages/StockMovements";
+import Tools from "./pages/Tools";
 
 const queryClient = new QueryClient();
 
@@ -114,6 +115,14 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <StockMovements />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/tools" 
+                  element={
+                    <ProtectedRoute>
+                      <Tools />
                     </ProtectedRoute>
                   } 
                 />

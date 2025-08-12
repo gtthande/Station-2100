@@ -1,12 +1,14 @@
 
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { Link } from 'react-router-dom';
-import { FileText, AlertTriangle, Plus, ChevronDown } from 'lucide-react';
+import { FileText, AlertTriangle, Plus, ChevronDown, Wrench, History } from 'lucide-react';
 import { UnapprovedBatchesReport } from '@/components/inventory/UnapprovedBatchesReport';
 import ReorderReportCard from '@/components/reports/ReorderReportCard';
 import { BatchApprovalReport } from '@/components/reports/BatchApprovalReport';
 import { ProductMovementReport } from '@/components/reports/ProductMovementReport';
 import { BatchListReport } from '@/components/reports/BatchListReport';
+import UnreturnedToolsReport from '@/components/tools/UnreturnedToolsReport';
+import ToolEventsReport from '@/components/tools/ToolEventsReport';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useState } from 'react';
@@ -19,7 +21,9 @@ const Reports = () => {
     { value: 'reorder', label: 'Reorder Report - Low Stock Items', icon: FileText },
     { value: 'approval', label: 'Batch Approval Report', icon: AlertTriangle },
     { value: 'movement', label: 'Product Movement Chart', icon: FileText },
-    { value: 'batches', label: 'Batch List Report', icon: FileText }
+    { value: 'batches', label: 'Batch List Report', icon: FileText },
+    { value: 'tools-unreturned', label: 'Tools - Unreturned (Not Returned)', icon: Wrench },
+    { value: 'tools-events', label: 'Tools - Activity Log', icon: History }
   ];
 
   const renderSelectedReport = () => {
@@ -34,6 +38,10 @@ const Reports = () => {
         return <ProductMovementReport />;
       case 'batches':
         return <BatchListReport />;
+      case 'tools-unreturned':
+        return <UnreturnedToolsReport />;
+      case 'tools-events':
+        return <ToolEventsReport />;
       default:
         return <UnapprovedBatchesReport />;
     }

@@ -54,6 +54,18 @@ const Index = () => {
             </GlassCard>
           </Link>
 
+          <Link to="/tools">
+            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
+              <GlassCardContent className="p-6 text-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <Wrench className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">Tools</h3>
+                <p className="text-white/60 text-sm">Manage tools, loans, and reminders</p>
+              </GlassCardContent>
+            </GlassCard>
+          </Link>
+
           {canSubmitBatches && (
             <Link to="/batch-submission">
               <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
