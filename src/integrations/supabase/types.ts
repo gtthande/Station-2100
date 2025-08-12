@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          updated_at: string
+          user_id: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          updated_at?: string
+          user_id: string
+          value: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          updated_at?: string
+          user_id?: string
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_settings_user_id_fk"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       custom_roles: {
         Row: {
           created_at: string
@@ -1378,6 +1413,196 @@ export type Database = {
         }
         Relationships: []
       }
+      tool_events: {
+        Row: {
+          actor_user_id: string
+          at: string
+          created_at: string
+          event_type: Database["public"]["Enums"]["app_tool_event_type"]
+          id: string
+          loan_id: string | null
+          meta: Json | null
+          tool_id: string
+          user_id: string
+        }
+        Insert: {
+          actor_user_id: string
+          at?: string
+          created_at?: string
+          event_type: Database["public"]["Enums"]["app_tool_event_type"]
+          id?: string
+          loan_id?: string | null
+          meta?: Json | null
+          tool_id: string
+          user_id: string
+        }
+        Update: {
+          actor_user_id?: string
+          at?: string
+          created_at?: string
+          event_type?: Database["public"]["Enums"]["app_tool_event_type"]
+          id?: string
+          loan_id?: string | null
+          meta?: Json | null
+          tool_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tool_events_actor_fk"
+            columns: ["actor_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tool_events_loan_id_fk"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "tool_loans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tool_events_loan_id_fk"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "v_tool_movement"
+            referencedColumns: ["loan_id"]
+          },
+          {
+            foreignKeyName: "tool_events_tool_id_fk"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "tools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tool_events_user_id_fk"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tool_loans: {
+        Row: {
+          auth_method: Database["public"]["Enums"]["app_tool_auth_method"]
+          borrower_user_id: string
+          checkout_at: string
+          created_at: string
+          due_at: string
+          id: string
+          issuer_user_id: string
+          notes: string | null
+          returned_at: string | null
+          tool_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auth_method: Database["public"]["Enums"]["app_tool_auth_method"]
+          borrower_user_id: string
+          checkout_at?: string
+          created_at?: string
+          due_at: string
+          id?: string
+          issuer_user_id: string
+          notes?: string | null
+          returned_at?: string | null
+          tool_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auth_method?: Database["public"]["Enums"]["app_tool_auth_method"]
+          borrower_user_id?: string
+          checkout_at?: string
+          created_at?: string
+          due_at?: string
+          id?: string
+          issuer_user_id?: string
+          notes?: string | null
+          returned_at?: string | null
+          tool_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tool_loans_borrower_fk"
+            columns: ["borrower_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tool_loans_issuer_fk"
+            columns: ["issuer_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tool_loans_tool_id_fk"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "tools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tool_loans_user_id_fk"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tools: {
+        Row: {
+          created_at: string
+          default_due_hours: number | null
+          id: string
+          name: string
+          serial_no: string | null
+          sku: string | null
+          status: Database["public"]["Enums"]["app_tool_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          default_due_hours?: number | null
+          id?: string
+          name: string
+          serial_no?: string | null
+          sku?: string | null
+          status?: Database["public"]["Enums"]["app_tool_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          default_due_hours?: number | null
+          id?: string
+          name?: string
+          serial_no?: string | null
+          sku?: string | null
+          status?: Database["public"]["Enums"]["app_tool_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tools_user_id_fk"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_custom_roles: {
         Row: {
           created_at: string
@@ -1436,9 +1661,44 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_tool_movement: {
+        Row: {
+          actor_name: string | null
+          at: string | null
+          event: string | null
+          from_holder: string | null
+          issuer_name: string | null
+          loan_id: string | null
+          serial_no: string | null
+          sku: string | null
+          to_holder: string | null
+          tool_id: string | null
+          tool_name: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tool_events_tool_id_fk"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "tools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tool_events_user_id_fk"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      compute_tool_due_at: {
+        Args: { _tool_id: string; _checkout_at: string }
+        Returns: string
+      }
       get_batch_breakdown_report: {
         Args: { _user_id: string; _product_id?: string; _as_of_date?: string }
         Returns: {
@@ -1519,6 +1779,9 @@ export type Database = {
         | "job_allocator"
         | "batch_manager"
         | "supervisor"
+      app_tool_auth_method: "code" | "fingerprint"
+      app_tool_event_type: "checkout" | "return" | "transfer"
+      app_tool_status: "in_stock" | "checked_out"
       item_category: "spare" | "consumable" | "owner_supplied"
       job_status: "open" | "awaiting_auth" | "closed"
       stock_movement_event:
@@ -1661,6 +1924,9 @@ export const Constants = {
         "batch_manager",
         "supervisor",
       ],
+      app_tool_auth_method: ["code", "fingerprint"],
+      app_tool_event_type: ["checkout", "return", "transfer"],
+      app_tool_status: ["in_stock", "checked_out"],
       item_category: ["spare", "consumable", "owner_supplied"],
       job_status: ["open", "awaiting_auth", "closed"],
       stock_movement_event: [
