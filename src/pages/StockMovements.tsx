@@ -9,6 +9,7 @@ import { StockAdjustmentDialog } from '@/components/stock/StockAdjustmentDialog'
 import { StockMovementReport } from '@/components/stock/StockMovementReport';
 import { StockValuationReport } from '@/components/stock/StockValuationReport';
 import { BatchBreakdownReport } from '@/components/stock/BatchBreakdownReport';
+import { StockMovementsList } from '@/components/stock/StockMovementsList';
 
 const StockMovements = () => {
   const [openingBalanceOpen, setOpeningBalanceOpen] = useState(false);
