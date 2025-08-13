@@ -4,12 +4,14 @@ import { Link } from 'react-router-dom';
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/components/ui/glass-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ToolSubmissionForm } from '@/components/tools/ToolSubmissionForm';
+import { ToolTransactionForm } from '@/components/tools/ToolTransactionForm';
+import { ToolsList } from '@/components/tools/ToolsList';
 import UnreturnedToolsReport from '@/components/tools/UnreturnedToolsReport';
 import ToolEventsReport from '@/components/tools/ToolEventsReport';
-import { ToolsList } from '@/components/tools/ToolsList';
 
 const Tools = () => {
-  const [activeTab, setActiveTab] = useState('management');
+  const [activeTab, setActiveTab] = useState('entry');
 
   // Basic SEO without extra deps
   useEffect(() => {
@@ -54,9 +56,15 @@ const Tools = () => {
       {/* Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-white/5 backdrop-blur">
-            <TabsTrigger value="management" className="data-[state=active]:bg-white/10">
-              Tool Management
+          <TabsList className="grid w-full grid-cols-5 bg-white/5 backdrop-blur">
+            <TabsTrigger value="entry" className="data-[state=active]:bg-white/10">
+              Tool Entry
+            </TabsTrigger>
+            <TabsTrigger value="transactions" className="data-[state=active]:bg-white/10">
+              Transactions
+            </TabsTrigger>
+            <TabsTrigger value="inventory" className="data-[state=active]:bg-white/10">
+              Inventory
             </TabsTrigger>
             <TabsTrigger value="reports" className="data-[state=active]:bg-white/10">
               Reports
@@ -66,7 +74,15 @@ const Tools = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="management" className="space-y-6">
+          <TabsContent value="entry" className="space-y-6">
+            <ToolSubmissionForm />
+          </TabsContent>
+
+          <TabsContent value="transactions" className="space-y-6">
+            <ToolTransactionForm />
+          </TabsContent>
+
+          <TabsContent value="inventory" className="space-y-6">
             <ToolsList />
           </TabsContent>
 

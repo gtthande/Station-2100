@@ -52,7 +52,7 @@ export const ToolsList = () => {
         .from('tools')
         .select(`
           *,
-          tool_loans!inner (
+          tool_loans (
             id,
             borrower_user_id,
             checkout_at,
