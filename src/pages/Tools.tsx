@@ -1,12 +1,16 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/components/ui/glass-card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UnreturnedToolsReport from '@/components/tools/UnreturnedToolsReport';
 import ToolEventsReport from '@/components/tools/ToolEventsReport';
+import { ToolsList } from '@/components/tools/ToolsList';
 
 const Tools = () => {
+  const [activeTab, setActiveTab] = useState('management');
+
   // Basic SEO without extra deps
   useEffect(() => {
     document.title = 'Tools Management | Station-2100';
@@ -48,40 +52,60 @@ const Tools = () => {
       </div>
 
       {/* Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        <section aria-labelledby="tools-overview">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <GlassCard>
-              <GlassCardHeader>
-                <GlassCardTitle id="tools-overview">Unreturned Tools</GlassCardTitle>
-              </GlassCardHeader>
-              <GlassCardContent>
-                <UnreturnedToolsReport compact />
-              </GlassCardContent>
-            </GlassCard>
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 bg-white/5 backdrop-blur">
+            <TabsTrigger value="management" className="data-[state=active]:bg-white/10">
+              Tool Management
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="data-[state=active]:bg-white/10">
+              Reports
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="data-[state=active]:bg-white/10">
+              Activity
+            </TabsTrigger>
+          </TabsList>
 
+          <TabsContent value="management" className="space-y-6">
+            <ToolsList />
+          </TabsContent>
+
+          <TabsContent value="reports" className="space-y-6">
+            <section aria-labelledby="tools-overview">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <GlassCard>
+                  <GlassCardHeader>
+                    <GlassCardTitle id="tools-overview">Unreturned Tools</GlassCardTitle>
+                  </GlassCardHeader>
+                  <GlassCardContent>
+                    <UnreturnedToolsReport />
+                  </GlassCardContent>
+                </GlassCard>
+
+                <GlassCard>
+                  <GlassCardHeader>
+                    <GlassCardTitle>More Reports</GlassCardTitle>
+                  </GlassCardHeader>
+                  <GlassCardContent>
+                    <p className="text-white/70 mb-4">See full tools reports and reminders in the Reports section.</p>
+                    <Link to="/reports" className="text-primary hover:underline">Go to Reports →</Link>
+                  </GlassCardContent>
+                </GlassCard>
+              </div>
+            </section>
+          </TabsContent>
+
+          <TabsContent value="activity" className="space-y-6">
             <GlassCard>
               <GlassCardHeader>
                 <GlassCardTitle>Tool Activity</GlassCardTitle>
               </GlassCardHeader>
               <GlassCardContent>
-                <ToolEventsReport compact />
+                <ToolEventsReport />
               </GlassCardContent>
             </GlassCard>
-          </div>
-        </section>
-
-        <section>
-          <GlassCard>
-            <GlassCardHeader>
-              <GlassCardTitle>More Reports</GlassCardTitle>
-            </GlassCardHeader>
-            <GlassCardContent>
-              <p className="text-white/70 mb-4">See full tools reports and reminders in the Reports section.</p>
-              <Link to="/reports" className="text-primary hover:underline">Go to Reports →</Link>
-            </GlassCardContent>
-          </GlassCard>
-        </section>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
