@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToolSubmissionForm } from '@/components/tools/ToolSubmissionForm';
 import { ToolTransactionForm } from '@/components/tools/ToolTransactionForm';
 import { ToolsList } from '@/components/tools/ToolsList';
+import { ToolMovementReport } from '@/components/tools/ToolMovementReport';
 import UnreturnedToolsReport from '@/components/tools/UnreturnedToolsReport';
 import ToolEventsReport from '@/components/tools/ToolEventsReport';
 
@@ -56,7 +57,7 @@ const Tools = () => {
       {/* Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-white/5 backdrop-blur">
+          <TabsList className="grid w-full grid-cols-6 bg-white/5 backdrop-blur">
             <TabsTrigger value="entry" className="data-[state=active]:bg-white/10">
               Tool Entry
             </TabsTrigger>
@@ -65,6 +66,9 @@ const Tools = () => {
             </TabsTrigger>
             <TabsTrigger value="inventory" className="data-[state=active]:bg-white/10">
               Inventory
+            </TabsTrigger>
+            <TabsTrigger value="movements" className="data-[state=active]:bg-white/10">
+              Movements
             </TabsTrigger>
             <TabsTrigger value="reports" className="data-[state=active]:bg-white/10">
               Reports
@@ -84,6 +88,10 @@ const Tools = () => {
 
           <TabsContent value="inventory" className="space-y-6">
             <ToolsList />
+          </TabsContent>
+
+          <TabsContent value="movements" className="space-y-6">
+            <ToolMovementReport />
           </TabsContent>
 
           <TabsContent value="reports" className="space-y-6">

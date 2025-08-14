@@ -1418,7 +1418,7 @@ export type Database = {
           actor_user_id: string
           at: string
           created_at: string
-          event_type: Database["public"]["Enums"]["app_tool_event_type"]
+          event_type: Database["public"]["Enums"]["event_type"]
           id: string
           loan_id: string | null
           meta: Json | null
@@ -1429,7 +1429,7 @@ export type Database = {
           actor_user_id: string
           at?: string
           created_at?: string
-          event_type: Database["public"]["Enums"]["app_tool_event_type"]
+          event_type: Database["public"]["Enums"]["event_type"]
           id?: string
           loan_id?: string | null
           meta?: Json | null
@@ -1440,54 +1440,18 @@ export type Database = {
           actor_user_id?: string
           at?: string
           created_at?: string
-          event_type?: Database["public"]["Enums"]["app_tool_event_type"]
+          event_type?: Database["public"]["Enums"]["event_type"]
           id?: string
           loan_id?: string | null
           meta?: Json | null
           tool_id?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "tool_events_actor_fk"
-            columns: ["actor_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tool_events_loan_id_fk"
-            columns: ["loan_id"]
-            isOneToOne: false
-            referencedRelation: "tool_loans"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tool_events_loan_id_fk"
-            columns: ["loan_id"]
-            isOneToOne: false
-            referencedRelation: "v_tool_movement"
-            referencedColumns: ["loan_id"]
-          },
-          {
-            foreignKeyName: "tool_events_tool_id_fk"
-            columns: ["tool_id"]
-            isOneToOne: false
-            referencedRelation: "tools"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tool_events_user_id_fk"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       tool_loans: {
         Row: {
-          auth_method: Database["public"]["Enums"]["app_tool_auth_method"]
+          auth_method: Database["public"]["Enums"]["auth_method"]
           borrower_user_id: string
           checkout_at: string
           created_at: string
@@ -1501,7 +1465,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          auth_method: Database["public"]["Enums"]["app_tool_auth_method"]
+          auth_method: Database["public"]["Enums"]["auth_method"]
           borrower_user_id: string
           checkout_at?: string
           created_at?: string
@@ -1515,7 +1479,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          auth_method?: Database["public"]["Enums"]["app_tool_auth_method"]
+          auth_method?: Database["public"]["Enums"]["auth_method"]
           borrower_user_id?: string
           checkout_at?: string
           created_at?: string
@@ -1528,39 +1492,11 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "tool_loans_borrower_fk"
-            columns: ["borrower_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tool_loans_issuer_fk"
-            columns: ["issuer_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tool_loans_tool_id_fk"
-            columns: ["tool_id"]
-            isOneToOne: false
-            referencedRelation: "tools"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tool_loans_user_id_fk"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       tools: {
         Row: {
+          calibration_date: string | null
           created_at: string
           default_due_hours: number | null
           id: string
@@ -1572,6 +1508,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          calibration_date?: string | null
           created_at?: string
           default_due_hours?: number | null
           id?: string
@@ -1583,6 +1520,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          calibration_date?: string | null
           created_at?: string
           default_due_hours?: number | null
           id?: string
@@ -1593,15 +1531,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "tools_user_id_fk"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_custom_roles: {
         Row: {
@@ -1665,7 +1595,8 @@ export type Database = {
         Row: {
           actor_name: string | null
           at: string | null
-          event: string | null
+          event: Database["public"]["Enums"]["event_type"] | null
+          event_id: string | null
           from_holder: string | null
           issuer_name: string | null
           loan_id: string | null
@@ -1676,22 +1607,7 @@ export type Database = {
           tool_name: string | null
           user_id: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "tool_events_tool_id_fk"
-            columns: ["tool_id"]
-            isOneToOne: false
-            referencedRelation: "tools"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tool_events_user_id_fk"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
@@ -1782,6 +1698,13 @@ export type Database = {
       app_tool_auth_method: "code" | "fingerprint"
       app_tool_event_type: "checkout" | "return" | "transfer"
       app_tool_status: "in_stock" | "checked_out"
+      auth_method: "code" | "fingerprint"
+      event_type:
+        | "checkout"
+        | "return"
+        | "transfer"
+        | "overdue"
+        | "reminder_sent"
       item_category: "spare" | "consumable" | "owner_supplied"
       job_status: "open" | "awaiting_auth" | "closed"
       stock_movement_event:
@@ -1927,6 +1850,14 @@ export const Constants = {
       app_tool_auth_method: ["code", "fingerprint"],
       app_tool_event_type: ["checkout", "return", "transfer"],
       app_tool_status: ["in_stock", "checked_out"],
+      auth_method: ["code", "fingerprint"],
+      event_type: [
+        "checkout",
+        "return",
+        "transfer",
+        "overdue",
+        "reminder_sent",
+      ],
       item_category: ["spare", "consumable", "owner_supplied"],
       job_status: ["open", "awaiting_auth", "closed"],
       stock_movement_event: [

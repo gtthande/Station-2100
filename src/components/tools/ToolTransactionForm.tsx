@@ -37,7 +37,6 @@ export const ToolTransactionForm = () => {
   const [checkoutData, setCheckoutData] = useState({
     tool_id: '',
     borrower_user_id: '',
-    borrower_email: '',
     notes: '',
     auth_method: 'code' as const
   });
@@ -96,7 +95,7 @@ export const ToolTransactionForm = () => {
       if (error) throw error;
 
       // Process tools to include current loan info
-      const processedTools = data?.map(tool => {
+      const processedTools = data?.map((tool: any) => {
         const currentLoan = tool.tool_loans?.[0];
         return {
           ...tool,
@@ -183,7 +182,6 @@ export const ToolTransactionForm = () => {
       setCheckoutData({
         tool_id: '',
         borrower_user_id: '',
-        borrower_email: '',
         notes: '',
         auth_method: 'code'
       });
