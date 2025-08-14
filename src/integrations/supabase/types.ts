@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -1696,74 +1696,74 @@ export type Database = {
     }
     Functions: {
       compute_tool_due_at: {
-        Args: { _tool_id: string; _checkout_at: string }
+        Args: { _checkout_at: string; _tool_id: string }
         Returns: string
       }
       get_batch_breakdown_report: {
-        Args: { _user_id: string; _product_id?: string; _as_of_date?: string }
+        Args: { _as_of_date?: string; _product_id?: string; _user_id: string }
         Returns: {
-          product_id: string
-          part_number: string
           batch_id: string
           batch_number: string
-          quantity_on_hand: number
-          weighted_avg_cost: number
-          total_value: number
           date_received: string
+          part_number: string
+          product_id: string
+          quantity_on_hand: number
+          total_value: number
+          weighted_avg_cost: number
         }[]
       }
       get_inventory_summary: {
         Args: Record<PropertyKey, never>
         Returns: {
-          product_id: string
-          part_number: string
-          description: string
-          total_quantity: number
           allocated_quantity: number
           available_quantity: number
+          description: string
+          part_number: string
+          product_id: string
           reorder_point: number
+          total_quantity: number
         }[]
       }
       get_stock_on_hand: {
         Args: {
-          _user_id: string
-          _product_id: string
           _as_of_date?: string
           _batch_id?: string
+          _product_id: string
+          _user_id: string
         }
         Returns: {
-          product_id: string
           batch_id: string
+          product_id: string
           quantity_on_hand: number
-          weighted_avg_cost: number
           total_value: number
+          weighted_avg_cost: number
         }[]
       }
       get_stock_valuation_report: {
-        Args: { _user_id: string; _as_of_date?: string }
+        Args: { _as_of_date?: string; _user_id: string }
         Returns: {
-          product_id: string
-          part_number: string
           description: string
+          part_number: string
+          product_id: string
           quantity_on_hand: number
-          weighted_avg_cost: number
           total_value: number
+          weighted_avg_cost: number
         }[]
       }
       get_user_roles_with_profiles: {
         Args: Record<PropertyKey, never>
         Returns: {
-          user_id: string
-          role: string
-          full_name: string
-          email: string
           created_at: string
+          email: string
+          full_name: string
+          role: string
+          user_id: string
         }[]
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
