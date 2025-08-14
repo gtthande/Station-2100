@@ -10,7 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/components/ui/glass-card';
 import { useToast } from '@/hooks/use-toast';
-import { Package, Send } from 'lucide-react';
+import { Package, Send, ArrowLeft } from 'lucide-react';
+import { StaffAuthDialog } from '@/components/jobs/StaffAuthDialog';
+import { Link } from 'react-router-dom';
 
 export const BatchSubmissionForm = () => {
   const { user } = useAuth();
@@ -29,6 +31,9 @@ export const BatchSubmissionForm = () => {
     cost_per_unit: 0,
     notes: '',
   });
+  
+  const [showStaffAuth, setShowStaffAuth] = useState(false);
+  const [pendingSubmission, setPendingSubmission] = useState<any>(null);
 
   const { data: products, isLoading: loadingProducts } = useQuery({
     queryKey: ['inventory-products'],
@@ -158,7 +163,21 @@ export const BatchSubmissionForm = () => {
       return;
     }
     
-    submitBatchMutation.mutate(formData);
+    setPendingSubmission(formData);
+    setShowStaffAuth(true);
+  };
+
+  const completeSubmission = async (staffMember: any) => {
+    if (!pendingSubmission) return;
+    
+    const submissionData = {
+      ...pendingSubmission,
+      entered_by: staffMember.id
+    };
+    
+    submitBatchMutation.mutate(submissionData);
+    setShowStaffAuth(false);
+    setPendingSubmission(null);
   };
 
   if (loadingProducts || loadingSuppliers) {
@@ -321,7 +340,17 @@ export const BatchSubmissionForm = () => {
             />
           </div>
 
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-between pt-4">
+            <Link to="/">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Dashboard
+              </Button>
+            </Link>
             <Button
               type="submit"
               disabled={submitBatchMutation.isPending}
@@ -333,6 +362,13 @@ export const BatchSubmissionForm = () => {
           </div>
         </form>
       </GlassCardContent>
+      
+      <StaffAuthDialog
+        isOpen={showStaffAuth}
+        onClose={() => setShowStaffAuth(false)}
+        onStaffAuthenticated={completeSubmission}
+        action="receive"
+      />
     </GlassCard>
   );
 };
