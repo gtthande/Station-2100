@@ -1699,6 +1699,7 @@ export type Database = {
         | "job_allocator"
         | "batch_manager"
         | "supervisor"
+        | "hr"
       app_tool_auth_method: "code" | "fingerprint"
       app_tool_event_type: "checkout" | "return" | "transfer"
       app_tool_status: "in_stock" | "checked_out"
@@ -1850,6 +1851,7 @@ export const Constants = {
         "job_allocator",
         "batch_manager",
         "supervisor",
+        "hr",
       ],
       app_tool_auth_method: ["code", "fingerprint"],
       app_tool_event_type: ["checkout", "return", "transfer"],
