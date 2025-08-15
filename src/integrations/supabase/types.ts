@@ -1033,6 +1033,36 @@ export type Database = {
           },
         ]
       }
+      profile_access_log: {
+        Row: {
+          access_time: string | null
+          access_type: string
+          accessed_by: string
+          accessed_profile_id: string
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+        }
+        Insert: {
+          access_time?: string | null
+          access_type?: string
+          accessed_by: string
+          accessed_profile_id: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+        }
+        Update: {
+          access_time?: string | null
+          access_type?: string
+          accessed_by?: string
+          accessed_profile_id?: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           badge_id: string | null
@@ -1690,6 +1720,10 @@ export type Database = {
       is_admin: {
         Args: { _user_id: string }
         Returns: boolean
+      }
+      log_profile_access: {
+        Args: { _access_type?: string; _profile_id: string }
+        Returns: undefined
       }
     }
     Enums: {

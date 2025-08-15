@@ -7,15 +7,18 @@ import { UserRoleAssignment } from '@/components/admin/UserRoleAssignment';
 import { ExcelImport } from '@/components/admin/ExcelImport';
 import { DepartmentManagement } from '@/components/admin/DepartmentManagement';
 import { StockCategoryManagement } from '@/components/admin/StockCategoryManagement';
+import { HRManagement } from '@/components/admin/HRManagement';
+import { SecurityAuditLog } from '@/components/admin/SecurityAuditLog';
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link } from 'react-router-dom';
-import { Shield, Users, Settings, UserCheck, Cog, Upload, Building2, Package } from 'lucide-react';
+import { Shield, Users, Settings, UserCheck, Cog, Upload, Building2, Package, Lock, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GlassCard, GlassCardContent } from '@/components/ui/glass-card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'custom-roles' | 'advanced-assignment' | 'import' | 'departments' | 'stock-categories'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'custom-roles' | 'advanced-assignment' | 'import' | 'departments' | 'stock-categories' | 'hr-management' | 'security-audit'>('users');
   const { canManageSystem, isLoading } = useUserRoles();
 
   if (isLoading) {
@@ -45,6 +48,16 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-surface-dark">
+      {/* Security Alert */}
+      <div className="max-w-7xl mx-auto px-6 pt-4">
+        <Alert className="mb-4 bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
+          <Shield className="h-4 w-4 text-green-600 dark:text-green-400" />
+          <AlertDescription className="text-green-800 dark:text-green-200">
+            🔒 <strong>Security Enhanced:</strong> Employee profile access has been secured. Only users can view their own profiles, and admins/HR personnel can access employee data for legitimate purposes.
+          </AlertDescription>
+        </Alert>
+      </div>
+
       {/* Header */}
       <div className="border-b border-white/10 bg-surface-dark/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
@@ -58,7 +71,7 @@ const Admin = () => {
                   <Shield className="w-6 h-6" />
                   System Administration
                 </h1>
-                <p className="text-white/60">Manage users, roles and system permissions</p>
+                <p className="text-white/60">Manage users, roles, security and system permissions</p>
               </div>
             </div>
             <UserMenu />
@@ -153,6 +166,30 @@ const Admin = () => {
             <Package className="w-4 h-4 mr-2" />
             Stock Categories
           </Button>
+          <Button
+            variant={activeTab === 'hr-management' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('hr-management')}
+            className={
+              activeTab === 'hr-management'
+                ? 'bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700'
+                : 'border-white/20 text-white hover:bg-white/10'
+            }
+          >
+            <Lock className="w-4 h-4 mr-2" />
+            HR Security
+          </Button>
+          <Button
+            variant={activeTab === 'security-audit' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('security-audit')}
+            className={
+              activeTab === 'security-audit'
+                ? 'bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700'
+                : 'border-white/20 text-white hover:bg-white/10'
+            }
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            Security Audit
+          </Button>
         </div>
 
         {activeTab === 'users' && <UserManagement />}
@@ -162,6 +199,8 @@ const Admin = () => {
         {activeTab === 'import' && <ExcelImport />}
         {activeTab === 'departments' && <DepartmentManagement />}
         {activeTab === 'stock-categories' && <StockCategoryManagement />}
+        {activeTab === 'hr-management' && <HRManagement />}
+        {activeTab === 'security-audit' && <SecurityAuditLog />}
       </div>
     </div>
   );
