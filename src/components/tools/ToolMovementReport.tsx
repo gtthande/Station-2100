@@ -61,10 +61,12 @@ export const ToolMovementReport = () => {
   });
 
   // Fetch movement data
-  const { data: movements, isLoading, refetch } = useQuery({
+  const { data: movements, isLoading, refetch, error } = useQuery({
     queryKey: ['tool-movements', filters],
     queryFn: async () => {
       if (!user) return [];
+      
+      console.log('Fetching tool movements with filters:', filters);
       
       let query = supabase
         .from('v_tool_movement')
@@ -83,7 +85,13 @@ export const ToolMovementReport = () => {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      
+      console.log('Tool movements query result:', { data, error, count: data?.length });
+      
+      if (error) {
+        console.error('Tool movements query error:', error);
+        throw error;
+      }
       
       return data as MovementRecord[];
     },
@@ -262,6 +270,10 @@ export const ToolMovementReport = () => {
         <GlassCardContent>
           {isLoading ? (
             <div className="text-center py-8">Loading movements...</div>
+          ) : error ? (
+            <div className="text-center py-8 text-red-400">
+              Error loading movements: {error.message}
+            </div>
           ) : !movements?.length ? (
             <div className="text-center py-8 text-white/60">No movements found for the selected criteria</div>
           ) : (
