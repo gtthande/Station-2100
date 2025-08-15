@@ -42,7 +42,28 @@ export function JobsList({ onSelectJob }: JobsListProps) {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+
+      // Calculate costs for each job
+      const jobsWithCosts = await Promise.all((data || []).map(async (job) => {
+        // Get job items for cost calculation
+        const { data: items } = await supabase
+          .from("job_items")
+          .select("*")
+          .eq("job_id", job.job_id);
+
+        const warehouseACost = (items || []).filter(i => i.category === 'spare').reduce((sum, item) => sum + (item.total_cost || 0), 0);
+        const warehouseBCCost = (items || []).filter(i => i.category === 'consumable').reduce((sum, item) => sum + (item.total_cost || 0), 0);
+        const ownerSuppliedCost = (items || []).filter(i => i.category === 'owner_supplied').reduce((sum, item) => sum + (item.fitting_price || 0), 0);
+
+        return {
+          ...job,
+          warehouse_a_cost: warehouseACost,
+          warehouse_bc_cost: warehouseBCCost,
+          owner_supplied_cost: ownerSuppliedCost
+        };
+      }));
+
+      return jobsWithCosts;
     },
     enabled: !!user?.id,
   });
@@ -103,7 +124,11 @@ export function JobsList({ onSelectJob }: JobsListProps) {
         </TableHeader>
         <TableBody>
           {jobs?.map((job) => (
-            <TableRow key={job.job_id}>
+            <TableRow 
+              key={job.job_id} 
+              className="cursor-pointer hover:bg-muted/50"
+              onDoubleClick={() => onSelectJob(job.job_id)}
+            >
               <TableCell className="font-medium">{job.job_no}</TableCell>
               <TableCell>{job.aircraft_reg}</TableCell>
               <TableCell>{job.customers?.name || "N/A"}</TableCell>
@@ -114,27 +139,45 @@ export function JobsList({ onSelectJob }: JobsListProps) {
                 </Badge>
               </TableCell>
               <TableCell>
-                {job.total_cost_price ? `$${job.total_cost_price}` : "N/A"}
+                <div className="space-y-1">
+                  <div className="text-xs text-muted-foreground">
+                    WH-A: ${job.warehouse_a_cost || 0} | 
+                    WH-BC: ${job.warehouse_bc_cost || 0} | 
+                    Owner: ${job.owner_supplied_cost || 0}
+                  </div>
+                  <div className="font-medium">
+                    Total: ${((job.total_cost_price || 0) + (job.total_fitting_cost || 0)).toFixed(2)}
+                  </div>
+                </div>
               </TableCell>
               <TableCell className="space-x-2">
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => onSelectJob(job.job_id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectJob(job.job_id);
+                  }}
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setEditingJob(job)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingJob(job);
+                  }}
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleDelete(job.job_id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(job.job_id);
+                  }}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

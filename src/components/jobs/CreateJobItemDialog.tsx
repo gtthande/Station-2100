@@ -86,13 +86,19 @@ export function CreateJobItemDialog({ jobId, open, onOpenChange, onSuccess }: Cr
 
     setIsLoading(true);
     try {
+      const qty = parseInt(data.qty);
+      const unitCost = data.unit_cost ? parseFloat(data.unit_cost) : 0;
+      const fittingPrice = data.fitting_price ? parseFloat(data.fitting_price) : 0;
+      const totalCost = qty * unitCost;
+
       const { error } = await supabase.from("job_items").insert({
         ...data,
         job_id: jobId,
         user_id: user.id,
-        qty: parseInt(data.qty),
-        unit_cost: data.unit_cost ? parseFloat(data.unit_cost) : null,
-        fitting_price: data.fitting_price ? parseFloat(data.fitting_price) : null,
+        qty: qty,
+        unit_cost: unitCost,
+        fitting_price: fittingPrice,
+        total_cost: totalCost,
         item_date: data.item_date || null,
       });
 
