@@ -1611,6 +1611,10 @@ export type Database = {
       }
     }
     Functions: {
+      can_view_profile: {
+        Args: { _profile_user_id: string }
+        Returns: boolean
+      }
       compute_tool_due_at: {
         Args: { _checkout_at: string; _tool_id: string }
         Returns: string
