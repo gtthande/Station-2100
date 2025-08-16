@@ -10,10 +10,12 @@ import { JobAuthList } from "@/components/jobs/JobAuthList";
 import { JobCardInterface } from "@/components/jobs/JobCardInterface";
 import { JobCardNotifications } from "@/components/jobs/JobCardNotifications";
 import { TabbedJobInterface } from "@/components/jobs/TabbedJobInterface";
+import { JobCardEditor } from "@/components/jobs/JobCardEditor";
 
 export default function JobCards() {
   const [createJobOpen, setCreateJobOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
+  const [editingJobId, setEditingJobId] = useState<number | null>(null);
 
   return (
     <div className="container mx-auto p-6 space-y-6 relative">
@@ -52,7 +54,10 @@ export default function JobCards() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <JobsList onSelectJob={setSelectedJobId} />
+              <JobsList 
+                onSelectJob={setSelectedJobId} 
+                onEditJob={setEditingJobId}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -87,6 +92,12 @@ export default function JobCards() {
       </Tabs>
 
       <CreateJobDialog open={createJobOpen} onOpenChange={setCreateJobOpen} />
+      <JobCardEditor 
+        jobId={editingJobId}
+        open={!!editingJobId}
+        onOpenChange={(open) => !open && setEditingJobId(null)}
+        onSuccess={() => setEditingJobId(null)}
+      />
     </div>
   );
 }

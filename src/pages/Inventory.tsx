@@ -14,11 +14,13 @@ import { BatchesList } from '@/components/inventory/BatchesList';
 import { InventoryAnalytics } from '@/components/inventory/InventoryAnalytics';
 import { AddProductDialog } from '@/components/inventory/AddProductDialog';
 import { AddBatchDialog } from '@/components/inventory/AddBatchDialog';
+import { TwoGridInventoryView } from '@/components/inventory/TwoGridInventoryView';
 
 const Inventory = () => {
   const { user } = useAuth();
   const [addProductOpen, setAddProductOpen] = useState(false);
   const [addBatchOpen, setAddBatchOpen] = useState(false);
+  const [inventoryGridOpen, setInventoryGridOpen] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
   // Fetch inventory stats
@@ -80,6 +82,10 @@ const Inventory = () => {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              <GradientButton onClick={() => setInventoryGridOpen(true)} variant="outline" className="gap-2">
+                <Package className="w-4 h-4" />
+                Inventory Overview
+              </GradientButton>
               <GradientButton onClick={() => setAddProductOpen(true)} className="gap-2">
                 <Plus className="w-4 h-4" />
                 Add Product
@@ -184,6 +190,10 @@ const Inventory = () => {
         open={addBatchOpen} 
         onOpenChange={setAddBatchOpen}
         selectedProductId={selectedProductId}
+      />
+      <TwoGridInventoryView 
+        open={inventoryGridOpen}
+        onOpenChange={setInventoryGridOpen}
       />
     </div>
   );

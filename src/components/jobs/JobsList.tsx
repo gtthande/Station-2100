@@ -19,9 +19,10 @@ import { toast } from "@/hooks/use-toast";
 
 interface JobsListProps {
   onSelectJob: (jobId: number) => void;
+  onEditJob?: (jobId: number) => void;
 }
 
-export function JobsList({ onSelectJob }: JobsListProps) {
+export function JobsList({ onSelectJob, onEditJob }: JobsListProps) {
   const { user } = useAuth();
   const [editingJob, setEditingJob] = useState<any>(null);
 
@@ -127,7 +128,7 @@ export function JobsList({ onSelectJob }: JobsListProps) {
             <TableRow 
               key={job.job_id} 
               className="cursor-pointer hover:bg-muted/50"
-              onDoubleClick={() => onSelectJob(job.job_id)}
+              onDoubleClick={() => onEditJob ? onEditJob(job.job_id) : onSelectJob(job.job_id)}
             >
               <TableCell className="font-medium">{job.job_no}</TableCell>
               <TableCell>{job.aircraft_reg}</TableCell>
@@ -166,7 +167,7 @@ export function JobsList({ onSelectJob }: JobsListProps) {
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setEditingJob(job);
+                    onEditJob ? onEditJob(job.job_id) : setEditingJob(job);
                   }}
                 >
                   <Edit className="h-4 w-4" />

@@ -1066,6 +1066,7 @@ export type Database = {
       profiles: {
         Row: {
           badge_id: string | null
+          bio: string | null
           biometric_data: string | null
           created_at: string | null
           department_id: string | null
@@ -1078,12 +1079,14 @@ export type Database = {
           position: string | null
           profile_image_url: string | null
           role: string | null
+          sample_password: string | null
           staff_active: boolean | null
           staff_code: string | null
           updated_at: string | null
         }
         Insert: {
           badge_id?: string | null
+          bio?: string | null
           biometric_data?: string | null
           created_at?: string | null
           department_id?: string | null
@@ -1096,12 +1099,14 @@ export type Database = {
           position?: string | null
           profile_image_url?: string | null
           role?: string | null
+          sample_password?: string | null
           staff_active?: boolean | null
           staff_code?: string | null
           updated_at?: string | null
         }
         Update: {
           badge_id?: string | null
+          bio?: string | null
           biometric_data?: string | null
           created_at?: string | null
           department_id?: string | null
@@ -1114,6 +1119,7 @@ export type Database = {
           position?: string | null
           profile_image_url?: string | null
           role?: string | null
+          sample_password?: string | null
           staff_active?: boolean | null
           staff_code?: string | null
           updated_at?: string | null
@@ -1155,6 +1161,48 @@ export type Database = {
           old_role?: Database["public"]["Enums"]["app_role"] | null
           target_user_id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      sample_user_credentials: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean | null
+          pin_code: string
+          position: string | null
+          sample_password: string
+          staff_code: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          email: string
+          full_name: string
+          id?: string
+          is_active?: boolean | null
+          pin_code: string
+          position?: string | null
+          sample_password: string
+          staff_code?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean | null
+          pin_code?: string
+          position?: string | null
+          sample_password?: string
+          staff_code?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }

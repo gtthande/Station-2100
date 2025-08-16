@@ -9,6 +9,7 @@ import { DepartmentManagement } from '@/components/admin/DepartmentManagement';
 import { StockCategoryManagement } from '@/components/admin/StockCategoryManagement';
 import { HRManagement } from '@/components/admin/HRManagement';
 import { SecurityAuditLog } from '@/components/admin/SecurityAuditLog';
+import { SampleUsersManagement } from '@/components/admin/SampleUsersManagement';
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link } from 'react-router-dom';
@@ -18,7 +19,7 @@ import { GlassCard, GlassCardContent } from '@/components/ui/glass-card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'custom-roles' | 'advanced-assignment' | 'import' | 'departments' | 'stock-categories' | 'hr-management' | 'security-audit'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'custom-roles' | 'advanced-assignment' | 'import' | 'departments' | 'stock-categories' | 'sample-users' | 'hr-management' | 'security-audit'>('users');
   const { canManageSystem, isLoading } = useUserRoles();
 
   if (isLoading) {
@@ -167,6 +168,18 @@ const Admin = () => {
             Stock Categories
           </Button>
           <Button
+            variant={activeTab === 'sample-users' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('sample-users')}
+            className={
+              activeTab === 'sample-users'
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700'
+                : 'border-white/20 text-white hover:bg-white/10'
+            }
+          >
+            <Users className="w-4 h-4 mr-2" />
+            Sample Users
+          </Button>
+          <Button
             variant={activeTab === 'hr-management' ? 'default' : 'outline'}
             onClick={() => setActiveTab('hr-management')}
             className={
@@ -199,6 +212,7 @@ const Admin = () => {
         {activeTab === 'import' && <ExcelImport />}
         {activeTab === 'departments' && <DepartmentManagement />}
         {activeTab === 'stock-categories' && <StockCategoryManagement />}
+        {activeTab === 'sample-users' && <SampleUsersManagement />}
         {activeTab === 'hr-management' && <HRManagement />}
         {activeTab === 'security-audit' && <SecurityAuditLog />}
       </div>
