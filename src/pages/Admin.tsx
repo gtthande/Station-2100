@@ -10,6 +10,7 @@ import { StockCategoryManagement } from '@/components/admin/StockCategoryManagem
 import { HRManagement } from '@/components/admin/HRManagement';
 import { SecurityAuditLog } from '@/components/admin/SecurityAuditLog';
 import { SampleUsersManagement } from '@/components/admin/SampleUsersManagement';
+import { CustomerPermissionManagement } from '@/components/admin/CustomerPermissionManagement';
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link } from 'react-router-dom';
@@ -205,7 +206,12 @@ const Admin = () => {
           </Button>
         </div>
 
-        {activeTab === 'users' && <UserManagement />}
+        {activeTab === 'users' && (
+          <div className="space-y-6">
+            <UserManagement />
+            <CustomerPermissionManagement />
+          </div>
+        )}
         {activeTab === 'roles' && <UserRoleManagement />}
         {activeTab === 'custom-roles' && <CustomRoleManagement />}
         {activeTab === 'advanced-assignment' && <UserRoleAssignment />}

@@ -109,6 +109,39 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_permissions: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          granted_at: string | null
+          granted_by: string
+          id: string
+          notes: string | null
+          permission_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by: string
+          id?: string
+          notes?: string | null
+          permission_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string
+          id?: string
+          notes?: string | null
+          permission_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null
@@ -1055,6 +1088,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "jobs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_secure"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "jobs_sub_job_card_of_fkey"
             columns: ["sub_job_card_of"]
             isOneToOne: false
@@ -1699,6 +1739,63 @@ export type Database = {
       }
     }
     Views: {
+      customers_secure: {
+        Row: {
+          address: string | null
+          aircraft_type: string | null
+          city: string | null
+          contact_person: string | null
+          country: string | null
+          created_at: string | null
+          email: string | null
+          id: string | null
+          name: string | null
+          notes: string | null
+          phone: string | null
+          state: string | null
+          tail_number: string | null
+          updated_at: string | null
+          user_id: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          address?: never
+          aircraft_type?: string | null
+          city?: never
+          contact_person?: never
+          country?: string | null
+          created_at?: string | null
+          email?: never
+          id?: string | null
+          name?: string | null
+          notes?: never
+          phone?: never
+          state?: never
+          tail_number?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          zip_code?: never
+        }
+        Update: {
+          address?: never
+          aircraft_type?: string | null
+          city?: never
+          contact_person?: never
+          country?: string | null
+          created_at?: string | null
+          email?: never
+          id?: string | null
+          name?: string | null
+          notes?: never
+          phone?: never
+          state?: never
+          tail_number?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          zip_code?: never
+        }
+        Relationships: []
+      }
       v_tool_movement: {
         Row: {
           actor_name: string | null
@@ -1787,6 +1884,10 @@ export type Database = {
           role: string
           user_id: string
         }[]
+      }
+      has_customer_permission: {
+        Args: { _permission: string; _user_id: string }
+        Returns: boolean
       }
       has_role: {
         Args: {
