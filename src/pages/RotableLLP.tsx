@@ -5,8 +5,11 @@ import { RotablePartsList } from '@/components/rotable/RotablePartsList';
 import { AddRotableDialog } from '@/components/rotable/AddRotableDialog';
 import { FlightTrackingList } from '@/components/rotable/FlightTrackingList';
 import { RotableAlerts } from '@/components/rotable/RotableAlerts';
+import { InstallationLogsTab } from '@/components/rotable/InstallationLogsTab';
+import { RepairExchangeTab } from '@/components/rotable/RepairExchangeTab';
+import { InventoryPoolingTab } from '@/components/rotable/InventoryPoolingTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Plus, Plane, AlertTriangle } from 'lucide-react';
+import { Settings, Plus, Plane, AlertTriangle, History, Wrench, Package } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -40,7 +43,7 @@ const RotableLLP = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="parts" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-white/5 border border-white/10">
+          <TabsList className="grid w-full grid-cols-6 bg-white/5 border border-white/10">
             <TabsTrigger value="parts" className="data-[state=active]:bg-primary data-[state=active]:text-white">
               <Settings className="w-4 h-4 mr-2" />
               Parts Management
@@ -52,6 +55,18 @@ const RotableLLP = () => {
             <TabsTrigger value="alerts" className="data-[state=active]:bg-primary data-[state=active]:text-white">
               <AlertTriangle className="w-4 h-4 mr-2" />
               Alerts & Limits
+            </TabsTrigger>
+            <TabsTrigger value="logs" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+              <History className="w-4 h-4 mr-2" />
+              Installation Logs
+            </TabsTrigger>
+            <TabsTrigger value="repair" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+              <Wrench className="w-4 h-4 mr-2" />
+              Repair & Exchange
+            </TabsTrigger>
+            <TabsTrigger value="inventory" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+              <Package className="w-4 h-4 mr-2" />
+              Inventory & Pooling
             </TabsTrigger>
           </TabsList>
 
@@ -84,6 +99,39 @@ const RotableLLP = () => {
               </GlassCardHeader>
               <GlassCardContent>
                 <RotableAlerts />
+              </GlassCardContent>
+            </GlassCard>
+          </TabsContent>
+
+          <TabsContent value="logs" className="mt-6">
+            <GlassCard>
+              <GlassCardHeader>
+                <GlassCardTitle>Installation & Removal Logs</GlassCardTitle>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <InstallationLogsTab />
+              </GlassCardContent>
+            </GlassCard>
+          </TabsContent>
+
+          <TabsContent value="repair" className="mt-6">
+            <GlassCard>
+              <GlassCardHeader>
+                <GlassCardTitle>Repair & Exchange Records</GlassCardTitle>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <RepairExchangeTab />
+              </GlassCardContent>
+            </GlassCard>
+          </TabsContent>
+
+          <TabsContent value="inventory" className="mt-6">
+            <GlassCard>
+              <GlassCardHeader>
+                <GlassCardTitle>Inventory & Pooling Management</GlassCardTitle>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <InventoryPoolingTab />
               </GlassCardContent>
             </GlassCard>
           </TabsContent>

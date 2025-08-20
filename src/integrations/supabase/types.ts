@@ -285,6 +285,68 @@ export type Database = {
           },
         ]
       }
+      installation_removal_logs: {
+        Row: {
+          aircraft_id: string
+          created_at: string
+          flight_cycles_at_action: number | null
+          flight_hours_at_action: number | null
+          id: string
+          log_date: string
+          log_type: string
+          maintenance_reference: string | null
+          notes: string | null
+          performed_by_name: string | null
+          performed_by_staff_id: string | null
+          reason_for_removal: string | null
+          rotable_part_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          aircraft_id: string
+          created_at?: string
+          flight_cycles_at_action?: number | null
+          flight_hours_at_action?: number | null
+          id?: string
+          log_date: string
+          log_type: string
+          maintenance_reference?: string | null
+          notes?: string | null
+          performed_by_name?: string | null
+          performed_by_staff_id?: string | null
+          reason_for_removal?: string | null
+          rotable_part_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          aircraft_id?: string
+          created_at?: string
+          flight_cycles_at_action?: number | null
+          flight_hours_at_action?: number | null
+          id?: string
+          log_date?: string
+          log_type?: string
+          maintenance_reference?: string | null
+          notes?: string | null
+          performed_by_name?: string | null
+          performed_by_staff_id?: string | null
+          reason_for_removal?: string | null
+          rotable_part_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "installation_removal_logs_rotable_part_id_fkey"
+            columns: ["rotable_part_id"]
+            isOneToOne: false
+            referencedRelation: "rotable_parts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_batches: {
         Row: {
           aircraft_reg_no: string | null
@@ -1162,6 +1224,62 @@ export type Database = {
           },
         ]
       }
+      pooled_parts: {
+        Row: {
+          available_for_pool: boolean | null
+          created_at: string
+          id: string
+          notes: string | null
+          pool_name: string
+          pool_operator: string | null
+          pool_priority: number | null
+          rotable_part_id: string
+          sharing_agreement_ref: string | null
+          updated_at: string
+          usage_cost_per_cycle: number | null
+          usage_cost_per_hour: number | null
+          user_id: string
+        }
+        Insert: {
+          available_for_pool?: boolean | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          pool_name: string
+          pool_operator?: string | null
+          pool_priority?: number | null
+          rotable_part_id: string
+          sharing_agreement_ref?: string | null
+          updated_at?: string
+          usage_cost_per_cycle?: number | null
+          usage_cost_per_hour?: number | null
+          user_id: string
+        }
+        Update: {
+          available_for_pool?: boolean | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          pool_name?: string
+          pool_operator?: string | null
+          pool_priority?: number | null
+          rotable_part_id?: string
+          sharing_agreement_ref?: string | null
+          updated_at?: string
+          usage_cost_per_cycle?: number | null
+          usage_cost_per_hour?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pooled_parts_rotable_part_id_fkey"
+            columns: ["rotable_part_id"]
+            isOneToOne: false
+            referencedRelation: "rotable_parts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_access_log: {
         Row: {
           access_time: string | null
@@ -1259,6 +1377,83 @@ export type Database = {
             columns: ["department_id"]
             isOneToOne: false
             referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      repair_exchange_records: {
+        Row: {
+          actual_return_date: string | null
+          certification_reference: string | null
+          cost: number | null
+          created_at: string
+          exchange_part_serial: string | null
+          expected_return_date: string | null
+          id: string
+          new_tso_cycles: number | null
+          new_tso_hours: number | null
+          notes: string | null
+          record_type: string
+          rotable_part_id: string
+          sent_date: string
+          sent_to_facility: string
+          status: string
+          updated_at: string
+          user_id: string
+          warranty_expiry_date: string | null
+          warranty_terms: string | null
+          work_order_number: string | null
+        }
+        Insert: {
+          actual_return_date?: string | null
+          certification_reference?: string | null
+          cost?: number | null
+          created_at?: string
+          exchange_part_serial?: string | null
+          expected_return_date?: string | null
+          id?: string
+          new_tso_cycles?: number | null
+          new_tso_hours?: number | null
+          notes?: string | null
+          record_type: string
+          rotable_part_id: string
+          sent_date: string
+          sent_to_facility: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          warranty_expiry_date?: string | null
+          warranty_terms?: string | null
+          work_order_number?: string | null
+        }
+        Update: {
+          actual_return_date?: string | null
+          certification_reference?: string | null
+          cost?: number | null
+          created_at?: string
+          exchange_part_serial?: string | null
+          expected_return_date?: string | null
+          id?: string
+          new_tso_cycles?: number | null
+          new_tso_hours?: number | null
+          notes?: string | null
+          record_type?: string
+          rotable_part_id?: string
+          sent_date?: string
+          sent_to_facility?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          warranty_expiry_date?: string | null
+          warranty_terms?: string | null
+          work_order_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repair_exchange_records_rotable_part_id_fkey"
+            columns: ["rotable_part_id"]
+            isOneToOne: false
+            referencedRelation: "rotable_parts"
             referencedColumns: ["id"]
           },
         ]
@@ -1890,6 +2085,65 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      warehouse_locations: {
+        Row: {
+          aisle: string | null
+          bin: string | null
+          created_at: string
+          id: string
+          is_current_location: boolean | null
+          moved_by_name: string | null
+          moved_by_staff_id: string | null
+          moved_date: string | null
+          notes: string | null
+          rotable_part_id: string
+          shelf: string | null
+          updated_at: string
+          user_id: string
+          warehouse_code: string
+        }
+        Insert: {
+          aisle?: string | null
+          bin?: string | null
+          created_at?: string
+          id?: string
+          is_current_location?: boolean | null
+          moved_by_name?: string | null
+          moved_by_staff_id?: string | null
+          moved_date?: string | null
+          notes?: string | null
+          rotable_part_id: string
+          shelf?: string | null
+          updated_at?: string
+          user_id: string
+          warehouse_code: string
+        }
+        Update: {
+          aisle?: string | null
+          bin?: string | null
+          created_at?: string
+          id?: string
+          is_current_location?: boolean | null
+          moved_by_name?: string | null
+          moved_by_staff_id?: string | null
+          moved_date?: string | null
+          notes?: string | null
+          rotable_part_id?: string
+          shelf?: string | null
+          updated_at?: string
+          user_id?: string
+          warehouse_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warehouse_locations_rotable_part_id_fkey"
+            columns: ["rotable_part_id"]
+            isOneToOne: false
+            referencedRelation: "rotable_parts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
