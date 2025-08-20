@@ -16,7 +16,8 @@ import {
   TrendingUp,
   Building2,
   Wrench,
-  FileText
+  FileText,
+  RotateCcw
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -119,6 +120,18 @@ const Index = () => {
               </GlassCard>
             </Link>
           )}
+
+          <Link to="/rotable-llp">
+            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
+              <GlassCardContent className="p-6 text-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <RotateCcw className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">Rotable & LLP</h3>
+                <p className="text-white/60 text-sm">Manage rotable parts tracking</p>
+              </GlassCardContent>
+            </GlassCard>
+          </Link>
 
           {canAccessAdmin && (
             <Link to="/admin">

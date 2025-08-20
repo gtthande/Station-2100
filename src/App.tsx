@@ -21,6 +21,7 @@ import Reports from "./pages/Reports";
 import JobCards from "./pages/JobCards";
 import StockMovements from "./pages/StockMovements";
 import Tools from "./pages/Tools";
+import RotableLLP from "./pages/RotableLLP";
 
 const queryClient = new QueryClient();
 
@@ -123,6 +124,14 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <Tools />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/rotable-llp" 
+                  element={
+                    <ProtectedRoute>
+                      <RotableLLP />
                     </ProtectedRoute>
                   } 
                 />

@@ -226,6 +226,65 @@ export type Database = {
         }
         Relationships: []
       }
+      flight_tracking: {
+        Row: {
+          aircraft_tail_number: string
+          calendar_time_limit_days: number | null
+          created_at: string
+          flight_cycles: number | null
+          flight_cycles_limit: number | null
+          flight_hours: number | null
+          flight_hours_limit: number | null
+          id: string
+          installation_date: string | null
+          next_inspection_due: string | null
+          removal_date: string | null
+          rotable_part_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          aircraft_tail_number: string
+          calendar_time_limit_days?: number | null
+          created_at?: string
+          flight_cycles?: number | null
+          flight_cycles_limit?: number | null
+          flight_hours?: number | null
+          flight_hours_limit?: number | null
+          id?: string
+          installation_date?: string | null
+          next_inspection_due?: string | null
+          removal_date?: string | null
+          rotable_part_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          aircraft_tail_number?: string
+          calendar_time_limit_days?: number | null
+          created_at?: string
+          flight_cycles?: number | null
+          flight_cycles_limit?: number | null
+          flight_hours?: number | null
+          flight_hours_limit?: number | null
+          id?: string
+          installation_date?: string | null
+          next_inspection_due?: string | null
+          removal_date?: string | null
+          rotable_part_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flight_tracking_rotable_part_id_fkey"
+            columns: ["rotable_part_id"]
+            isOneToOne: false
+            referencedRelation: "rotable_parts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_batches: {
         Row: {
           aircraft_reg_no: string | null
@@ -1234,6 +1293,101 @@ export type Database = {
         }
         Relationships: []
       }
+      rotable_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_date: string | null
+          alert_type: string
+          created_at: string
+          current_value: number | null
+          id: string
+          is_acknowledged: boolean | null
+          rotable_part_id: string
+          threshold_value: number | null
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_date?: string | null
+          alert_type: string
+          created_at?: string
+          current_value?: number | null
+          id?: string
+          is_acknowledged?: boolean | null
+          rotable_part_id: string
+          threshold_value?: number | null
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_date?: string | null
+          alert_type?: string
+          created_at?: string
+          current_value?: number | null
+          id?: string
+          is_acknowledged?: boolean | null
+          rotable_part_id?: string
+          threshold_value?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rotable_alerts_rotable_part_id_fkey"
+            columns: ["rotable_part_id"]
+            isOneToOne: false
+            referencedRelation: "rotable_parts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rotable_parts: {
+        Row: {
+          ata_chapter: string | null
+          created_at: string
+          description: string | null
+          id: string
+          location: string | null
+          manufacturer: string
+          notes: string | null
+          part_number: string
+          serial_number: string
+          status: Database["public"]["Enums"]["rotable_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ata_chapter?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          manufacturer: string
+          notes?: string | null
+          part_number: string
+          serial_number: string
+          status?: Database["public"]["Enums"]["rotable_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ata_chapter?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          manufacturer?: string
+          notes?: string | null
+          part_number?: string
+          serial_number?: string
+          status?: Database["public"]["Enums"]["rotable_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sample_user_credentials: {
         Row: {
           bio: string | null
@@ -1925,6 +2079,13 @@ export type Database = {
         | "reminder_sent"
       item_category: "spare" | "consumable" | "owner_supplied"
       job_status: "open" | "awaiting_auth" | "closed"
+      rotable_status:
+        | "installed"
+        | "in_stock"
+        | "sent_to_oem"
+        | "awaiting_repair"
+        | "serviceable"
+        | "unserviceable"
       stock_movement_event:
         | "OPEN_BALANCE"
         | "BATCH_RECEIPT"
@@ -2079,6 +2240,14 @@ export const Constants = {
       ],
       item_category: ["spare", "consumable", "owner_supplied"],
       job_status: ["open", "awaiting_auth", "closed"],
+      rotable_status: [
+        "installed",
+        "in_stock",
+        "sent_to_oem",
+        "awaiting_repair",
+        "serviceable",
+        "unserviceable",
+      ],
       stock_movement_event: [
         "OPEN_BALANCE",
         "BATCH_RECEIPT",
