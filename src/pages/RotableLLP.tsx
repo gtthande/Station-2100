@@ -9,7 +9,10 @@ import { InstallationLogsTab } from '@/components/rotable/InstallationLogsTab';
 import { RepairExchangeTab } from '@/components/rotable/RepairExchangeTab';
 import { InventoryPoolingTab } from '@/components/rotable/InventoryPoolingTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Plus, Plane, AlertTriangle, History, Wrench, Package } from 'lucide-react';
+import { Settings, Plus, Plane, AlertTriangle, History, Wrench, Package, FileText, Shield, BarChart3 } from 'lucide-react';
+import { ComplianceTab } from '@/components/rotable/ComplianceTab';
+import { ReportsTab } from '@/components/rotable/ReportsTab';
+import { AuditTab } from '@/components/rotable/AuditTab';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -43,7 +46,7 @@ const RotableLLP = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="parts" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 bg-white/5 border border-white/10">
+          <TabsList className="grid w-full grid-cols-9 bg-white/5 border border-white/10">
             <TabsTrigger value="parts" className="data-[state=active]:bg-primary data-[state=active]:text-white">
               <Settings className="w-4 h-4 mr-2" />
               Parts Management
@@ -67,6 +70,18 @@ const RotableLLP = () => {
             <TabsTrigger value="inventory" className="data-[state=active]:bg-primary data-[state=active]:text-white">
               <Package className="w-4 h-4 mr-2" />
               Inventory & Pooling
+            </TabsTrigger>
+            <TabsTrigger value="compliance" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+              <FileText className="w-4 h-4 mr-2" />
+              Compliance
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Reports
+            </TabsTrigger>
+            <TabsTrigger value="audit" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+              <Shield className="w-4 h-4 mr-2" />
+              Audit Trail
             </TabsTrigger>
           </TabsList>
 
@@ -132,6 +147,39 @@ const RotableLLP = () => {
               </GlassCardHeader>
               <GlassCardContent>
                 <InventoryPoolingTab />
+              </GlassCardContent>
+            </GlassCard>
+          </TabsContent>
+
+          <TabsContent value="compliance" className="mt-6">
+            <GlassCard>
+              <GlassCardHeader>
+                <GlassCardTitle>Compliance & Documentation</GlassCardTitle>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <ComplianceTab />
+              </GlassCardContent>
+            </GlassCard>
+          </TabsContent>
+
+          <TabsContent value="reports" className="mt-6">
+            <GlassCard>
+              <GlassCardHeader>
+                <GlassCardTitle>Reports & Analytics</GlassCardTitle>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <ReportsTab />
+              </GlassCardContent>
+            </GlassCard>
+          </TabsContent>
+
+          <TabsContent value="audit" className="mt-6">
+            <GlassCard>
+              <GlassCardHeader>
+                <GlassCardTitle>Audit Trail & Logs</GlassCardTitle>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <AuditTab />
               </GlassCardContent>
             </GlassCard>
           </TabsContent>

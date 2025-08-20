@@ -49,6 +49,63 @@ export type Database = {
           },
         ]
       }
+      compliance_documents: {
+        Row: {
+          certificate_number: string | null
+          created_at: string
+          document_name: string
+          document_type: string
+          document_url: string
+          expiry_date: string | null
+          id: string
+          issue_date: string | null
+          issuing_authority: string | null
+          job_card_reference: string | null
+          notes: string | null
+          rotable_part_id: string
+          updated_at: string
+          uploaded_by: string
+          user_id: string
+          work_order_reference: string | null
+        }
+        Insert: {
+          certificate_number?: string | null
+          created_at?: string
+          document_name: string
+          document_type: string
+          document_url: string
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string | null
+          issuing_authority?: string | null
+          job_card_reference?: string | null
+          notes?: string | null
+          rotable_part_id: string
+          updated_at?: string
+          uploaded_by: string
+          user_id: string
+          work_order_reference?: string | null
+        }
+        Update: {
+          certificate_number?: string | null
+          created_at?: string
+          document_name?: string
+          document_type?: string
+          document_url?: string
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string | null
+          issuing_authority?: string | null
+          job_card_reference?: string | null
+          notes?: string | null
+          rotable_part_id?: string
+          updated_at?: string
+          uploaded_by?: string
+          user_id?: string
+          work_order_reference?: string | null
+        }
+        Relationships: []
+      }
       custom_roles: {
         Row: {
           created_at: string
@@ -1538,6 +1595,54 @@ export type Database = {
           },
         ]
       }
+      rotable_audit_logs: {
+        Row: {
+          action_description: string
+          action_type: string
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          new_values: Json | null
+          old_values: Json | null
+          performed_by: string
+          related_id: string | null
+          related_table: string | null
+          rotable_part_id: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action_description: string
+          action_type: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          performed_by: string
+          related_id?: string | null
+          related_table?: string | null
+          rotable_part_id?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action_description?: string
+          action_type?: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          performed_by?: string
+          related_id?: string | null
+          related_table?: string | null
+          rotable_part_id?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       rotable_parts: {
         Row: {
           ata_chapter: string | null
@@ -1579,6 +1684,30 @@ export type Database = {
           serial_number?: string
           status?: Database["public"]["Enums"]["rotable_status"]
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      rotable_user_roles: {
+        Row: {
+          granted_at: string
+          granted_by: string
+          id: string
+          role: Database["public"]["Enums"]["rotable_role"]
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by: string
+          id?: string
+          role: Database["public"]["Enums"]["rotable_role"]
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string
+          id?: string
+          role?: Database["public"]["Enums"]["rotable_role"]
           user_id?: string
         }
         Relationships: []
@@ -2304,12 +2433,31 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_rotable_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["rotable_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_admin: {
         Args: { _user_id: string }
         Returns: boolean
       }
       log_profile_access: {
         Args: { _access_type?: string; _profile_id: string }
+        Returns: undefined
+      }
+      log_rotable_action: {
+        Args: {
+          _action_description: string
+          _action_type: string
+          _new_values?: Json
+          _old_values?: Json
+          _related_id?: string
+          _related_table?: string
+          _rotable_part_id: string
+        }
         Returns: undefined
       }
     }
@@ -2333,6 +2481,12 @@ export type Database = {
         | "reminder_sent"
       item_category: "spare" | "consumable" | "owner_supplied"
       job_status: "open" | "awaiting_auth" | "closed"
+      rotable_role:
+        | "admin"
+        | "technician"
+        | "storekeeper"
+        | "manager"
+        | "auditor"
       rotable_status:
         | "installed"
         | "in_stock"
@@ -2494,6 +2648,13 @@ export const Constants = {
       ],
       item_category: ["spare", "consumable", "owner_supplied"],
       job_status: ["open", "awaiting_auth", "closed"],
+      rotable_role: [
+        "admin",
+        "technician",
+        "storekeeper",
+        "manager",
+        "auditor",
+      ],
       rotable_status: [
         "installed",
         "in_stock",
