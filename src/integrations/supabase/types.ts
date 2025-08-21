@@ -2638,7 +2638,7 @@ export type Database = {
           aircraft_type?: string | null
           city?: never
           contact_person?: never
-          country?: never
+          country?: string | null
           created_at?: string | null
           email?: never
           id?: string | null
@@ -2656,7 +2656,7 @@ export type Database = {
           aircraft_type?: string | null
           city?: never
           contact_person?: never
-          country?: never
+          country?: string | null
           created_at?: string | null
           email?: never
           id?: string | null
@@ -2789,6 +2789,10 @@ export type Database = {
         Args: { _checkout_at: string; _tool_id: string }
         Returns: string
       }
+      emergency_customer_access: {
+        Args: { _customer_id: string; _justification: string }
+        Returns: Json
+      }
       emergency_profile_access: {
         Args: { _justification: string; _profile_id: string }
         Returns: Json
@@ -2884,6 +2888,14 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      log_customer_data_access: {
+        Args: {
+          _access_type?: string
+          _customer_id: string
+          _sensitive_fields?: string[]
+        }
+        Returns: undefined
+      }
       log_profile_access: {
         Args: { _access_type?: string; _profile_id: string }
         Returns: undefined
@@ -2899,6 +2911,10 @@ export type Database = {
           _rotable_part_id: string
         }
         Returns: undefined
+      }
+      mask_sensitive_customer_data: {
+        Args: { _data: string }
+        Returns: string
       }
       secure_profile_access: {
         Args: { _access_type?: string; _profile_id: string }
