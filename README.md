@@ -105,6 +105,46 @@ All database migrations are handled through Supabase:
 
 Access `/api/supabase-check` to verify all Supabase services are connected.
 
+## Security Configuration
+
+⚠️ **Important**: After setting up the project, complete these security configurations:
+
+### Required Supabase Dashboard Settings
+
+1. **Authentication > Settings**:
+   - Set **OTP expiry**: 600 seconds (10 minutes)
+   - Enable **leaked password protection**
+   - Set **minimum password length**: 8 characters
+   - Enable **password strength requirements**
+
+2. **Authentication > Rate Limiting**:
+   - Review and configure appropriate rate limits for sign-in attempts
+
+### Security Features Implemented
+
+- ✅ **Row Level Security (RLS)** on all sensitive tables
+- ✅ **Permission-based data access** for customer information
+- ✅ **Audit logging** for all sensitive data access
+- ✅ **Data masking** for secure logging
+- ✅ **Emergency access procedures** with admin controls
+
+### Verify Security Setup
+
+Run these checks after configuration:
+
+```bash
+# 1. Check database connectivity and RLS
+curl http://localhost:5173/api/supabase-check
+
+# 2. Review audit logs (admin only)
+# Login to your app and check the Admin > Security Audit section
+
+# 3. Test customer permission levels
+# Create test users with different permission levels and verify data access
+```
+
+For detailed security information, see [SECURITY_FIXES.md](./SECURITY_FIXES.md).
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/3be45a24-6b88-4267-b181-6d323de70799) and click on Share -> Publish.
