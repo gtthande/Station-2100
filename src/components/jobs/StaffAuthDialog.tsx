@@ -37,23 +37,41 @@ export function StaffAuthDialog({ isOpen, onClose, onStaffAuthenticated, action,
         .eq('is_staff', true)
         .eq('staff_active', true);
 
-      // Apply different authentication methods
+      // Apply different authentication methods (updated for security)
       switch (authMethod) {
         case 'badge':
-          query = query.eq('badge_id', authData);
-          break;
-        case 'pin':
-          query = query.eq('pin_code', authData);
+          if (!authData || authData.trim().length === 0) {
+            throw new Error('Badge ID cannot be empty');
+          }
+          query = query.eq('badge_id', authData.trim());
           break;
         case 'staff_code':
-          query = query.eq('staff_code', authData);
+          if (!authData || authData.trim().length === 0) {
+            throw new Error('Staff code cannot be empty');
+          }
+          query = query.eq('staff_code', authData.trim());
           break;
+        case 'pin':
+          // Security Update: PIN authentication disabled for security
+          toast({
+            title: "Security Update",
+            description: "PIN authentication has been disabled for security. Please use Badge ID or Staff Code.",
+            variant: "destructive",
+          });
+          return;
         case 'biometric':
-          query = query.eq('biometric_data', authData);
-          break;
+          // Security Update: Biometric authentication disabled for security
+          toast({
+            title: "Security Update", 
+            description: "Biometric authentication has been disabled for security. Please use Badge ID or Staff Code.",
+            variant: "destructive",
+          });
+          return;
+        default:
+          throw new Error('Invalid authentication method. Use Badge ID or Staff Code only.');
       }
 
-      const { data: staff, error } = await query.single();
+      const { data: staff, error } = await query.maybeSingle(); // Use maybeSingle for safer access
 
       if (error || !staff) {
         toast({

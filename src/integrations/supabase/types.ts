@@ -51,6 +51,13 @@ export type Database = {
             foreignKeyName: "app_settings_user_id_fk"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profiles_minimal"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "app_settings_user_id_fk"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles_safe"
             referencedColumns: ["id"]
           },
@@ -709,6 +716,13 @@ export type Database = {
             foreignKeyName: "job_approval_notifications_acknowledged_by_fkey"
             columns: ["acknowledged_by"]
             isOneToOne: false
+            referencedRelation: "profiles_minimal"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_approval_notifications_acknowledged_by_fkey"
+            columns: ["acknowledged_by"]
+            isOneToOne: false
             referencedRelation: "profiles_safe"
             referencedColumns: ["id"]
           },
@@ -717,6 +731,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_approval_notifications_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_minimal"
             referencedColumns: ["id"]
           },
           {
@@ -738,6 +759,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_approval_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_minimal"
             referencedColumns: ["id"]
           },
           {
@@ -1040,6 +1068,13 @@ export type Database = {
             foreignKeyName: "job_cards_finalized_by_fkey"
             columns: ["finalized_by"]
             isOneToOne: false
+            referencedRelation: "profiles_minimal"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_cards_finalized_by_fkey"
+            columns: ["finalized_by"]
+            isOneToOne: false
             referencedRelation: "profiles_safe"
             referencedColumns: ["id"]
           },
@@ -1048,6 +1083,13 @@ export type Database = {
             columns: ["owner_supplied_approved_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_cards_owner_supplied_approved_by_fkey"
+            columns: ["owner_supplied_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_minimal"
             referencedColumns: ["id"]
           },
           {
@@ -1062,6 +1104,13 @@ export type Database = {
             columns: ["warehouse_a_approved_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_cards_warehouse_a_approved_by_fkey"
+            columns: ["warehouse_a_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_minimal"
             referencedColumns: ["id"]
           },
           {
@@ -1076,6 +1125,13 @@ export type Database = {
             columns: ["warehouse_bc_approved_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_cards_warehouse_bc_approved_by_fkey"
+            columns: ["warehouse_bc_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_minimal"
             referencedColumns: ["id"]
           },
           {
@@ -1178,6 +1234,13 @@ export type Database = {
             foreignKeyName: "job_items_issued_by_staff_id_fkey"
             columns: ["issued_by_staff_id"]
             isOneToOne: false
+            referencedRelation: "profiles_minimal"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_items_issued_by_staff_id_fkey"
+            columns: ["issued_by_staff_id"]
+            isOneToOne: false
             referencedRelation: "profiles_safe"
             referencedColumns: ["id"]
           },
@@ -1193,6 +1256,13 @@ export type Database = {
             columns: ["received_by_staff_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_items_received_by_staff_id_fkey"
+            columns: ["received_by_staff_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_minimal"
             referencedColumns: ["id"]
           },
           {
@@ -1483,6 +1553,13 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_security_log_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_minimal"
             referencedColumns: ["id"]
           },
           {
@@ -1933,6 +2010,13 @@ export type Database = {
             foreignKeyName: "secure_employee_credentials_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: true
+            referencedRelation: "profiles_minimal"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "secure_employee_credentials_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
             referencedRelation: "profiles_safe"
             referencedColumns: ["id"]
           },
@@ -2012,6 +2096,13 @@ export type Database = {
             foreignKeyName: "staff_auth_log_staff_id_fkey"
             columns: ["staff_id"]
             isOneToOne: false
+            referencedRelation: "profiles_minimal"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_auth_log_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
             referencedRelation: "profiles_safe"
             referencedColumns: ["id"]
           },
@@ -2020,6 +2111,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_auth_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_minimal"
             referencedColumns: ["id"]
           },
           {
@@ -2071,6 +2169,13 @@ export type Database = {
             foreignKeyName: "staff_permissions_granted_by_fkey"
             columns: ["granted_by"]
             isOneToOne: false
+            referencedRelation: "profiles_minimal"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_permissions_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
             referencedRelation: "profiles_safe"
             referencedColumns: ["id"]
           },
@@ -2079,6 +2184,13 @@ export type Database = {
             columns: ["staff_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_permissions_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_minimal"
             referencedColumns: ["id"]
           },
           {
@@ -2093,6 +2205,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_minimal"
             referencedColumns: ["id"]
           },
           {
@@ -2551,6 +2670,47 @@ export type Database = {
           zip_code?: never
         }
         Relationships: []
+      }
+      profiles_minimal: {
+        Row: {
+          created_at: string | null
+          department_id: string | null
+          full_name: string | null
+          id: string | null
+          is_staff: boolean | null
+          position: string | null
+          profile_image_url: string | null
+          staff_active: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          department_id?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_staff?: boolean | null
+          position?: string | null
+          profile_image_url?: string | null
+          staff_active?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          department_id?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_staff?: boolean | null
+          position?: string | null
+          profile_image_url?: string | null
+          staff_active?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles_safe: {
         Row: {
