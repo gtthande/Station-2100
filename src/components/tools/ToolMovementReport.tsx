@@ -125,17 +125,49 @@ export const ToolMovementReport = () => {
     queryFn: async () => {
       if (!user || !selectedTool) return [];
       
-      const { data, error } = await supabase
-        .from('v_tool_movement')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('tool_id', selectedTool)
-        .gte('at', filters.start_date + 'T00:00:00')
-        .lte('at', filters.end_date + 'T23:59:59')
-        .order('at', { ascending: false });
+      try {
+        // Get tool events first
+        const { data: events, error: eventsError } = await supabase
+          .from('tool_events')
+          .select('id, at, tool_id, event_type, actor_user_id, meta')
+          .eq('user_id', user.id)
+          .eq('tool_id', selectedTool)
+          .gte('at', filters.start_date + 'T00:00:00')
+          .lte('at', filters.end_date + 'T23:59:59')
+          .order('at', { ascending: false });
 
-      if (error) throw error;
-      return data as MovementRecord[];
+        if (eventsError) throw eventsError;
+
+        // Get tool info
+        const { data: tool, error: toolError } = await supabase
+          .from('tools')
+          .select('name, sku, serial_no')
+          .eq('id', selectedTool)
+          .single();
+
+        if (toolError) throw toolError;
+        
+        // Transform the data to match MovementRecord interface
+        const movements = (events || []).map(event => {
+          const meta = event.meta as any; // Type cast the Json field
+          return {
+            event_id: event.id,
+            at: event.at,
+            tool_id: event.tool_id,
+            tool_name: tool?.name || 'Unknown',
+            sku: tool?.sku || '',
+            serial_no: tool?.serial_no || '',
+            event: event.event_type,
+            from_holder: event.event_type === 'checkout' ? 'Inventory' : (meta?.borrower_user_id || 'Unknown'),
+            to_holder: event.event_type === 'return' ? 'Inventory' : (meta?.borrower_user_id || 'Unknown')
+          };
+        });
+        
+        return movements as MovementRecord[];
+      } catch (error) {
+        console.error('Tool movement detail error:', error);
+        throw error;
+      }
     },
     enabled: !!user && !!selectedTool,
   });

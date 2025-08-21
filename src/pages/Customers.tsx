@@ -59,9 +59,9 @@ const Customers = () => {
     notes: ''
   });
 
-  // Fetch customers using secure view
+  // Fetch customers using secure view with field-level permissions
   const { data: customers = [], isLoading } = useQuery({
-    queryKey: ['customers'],
+    queryKey: ['customers-secure'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('customers_secure_view')
@@ -87,7 +87,7 @@ const Customers = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['customers-secure'] });
       setIsAddDialogOpen(false);
       resetForm();
       toast({
@@ -115,7 +115,7 @@ const Customers = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['customers-secure'] });
       setEditingCustomer(null);
       resetForm();
       toast({
@@ -143,7 +143,7 @@ const Customers = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['customers-secure'] });
       toast({
         title: "Customer Deleted",
         description: "Customer has been successfully deleted.",
