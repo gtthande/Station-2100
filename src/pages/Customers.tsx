@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useCustomerPermissions } from '@/hooks/useCustomerPermissions';
 import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/components/ui/glass-card';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +35,12 @@ const Customers = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { 
+    canViewCustomers, 
+    canViewContactInfo, 
+    canViewFullDetails, 
+    canManageCustomers 
+  } = useCustomerPermissions();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
@@ -52,19 +59,19 @@ const Customers = () => {
     notes: ''
   });
 
-  // Fetch customers
+  // Fetch customers using secure view
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ['customers'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('customers')
+        .from('customers_secure_view')
         .select('*')
         .order('name');
       
       if (error) throw error;
       return data as Customer[];
     },
-    enabled: !!user
+    enabled: !!user && canViewCustomers()
   });
 
   // Add customer mutation
@@ -231,7 +238,11 @@ const Customers = () => {
             }
           }}>
             <DialogTrigger asChild>
-              <GradientButton onClick={() => setIsAddDialogOpen(true)} className="gap-2">
+              <GradientButton 
+                onClick={() => setIsAddDialogOpen(true)} 
+                className="gap-2"
+                disabled={!canManageCustomers()}
+              >
                 <Plus className="w-4 h-4" />
                 Add Customer
               </GradientButton>
@@ -265,67 +276,73 @@ const Customers = () => {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-white">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="bg-white/10 border-white/20 text-white"
-                    />
+                {canViewContactInfo() && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-white">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="bg-white/10 border-white/20 text-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone" className="text-white">Phone</Label>
+                      <Input
+                        id="phone"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="bg-white/10 border-white/20 text-white"
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-white">Phone</Label>
-                    <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="bg-white/10 border-white/20 text-white"
-                    />
-                  </div>
-                </div>
+                )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="address" className="text-white">Address</Label>
-                  <Input
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="bg-white/10 border-white/20 text-white"
-                  />
-                </div>
+                {canViewFullDetails() && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="address" className="text-white">Address</Label>
+                      <Input
+                        id="address"
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        className="bg-white/10 border-white/20 text-white"
+                      />
+                    </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="city" className="text-white">City</Label>
-                    <Input
-                      id="city"
-                      value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      className="bg-white/10 border-white/20 text-white"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="state" className="text-white">State</Label>
-                    <Input
-                      id="state"
-                      value={formData.state}
-                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                      className="bg-white/10 border-white/20 text-white"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="zip_code" className="text-white">ZIP Code</Label>
-                    <Input
-                      id="zip_code"
-                      value={formData.zip_code}
-                      onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
-                      className="bg-white/10 border-white/20 text-white"
-                    />
-                  </div>
-                </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="city" className="text-white">City</Label>
+                        <Input
+                          id="city"
+                          value={formData.city}
+                          onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="state" className="text-white">State</Label>
+                        <Input
+                          id="state"
+                          value={formData.state}
+                          onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="zip_code" className="text-white">ZIP Code</Label>
+                        <Input
+                          id="zip_code"
+                          value={formData.zip_code}
+                          onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -428,37 +445,39 @@ const Customers = () => {
                         <p className="text-sm text-white/70">Tail: {customer.tail_number}</p>
                       )}
                     </div>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => handleEdit(customer)}
-                        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                      >
-                        <Edit className="w-4 h-4 text-white/70" />
-                      </button>
-                      <button
-                        onClick={() => deleteCustomerMutation.mutate(customer.id)}
-                        className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-400" />
-                      </button>
-                    </div>
+                    {canManageCustomers() && (
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleEdit(customer)}
+                          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                        >
+                          <Edit className="w-4 h-4 text-white/70" />
+                        </button>
+                        <button
+                          onClick={() => deleteCustomerMutation.mutate(customer.id)}
+                          className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-400" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </GlassCardHeader>
                 <GlassCardContent className="pt-0">
                   <div className="space-y-2">
-                    {customer.contact_person && (
+                    {customer.contact_person && canViewContactInfo() && (
                       <div className="flex items-center gap-2 text-sm text-white/70">
                         <User className="w-4 h-4" />
                         {customer.contact_person}
                       </div>
                     )}
-                    {customer.email && (
+                    {customer.email && canViewContactInfo() && (
                       <div className="flex items-center gap-2 text-sm text-white/70">
                         <Mail className="w-4 h-4" />
                         {customer.email}
                       </div>
                     )}
-                    {customer.phone && (
+                    {customer.phone && canViewContactInfo() && (
                       <div className="flex items-center gap-2 text-sm text-white/70">
                         <Phone className="w-4 h-4" />
                         {customer.phone}

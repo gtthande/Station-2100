@@ -1273,6 +1273,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "jobs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_secure_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "jobs_sub_job_card_of_fkey"
             columns: ["sub_job_card_of"]
             isOneToOne: false
@@ -2333,6 +2340,63 @@ export type Database = {
         }
         Relationships: []
       }
+      customers_secure_view: {
+        Row: {
+          address: string | null
+          aircraft_type: string | null
+          city: string | null
+          contact_person: string | null
+          country: string | null
+          created_at: string | null
+          email: string | null
+          id: string | null
+          name: string | null
+          notes: string | null
+          phone: string | null
+          state: string | null
+          tail_number: string | null
+          updated_at: string | null
+          user_id: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          address?: never
+          aircraft_type?: string | null
+          city?: never
+          contact_person?: never
+          country?: never
+          created_at?: string | null
+          email?: never
+          id?: string | null
+          name?: string | null
+          notes?: never
+          phone?: never
+          state?: never
+          tail_number?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          zip_code?: never
+        }
+        Update: {
+          address?: never
+          aircraft_type?: string | null
+          city?: never
+          contact_person?: never
+          country?: never
+          created_at?: string | null
+          email?: never
+          id?: string | null
+          name?: string | null
+          notes?: never
+          phone?: never
+          state?: never
+          tail_number?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          zip_code?: never
+        }
+        Relationships: []
+      }
       v_tool_movement: {
         Row: {
           actor_name: string | null
@@ -2411,6 +2475,10 @@ export type Database = {
           total_value: number
           weighted_avg_cost: number
         }[]
+      }
+      get_user_customer_permission_level: {
+        Args: { _user_id: string }
+        Returns: string
       }
       get_user_roles_with_profiles: {
         Args: Record<PropertyKey, never>
