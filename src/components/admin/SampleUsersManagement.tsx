@@ -10,22 +10,25 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Plus, Edit, Trash2, Eye, EyeOff, Key, User } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+  import { Badge } from '@/components/ui/badge';
+  import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+  import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+  import { Users, Plus, Edit, Trash2, Shield, User, Info } from 'lucide-react';
+  import { toast } from '@/hooks/use-toast';
 
 interface SampleUser {
   id: string;
   email: string;
   full_name: string;
-  pin_code: string;
   bio?: string;
-  sample_password: string;
   position?: string;
   staff_code?: string;
   is_active: boolean;
   created_at: string;
+  credential_type: string;
+  access_level: string;
+  last_credential_reset: string;
+  requires_secure_login: boolean;
 }
 
 export function SampleUsersManagement() {
@@ -33,15 +36,14 @@ export function SampleUsersManagement() {
   const { isAdmin } = useUserRoles();
   const queryClient = useQueryClient();
   const [editingUser, setEditingUser] = useState<SampleUser | null>(null);
-  const [showPasswords, setShowPasswords] = useState<{ [key: string]: boolean }>({});
   const [newUser, setNewUser] = useState({
     email: '',
     full_name: '',
-    pin_code: '',
     bio: '',
-    sample_password: '',
     position: '',
-    staff_code: ''
+    staff_code: '',
+    credential_type: 'demo_user',
+    access_level: 'basic'
   });
 
   // Fetch sample users
@@ -69,12 +71,13 @@ export function SampleUsersManagement() {
           .update({
             email: userData.email,
             full_name: userData.full_name,
-            pin_code: userData.pin_code,
             bio: userData.bio,
-            sample_password: userData.sample_password,
             position: userData.position,
             staff_code: userData.staff_code,
-            is_active: userData.is_active
+            is_active: userData.is_active,
+            credential_type: userData.credential_type,
+            access_level: userData.access_level,
+            last_credential_reset: new Date().toISOString()
           })
           .eq('id', userData.id);
         
@@ -86,12 +89,13 @@ export function SampleUsersManagement() {
           .insert({
             email: userData.email,
             full_name: userData.full_name,
-            pin_code: userData.pin_code,
             bio: userData.bio,
-            sample_password: userData.sample_password,
             position: userData.position,
             staff_code: userData.staff_code,
-            is_active: true
+            is_active: true,
+            credential_type: userData.credential_type || 'demo_user',
+            access_level: userData.access_level || 'basic',
+            requires_secure_login: true
           });
         
         if (error) throw error;
@@ -103,11 +107,11 @@ export function SampleUsersManagement() {
       setNewUser({
         email: '',
         full_name: '',
-        pin_code: '',
         bio: '',
-        sample_password: '',
         position: '',
-        staff_code: ''
+        staff_code: '',
+        credential_type: 'demo_user',
+        access_level: 'basic'
       });
       toast({
         title: "Success",
@@ -152,21 +156,27 @@ export function SampleUsersManagement() {
     }
   };
 
-  const togglePasswordVisibility = (userId: string) => {
-    setShowPasswords(prev => ({ ...prev, [userId]: !prev[userId] }));
-  };
-
-  const generateRandomPassword = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-    let password = '';
-    for (let i = 0; i < 12; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
+  const generateDemoCredentials = async (userId: string) => {
+    try {
+      const { data, error } = await supabase.rpc('generate_demo_credentials', {
+        _user_id: userId
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Demo Credentials Generated",
+        description: "Secure demo access information has been generated. Contact administrator for actual login credentials."
+      });
+      
+      return data;
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate demo credentials",
+        variant: "destructive"
+      });
     }
-    return password;
-  };
-
-  const generateRandomPIN = () => {
-    return Math.floor(1000 + Math.random() * 9000).toString();
   };
 
   if (!isAdmin()) {
@@ -238,8 +248,8 @@ export function SampleUsersManagement() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>PIN</TableHead>
-                  <TableHead>Password</TableHead>
+                  <TableHead>Access Level</TableHead>
+                  <TableHead>Credential Type</TableHead>
                   <TableHead>Position</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
@@ -256,22 +266,14 @@ export function SampleUsersManagement() {
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="font-mono">
-                        {user.pin_code}
+                      <Badge variant="outline" className="capitalize">
+                        {user.access_level}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <code className="bg-muted px-2 py-1 rounded text-sm font-mono">
-                          {showPasswords[user.id] ? user.sample_password : '••••••••••'}
-                        </code>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => togglePasswordVisibility(user.id)}
-                        >
-                          {showPasswords[user.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </Button>
+                        <Shield className="w-4 h-4 text-green-500" />
+                        <span className="text-sm capitalize">{user.credential_type}</span>
                       </div>
                     </TableCell>
                     <TableCell>{user.position}</TableCell>
@@ -287,6 +289,14 @@ export function SampleUsersManagement() {
                         onClick={() => setEditingUser(user)}
                       >
                         <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => generateDemoCredentials(user.id)}
+                        title="Generate secure demo access"
+                      >
+                        <Info className="w-4 h-4" />
                       </Button>
                       <Button
                         size="sm"
@@ -366,43 +376,48 @@ export function SampleUsersManagement() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="pin_code">4-Digit PIN</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="pin_code"
-                      value={editingUser.pin_code || ''}
-                      onChange={(e) => setEditingUser({ ...editingUser, pin_code: e.target.value.slice(0, 4) })}
-                      placeholder="1234"
-                      maxLength={4}
-                      pattern="[0-9]{4}"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setEditingUser({ ...editingUser, pin_code: generateRandomPIN() })}
-                      title="Generate random PIN"
-                    >
-                      <Key className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  <Label htmlFor="credential_type">Credential Type</Label>
+                  <Select
+                    value={editingUser.credential_type || 'demo_user'}
+                    onValueChange={(value) => setEditingUser({ ...editingUser, credential_type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select credential type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="demo_user">Demo User</SelectItem>
+                      <SelectItem value="training_account">Training Account</SelectItem>
+                      <SelectItem value="test_profile">Test Profile</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
-                  <Label htmlFor="sample_password">Sample Password</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="sample_password"
-                      value={editingUser.sample_password || ''}
-                      onChange={(e) => setEditingUser({ ...editingUser, sample_password: e.target.value })}
-                      placeholder="Password123!"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setEditingUser({ ...editingUser, sample_password: generateRandomPassword() })}
-                      title="Generate random password"
-                    >
-                      <Key className="w-4 h-4" />
-                    </Button>
+                  <Label htmlFor="access_level">Access Level</Label>
+                  <Select
+                    value={editingUser.access_level || 'basic'}
+                    onValueChange={(value) => setEditingUser({ ...editingUser, access_level: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select access level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="basic">Basic</SelectItem>
+                      <SelectItem value="intermediate">Intermediate</SelectItem>
+                      <SelectItem value="advanced">Advanced</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <Shield className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <h4 className="text-sm font-medium text-blue-900">Security Note</h4>
+                    <p className="text-sm text-blue-700 mt-1">
+                      No actual passwords or PINs are stored. This profile is for demonstration purposes only. 
+                      Real authentication credentials are managed through the secure authentication system.
+                    </p>
                   </div>
                 </div>
               </div>

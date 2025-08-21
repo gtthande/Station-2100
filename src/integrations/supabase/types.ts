@@ -1721,41 +1721,47 @@ export type Database = {
       }
       sample_user_credentials: {
         Row: {
+          access_level: string | null
           bio: string | null
           created_at: string | null
+          credential_type: string | null
           email: string
           full_name: string
           id: string
           is_active: boolean | null
-          pin_code: string
+          last_credential_reset: string | null
           position: string | null
-          sample_password: string
+          requires_secure_login: boolean | null
           staff_code: string | null
           updated_at: string | null
         }
         Insert: {
+          access_level?: string | null
           bio?: string | null
           created_at?: string | null
+          credential_type?: string | null
           email: string
           full_name: string
           id?: string
           is_active?: boolean | null
-          pin_code: string
+          last_credential_reset?: string | null
           position?: string | null
-          sample_password: string
+          requires_secure_login?: boolean | null
           staff_code?: string | null
           updated_at?: string | null
         }
         Update: {
+          access_level?: string | null
           bio?: string | null
           created_at?: string | null
+          credential_type?: string | null
           email?: string
           full_name?: string
           id?: string
           is_active?: boolean | null
-          pin_code?: string
+          last_credential_reset?: string | null
           position?: string | null
-          sample_password?: string
+          requires_secure_login?: boolean | null
           staff_code?: string | null
           updated_at?: string | null
         }
@@ -2424,6 +2430,10 @@ export type Database = {
       compute_tool_due_at: {
         Args: { _checkout_at: string; _tool_id: string }
         Returns: string
+      }
+      generate_demo_credentials: {
+        Args: { _user_id: string }
+        Returns: Json
       }
       get_batch_breakdown_report: {
         Args: { _as_of_date?: string; _product_id?: string; _user_id: string }
