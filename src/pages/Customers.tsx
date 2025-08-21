@@ -465,30 +465,65 @@ const Customers = () => {
                 </GlassCardHeader>
                 <GlassCardContent className="pt-0">
                   <div className="space-y-2">
-                    {customer.contact_person && canViewContactInfo() && (
+                    {/* Contact Person - show if available or show protected status */}
+                    {customer.contact_person && customer.contact_person !== '[PROTECTED]' && (
                       <div className="flex items-center gap-2 text-sm text-white/70">
                         <User className="w-4 h-4" />
                         {customer.contact_person}
                       </div>
                     )}
-                    {customer.email && canViewContactInfo() && (
+                    {customer.contact_person === '[PROTECTED]' && (
+                      <div className="flex items-center gap-2 text-sm text-white/40 italic">
+                        <User className="w-4 h-4" />
+                        Contact info protected
+                      </div>
+                    )}
+                    
+                    {/* Email - show if available or show protected status */}
+                    {customer.email && customer.email !== '[PROTECTED]' && (
                       <div className="flex items-center gap-2 text-sm text-white/70">
                         <Mail className="w-4 h-4" />
                         {customer.email}
                       </div>
                     )}
-                    {customer.phone && canViewContactInfo() && (
+                    {customer.email === '[PROTECTED]' && (
+                      <div className="flex items-center gap-2 text-sm text-white/40 italic">
+                        <Mail className="w-4 h-4" />
+                        Email protected
+                      </div>
+                    )}
+                    
+                    {/* Phone - show if available or show protected status */}
+                    {customer.phone && customer.phone !== '[PROTECTED]' && (
                       <div className="flex items-center gap-2 text-sm text-white/70">
                         <Phone className="w-4 h-4" />
                         {customer.phone}
                       </div>
                     )}
+                    {customer.phone === '[PROTECTED]' && (
+                      <div className="flex items-center gap-2 text-sm text-white/40 italic">
+                        <Phone className="w-4 h-4" />
+                        Phone protected
+                      </div>
+                    )}
+                    
+                    {/* Location - show city/state (usually not protected) */}
                     {customer.city && customer.state && (
                       <div className="flex items-center gap-2 text-sm text-white/70">
                         <MapPin className="w-4 h-4" />
                         {customer.city}, {customer.state}
                       </div>
                     )}
+                    
+                    {/* Address protection indicator for full address */}
+                    {customer.address === '[PROTECTED]' && (
+                      <div className="flex items-center gap-2 text-sm text-white/40 italic">
+                        <MapPin className="w-4 h-4" />
+                        Full address protected
+                      </div>
+                    )}
+                    
+                    {/* Aircraft info - generally not sensitive */}
                     {customer.aircraft_type && (
                       <div className="mt-3 p-2 bg-white/5 rounded-lg">
                         <p className="text-xs text-white/50 mb-1">Aircraft</p>

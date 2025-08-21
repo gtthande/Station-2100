@@ -2636,7 +2636,7 @@ export type Database = {
         Insert: {
           address?: never
           aircraft_type?: string | null
-          city?: string | null
+          city?: never
           contact_person?: never
           country?: string | null
           created_at?: string | null
@@ -2645,7 +2645,7 @@ export type Database = {
           name?: string | null
           notes?: string | null
           phone?: never
-          state?: string | null
+          state?: never
           tail_number?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -2654,7 +2654,7 @@ export type Database = {
         Update: {
           address?: never
           aircraft_type?: string | null
-          city?: string | null
+          city?: never
           contact_person?: never
           country?: string | null
           created_at?: string | null
@@ -2663,7 +2663,7 @@ export type Database = {
           name?: string | null
           notes?: string | null
           phone?: never
-          state?: string | null
+          state?: never
           tail_number?: string | null
           updated_at?: string | null
           user_id?: string | null
