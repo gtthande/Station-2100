@@ -1437,11 +1437,67 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_security_log: {
+        Row: {
+          access_granted: boolean | null
+          access_type: string
+          accessed_by: string
+          created_at: string | null
+          denial_reason: string | null
+          id: string
+          ip_address: unknown | null
+          profile_id: string
+          sensitive_fields_accessed: string[] | null
+          session_info: Json | null
+          user_agent: string | null
+        }
+        Insert: {
+          access_granted?: boolean | null
+          access_type: string
+          accessed_by: string
+          created_at?: string | null
+          denial_reason?: string | null
+          id?: string
+          ip_address?: unknown | null
+          profile_id: string
+          sensitive_fields_accessed?: string[] | null
+          session_info?: Json | null
+          user_agent?: string | null
+        }
+        Update: {
+          access_granted?: boolean | null
+          access_type?: string
+          accessed_by?: string
+          created_at?: string | null
+          denial_reason?: string | null
+          id?: string
+          ip_address?: unknown | null
+          profile_id?: string
+          sensitive_fields_accessed?: string[] | null
+          session_info?: Json | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_security_log_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_security_log_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           badge_id: string | null
           bio: string | null
-          biometric_data: string | null
           created_at: string | null
           department_id: string | null
           email: string
@@ -1449,11 +1505,9 @@ export type Database = {
           id: string
           is_staff: boolean | null
           phone: string | null
-          pin_code: string | null
           position: string | null
           profile_image_url: string | null
           role: string | null
-          sample_password: string | null
           staff_active: boolean | null
           staff_code: string | null
           updated_at: string | null
@@ -1461,7 +1515,6 @@ export type Database = {
         Insert: {
           badge_id?: string | null
           bio?: string | null
-          biometric_data?: string | null
           created_at?: string | null
           department_id?: string | null
           email: string
@@ -1469,11 +1522,9 @@ export type Database = {
           id: string
           is_staff?: boolean | null
           phone?: string | null
-          pin_code?: string | null
           position?: string | null
           profile_image_url?: string | null
           role?: string | null
-          sample_password?: string | null
           staff_active?: boolean | null
           staff_code?: string | null
           updated_at?: string | null
@@ -1481,7 +1532,6 @@ export type Database = {
         Update: {
           badge_id?: string | null
           bio?: string | null
-          biometric_data?: string | null
           created_at?: string | null
           department_id?: string | null
           email?: string
@@ -1489,11 +1539,9 @@ export type Database = {
           id?: string
           is_staff?: boolean | null
           phone?: string | null
-          pin_code?: string | null
           position?: string | null
           profile_image_url?: string | null
           role?: string | null
-          sample_password?: string | null
           staff_active?: boolean | null
           staff_code?: string | null
           updated_at?: string | null
@@ -1829,6 +1877,66 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      secure_employee_credentials: {
+        Row: {
+          badge_access_token: string | null
+          biometric_template_hash: string | null
+          created_at: string | null
+          created_by: string | null
+          failed_access_attempts: number | null
+          id: string
+          last_credential_change: string | null
+          locked_until: string | null
+          pin_hash: string | null
+          profile_id: string
+          requires_reset: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          badge_access_token?: string | null
+          biometric_template_hash?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          failed_access_attempts?: number | null
+          id?: string
+          last_credential_change?: string | null
+          locked_until?: string | null
+          pin_hash?: string | null
+          profile_id: string
+          requires_reset?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          badge_access_token?: string | null
+          biometric_template_hash?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          failed_access_attempts?: number | null
+          id?: string
+          last_credential_change?: string | null
+          locked_until?: string | null
+          pin_hash?: string | null
+          profile_id?: string
+          requires_reset?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "secure_employee_credentials_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "secure_employee_credentials_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       security_config_notes: {
         Row: {
@@ -2446,31 +2554,40 @@ export type Database = {
       }
       profiles_safe: {
         Row: {
+          badge_id: string | null
           created_at: string | null
           department_id: string | null
+          email: string | null
           full_name: string | null
           id: string | null
           is_staff: boolean | null
+          phone: string | null
           position: string | null
           profile_image_url: string | null
           staff_active: boolean | null
         }
         Insert: {
+          badge_id?: never
           created_at?: string | null
           department_id?: string | null
+          email?: never
           full_name?: string | null
           id?: string | null
           is_staff?: boolean | null
+          phone?: never
           position?: string | null
           profile_image_url?: string | null
           staff_active?: boolean | null
         }
         Update: {
+          badge_id?: never
           created_at?: string | null
           department_id?: string | null
+          email?: never
           full_name?: string | null
           id?: string | null
           is_staff?: boolean | null
+          phone?: never
           position?: string | null
           profile_image_url?: string | null
           staff_active?: boolean | null
@@ -2511,6 +2628,10 @@ export type Database = {
       compute_tool_due_at: {
         Args: { _checkout_at: string; _tool_id: string }
         Returns: string
+      }
+      emergency_profile_access: {
+        Args: { _justification: string; _profile_id: string }
+        Returns: Json
       }
       generate_demo_credentials: {
         Args: { _user_id: string }
@@ -2618,6 +2739,10 @@ export type Database = {
           _rotable_part_id: string
         }
         Returns: undefined
+      }
+      secure_profile_access: {
+        Args: { _access_type?: string; _profile_id: string }
+        Returns: boolean
       }
     }
     Enums: {
