@@ -54,11 +54,56 @@ npm run dev
 
 This project is built with:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- **Frontend**: Vite, TypeScript, React, shadcn-ui, Tailwind CSS
+- **Backend**: Supabase (PostgreSQL, Auth, Storage, Realtime)
+- **Database**: PostgreSQL with Row Level Security (RLS)
+- **Authentication**: Supabase Auth with JWT tokens
+- **File Storage**: Supabase Storage with bucket policies
+- **Real-time**: Supabase Realtime channels
+
+## Database & Backend Setup
+
+This project uses **Supabase exclusively** for all backend services. No additional database setup required.
+
+### Environment Setup
+
+1. Copy the environment template:
+```bash
+cp .env.example .env
+```
+
+2. Get your Supabase credentials from [your Supabase dashboard](https://supabase.com/dashboard):
+   - Project URL
+   - Anon/Public key
+   - Service role key (for server-side operations only)
+
+3. Update `.env` with your Supabase credentials:
+```bash
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+```
+
+### Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server  
+npm run dev
+```
+
+### Database Migrations
+
+All database migrations are handled through Supabase:
+- Schema changes are in `supabase/migrations/`
+- Row Level Security (RLS) policies protect all user data
+- Authentication and user management via Supabase Auth
+
+### Health Check
+
+Access `/api/supabase-check` to verify all Supabase services are connected.
 
 ## How can I deploy this project?
 

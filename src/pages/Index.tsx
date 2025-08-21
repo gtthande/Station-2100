@@ -1,8 +1,11 @@
 
 import { useState } from 'react';
 import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/components/ui/glass-card';
+import { Button } from '@/components/ui/button';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { UserMenu } from '@/components/navigation/UserMenu';
+import { HealthCheck } from '@/components/system/HealthCheck';
+import { ProfileSecurityAlert } from '@/components/security/ProfileSecurityAlert';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { 
   Users, 
@@ -23,6 +26,7 @@ import { Link } from 'react-router-dom';
 
 const Index = () => {
   const { isAdmin, isSupervisor, isPartsApprover, isJobAllocator, isBatchManager } = useUserRoles();
+  const [showHealthCheck, setShowHealthCheck] = useState(false);
 
   const canAccessApprovals = isPartsApprover() || isSupervisor() || isJobAllocator() || isAdmin();
   const canAccessAdmin = isAdmin();
@@ -36,10 +40,29 @@ const Index = () => {
         <div className="flex items-center justify-between mb-12">
           <div>
             <h1 className="text-4xl font-bold text-white mb-2">Station-2100</h1>
-            <p className="text-white/70 text-lg">Aircraft Parts Management System</p>
+            <p className="text-white/70 text-lg">Aircraft Parts Management System - Supabase Only</p>
           </div>
-          <UserMenu />
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowHealthCheck(!showHealthCheck)}
+            >
+              System Health
+            </Button>
+            <UserMenu />
+          </div>
         </div>
+
+        {/* Health Check Panel */}
+        {showHealthCheck && (
+          <div className="mb-8 flex justify-center">
+            <HealthCheck />
+          </div>
+        )}
+
+        {/* Security Alert */}
+        <ProfileSecurityAlert />
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
@@ -263,18 +286,18 @@ const Index = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center">
                   <div className="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2"></div>
-                  <p className="text-white font-medium">Inventory System</p>
-                  <p className="text-white/60 text-sm">Operational</p>
+                  <p className="text-white font-medium">PostgreSQL Database</p>
+                  <p className="text-white/60 text-sm">Supabase Connected</p>
                 </div>
                 <div className="text-center">
                   <div className="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2"></div>
-                  <p className="text-white font-medium">Database</p>
-                  <p className="text-white/60 text-sm">Connected</p>
+                  <p className="text-white font-medium">Authentication</p>
+                  <p className="text-white/60 text-sm">Supabase Auth</p>
                 </div>
                 <div className="text-center">
                   <div className="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2"></div>
-                  <p className="text-white font-medium">Security</p>
-                  <p className="text-white/60 text-sm">Active</p>
+                  <p className="text-white font-medium">Storage & Realtime</p>
+                  <p className="text-white/60 text-sm">Supabase Active</p>
                 </div>
               </div>
             </GlassCardContent>
