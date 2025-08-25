@@ -44,6 +44,24 @@ export const useProfileSafe = () => {
     }
   });
 
+  // Enhanced function to get secure profile data using the new database function
+  const getSecureProfileData = async (profileId: string) => {
+    if (!user) {
+      throw new Error('Authentication required');
+    }
+
+    const { data, error } = await supabase.rpc('get_safe_profile_data', {
+      _profile_id: profileId
+    });
+
+    if (error) {
+      console.error('Secure profile access error:', error);
+      throw error;
+    }
+
+    return data;
+  };
+
   const { data: currentUserProfile } = useQuery({
     queryKey: ['current-user-profile-safe', user?.id],
     queryFn: async () => {
@@ -91,6 +109,7 @@ export const useProfileSafe = () => {
     isLoading,
     error,
     emergencyAccess,
+    getSecureProfileData,
     // Helper functions to check data protection status
     isEmailProtected: (profile: SafeProfile) => profile.email === '[PROTECTED]',
     isPhoneProtected: (profile: SafeProfile) => profile.phone === '[PROTECTED]',

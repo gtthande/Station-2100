@@ -2826,6 +2826,10 @@ export type Database = {
           total_quantity: number
         }[]
       }
+      get_safe_profile_data: {
+        Args: { _profile_id: string }
+        Returns: Json
+      }
       get_stock_on_hand: {
         Args: {
           _as_of_date?: string
