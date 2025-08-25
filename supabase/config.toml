@@ -1,1 +1,29 @@
 project_id = "jarlvtojzqkccovburmi"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+# OTP expiry should be set to 2 minutes for enhanced security (120 seconds)
+# This can be configured in Supabase Dashboard -> Authentication -> Settings
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+refresh_token_rotation_enabled = true
+# Password security should be enabled in Supabase Dashboard
+enable_signup = true
+
+[db]
+shadow_port = 54320
+port = 54322
+
+[edge_functions]
+enabled = true
+
+[functions.check-leaked-password]
+verify_jwt = false  # Allow unauthenticated access for password checking during signup

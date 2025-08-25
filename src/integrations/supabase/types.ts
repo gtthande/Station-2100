@@ -180,6 +180,63 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_encrypted_data: {
+        Row: {
+          access_log: Json | null
+          customer_id: string
+          data_classification: string
+          encrypted_address: string | null
+          encrypted_at: string | null
+          encrypted_by: string
+          encrypted_email: string | null
+          encrypted_notes: string | null
+          encrypted_payment_info: string | null
+          encrypted_phone: string | null
+          id: string
+        }
+        Insert: {
+          access_log?: Json | null
+          customer_id: string
+          data_classification?: string
+          encrypted_address?: string | null
+          encrypted_at?: string | null
+          encrypted_by: string
+          encrypted_email?: string | null
+          encrypted_notes?: string | null
+          encrypted_payment_info?: string | null
+          encrypted_phone?: string | null
+          id?: string
+        }
+        Update: {
+          access_log?: Json | null
+          customer_id?: string
+          data_classification?: string
+          encrypted_address?: string | null
+          encrypted_at?: string | null
+          encrypted_by?: string
+          encrypted_email?: string | null
+          encrypted_notes?: string | null
+          encrypted_payment_info?: string | null
+          encrypted_phone?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_encrypted_data_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_encrypted_data_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers_secure_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_permissions: {
         Row: {
           created_at: string | null
@@ -293,6 +350,109 @@ export type Database = {
           department_name?: string
           id?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      employee_encrypted_data: {
+        Row: {
+          access_log: Json | null
+          data_classification: string
+          employee_id: string
+          encrypted_address: string | null
+          encrypted_at: string | null
+          encrypted_by: string
+          encrypted_email: string | null
+          encrypted_emergency_contact: string | null
+          encrypted_phone: string | null
+          encrypted_ssn_last_four: string | null
+          id: string
+        }
+        Insert: {
+          access_log?: Json | null
+          data_classification?: string
+          employee_id: string
+          encrypted_address?: string | null
+          encrypted_at?: string | null
+          encrypted_by: string
+          encrypted_email?: string | null
+          encrypted_emergency_contact?: string | null
+          encrypted_phone?: string | null
+          encrypted_ssn_last_four?: string | null
+          id?: string
+        }
+        Update: {
+          access_log?: Json | null
+          data_classification?: string
+          employee_id?: string
+          encrypted_address?: string | null
+          encrypted_at?: string | null
+          encrypted_by?: string
+          encrypted_email?: string | null
+          encrypted_emergency_contact?: string | null
+          encrypted_phone?: string | null
+          encrypted_ssn_last_four?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_encrypted_data_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_encrypted_data_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: true
+            referencedRelation: "profiles_minimal"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_encrypted_data_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: true
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      environment_access_control: {
+        Row: {
+          allowed_actions: string[] | null
+          created_at: string | null
+          created_by: string
+          environment: string
+          expires_at: string | null
+          id: string
+          ip_whitelist: unknown[] | null
+          role: Database["public"]["Enums"]["app_role"]
+          time_restrictions: Json | null
+          user_id: string
+        }
+        Insert: {
+          allowed_actions?: string[] | null
+          created_at?: string | null
+          created_by: string
+          environment: string
+          expires_at?: string | null
+          id?: string
+          ip_whitelist?: unknown[] | null
+          role: Database["public"]["Enums"]["app_role"]
+          time_restrictions?: Json | null
+          user_id: string
+        }
+        Update: {
+          allowed_actions?: string[] | null
+          created_at?: string | null
+          created_by?: string
+          environment?: string
+          expires_at?: string | null
+          id?: string
+          ip_whitelist?: unknown[] | null
+          role?: Database["public"]["Enums"]["app_role"]
+          time_restrictions?: Json | null
           user_id?: string
         }
         Relationships: []
@@ -2022,6 +2182,51 @@ export type Database = {
           },
         ]
       }
+      security_audit_trail: {
+        Row: {
+          action: string
+          changes_summary: Json | null
+          created_at: string | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          record_id: string | null
+          retention_until: string | null
+          severity: string | null
+          table_name: string
+          user_agent_hash: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          changes_summary?: Json | null
+          created_at?: string | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          record_id?: string | null
+          retention_until?: string | null
+          severity?: string | null
+          table_name: string
+          user_agent_hash?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          changes_summary?: Json | null
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          record_id?: string | null
+          retention_until?: string | null
+          severity?: string | null
+          table_name?: string
+          user_agent_hash?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       security_config_notes: {
         Row: {
           config_type: string
@@ -2925,6 +3130,17 @@ export type Database = {
           _related_id?: string
           _related_table?: string
           _rotable_part_id: string
+        }
+        Returns: undefined
+      }
+      log_security_audit: {
+        Args: {
+          _action: string
+          _changes_summary?: Json
+          _event_type: string
+          _record_id: string
+          _severity?: string
+          _table_name: string
         }
         Returns: undefined
       }
