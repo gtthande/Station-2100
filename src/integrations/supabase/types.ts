@@ -2789,6 +2789,10 @@ export type Database = {
         Args: { _checkout_at: string; _tool_id: string }
         Returns: string
       }
+      decrypt_sensitive_data: {
+        Args: { _encrypted_data: string }
+        Returns: string
+      }
       emergency_customer_access: {
         Args: { _customer_id: string; _justification: string }
         Returns: Json
@@ -2796,6 +2800,10 @@ export type Database = {
       emergency_profile_access: {
         Args: { _justification: string; _profile_id: string }
         Returns: Json
+      }
+      encrypt_sensitive_data: {
+        Args: { _data: string }
+        Returns: string
       }
       generate_demo_credentials: {
         Args: { _user_id: string }
@@ -2813,6 +2821,10 @@ export type Database = {
           total_value: number
           weighted_avg_cost: number
         }[]
+      }
+      get_encryption_key: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       get_inventory_summary: {
         Args: Record<PropertyKey, never>
@@ -2933,6 +2945,8 @@ export type Database = {
         | "batch_manager"
         | "supervisor"
         | "hr"
+        | "auditor"
+        | "security_officer"
       app_tool_auth_method: "code" | "fingerprint"
       app_tool_event_type: "checkout" | "return" | "transfer"
       app_tool_status: "in_stock" | "checked_out"
@@ -3098,6 +3112,8 @@ export const Constants = {
         "batch_manager",
         "supervisor",
         "hr",
+        "auditor",
+        "security_officer",
       ],
       app_tool_auth_method: ["code", "fingerprint"],
       app_tool_event_type: ["checkout", "return", "transfer"],
