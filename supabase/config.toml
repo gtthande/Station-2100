@@ -14,7 +14,6 @@ enabled = true
 site_url = "http://localhost:3000"
 additional_redirect_urls = ["https://localhost:3000"]
 jwt_expiry = 3600
-refresh_token_rotation_enabled = true
 # Password security should be enabled in Supabase Dashboard
 enable_signup = true
 
@@ -22,8 +21,8 @@ enable_signup = true
 shadow_port = 54320
 port = 54322
 
-[edge_functions]
-enabled = true
+#[edge_functions]
+#enabled = true
 
-[functions.check-leaked-password]
-verify_jwt = false  # Allow unauthenticated access for password checking during signup
+#[functions.check-leaked-password]
+#verify_jwt = false  # Allow unauthenticated access for password checking during signup

@@ -14,6 +14,7 @@ import { ComplianceTab } from '@/components/rotable/ComplianceTab';
 import { ReportsTab } from '@/components/rotable/ReportsTab';
 import { AuditTab } from '@/components/rotable/AuditTab';
 import { Link } from 'react-router-dom';
+import { BackButton } from '@/components/navigation/BackButton';
 import { Button } from '@/components/ui/button';
 
 const RotableLLP = () => {
@@ -25,6 +26,7 @@ const RotableLLP = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
+            <BackButton />
             <Link to="/" className="text-white/60 hover:text-white transition-colors">
               ← Back to Dashboard
             </Link>

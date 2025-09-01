@@ -7,17 +7,19 @@ import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/
 import { GradientButton } from '@/components/ui/gradient-button';
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Package, BarChart3, Plus, TrendingUp, AlertTriangle, DollarSign } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Package, BarChart3, Plus, TrendingUp, AlertTriangle, DollarSign, ArrowLeft } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { ProductsList } from '@/components/inventory/ProductsList';
 import { BatchesList } from '@/components/inventory/BatchesList';
 import { InventoryAnalytics } from '@/components/inventory/InventoryAnalytics';
 import { AddProductDialog } from '@/components/inventory/AddProductDialog';
 import { AddBatchDialog } from '@/components/inventory/AddBatchDialog';
 import { TwoGridInventoryView } from '@/components/inventory/TwoGridInventoryView';
+import { InventoryMovementSummary } from '@/components/inventory/InventoryMovementSummary';
 
 const Inventory = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [addProductOpen, setAddProductOpen] = useState(false);
   const [addBatchOpen, setAddBatchOpen] = useState(false);
   const [inventoryGridOpen, setInventoryGridOpen] = useState(false);
@@ -29,28 +31,42 @@ const Inventory = () => {
     queryFn: async () => {
       if (!user) return null;
       
-      // Get inventory summary
+      // Load products (basic fields used for thresholds and open balance)
       const { data: products } = await supabase
-        .rpc('get_inventory_summary');
-      
-      // Get approved batches with cost data
-      const { data: approvedBatches } = await supabase
+        .from('inventory_products')
+        .select('id, reorder_point, minimum_stock, open_balance');
+
+      // Load all batches we need once
+      const { data: batches } = await supabase
         .from('inventory_batches')
-        .select('quantity, cost_per_unit')
-        .eq('approval_status', 'approved')
-        .not('cost_per_unit', 'is', null);
-      
-      // Get all active batches count
-      const { data: activeBatches } = await supabase
-        .from('inventory_batches')
-        .select('id')
-        .eq('status', 'active');
+        .select('product_id, quantity, approval_status, cost_per_unit, status');
+
+      const batchesByProduct = new Map<string, { approvedQty: number }>();
+      let totalStockValue = 0;
+      let activeBatchesCount = 0;
+      for (const b of batches || []) {
+        if (b.status === 'active') activeBatchesCount += 1;
+        const entry = batchesByProduct.get(b.product_id as any) || { approvedQty: 0 };
+        if (b.approval_status === 'approved') {
+          entry.approvedQty += Number(b.quantity || 0);
+          if (b.cost_per_unit != null) {
+            totalStockValue += Number(b.quantity || 0) * Number(b.cost_per_unit || 0);
+          }
+        }
+        batchesByProduct.set(b.product_id as any, entry);
+      }
 
       const totalProducts = products?.length || 0;
-      const totalStock = products?.reduce((sum, p) => sum + (p.total_quantity || 0), 0) || 0;
-      const lowStockItems = products?.filter(p => (p.total_quantity || 0) <= (p.reorder_point || 0)).length || 0;
-      const totalStockValue = approvedBatches?.reduce((sum, b) => sum + ((b.quantity || 0) * (b.cost_per_unit || 0)), 0) || 0;
-      const activeBatchesCount = activeBatches?.length || 0;
+      let totalStock = 0;
+      let lowStockItems = 0;
+      for (const p of products || []) {
+        const approvedQty = batchesByProduct.get(p.id as any)?.approvedQty || 0;
+        const open = Number(p.open_balance || 0);
+        const totalQty = open + approvedQty;
+        totalStock += totalQty;
+        const reorder = Number((p as any).reorder_point || 0);
+        if (totalQty <= reorder) lowStockItems += 1;
+      }
 
       return {
         totalProducts,
@@ -70,6 +86,14 @@ const Inventory = () => {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate(-1)}
+                className="text-white/60 hover:text-white transition-colors flex items-center gap-2"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </button>
               <Link to="/" className="text-white/60 hover:text-white transition-colors">
                 ← Back to Dashboard
               </Link>
@@ -97,6 +121,11 @@ const Inventory = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Movement Summary */}
+        <div className="mb-8">
+          <InventoryMovementSummary />
+        </div>
+
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <GlassCard>

@@ -1,5 +1,6 @@
 
 import { UserMenu } from '@/components/navigation/UserMenu';
+import { BackButton } from '@/components/navigation/BackButton';
 import { Link } from 'react-router-dom';
 import { FileText, AlertTriangle, Plus, ChevronDown, Wrench, History } from 'lucide-react';
 import { UnapprovedBatchesReport } from '@/components/inventory/UnapprovedBatchesReport';
@@ -56,6 +57,7 @@ const Reports = () => {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
+              <BackButton />
               <Link to="/" className="text-white/60 hover:text-white transition-colors">
                 ← Back to Dashboard
               </Link>

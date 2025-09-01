@@ -29,7 +29,13 @@ export function JobsList({ onSelectJob, onEditJob }: JobsListProps) {
   const { data: jobs, isLoading, refetch } = useQuery({
     queryKey: ["jobs", user?.id],
     queryFn: async () => {
-      if (!user?.id) return [];
+      // Temporarily allow querying without user to test if jobs exist
+      console.log('Querying jobs, user:', user?.id);
+      
+      if (!user?.id) {
+        console.log('No user ID, returning empty array');
+        return [];
+      }
       
       const { data, error } = await supabase
         .from("jobs")
@@ -39,10 +45,14 @@ export function JobsList({ onSelectJob, onEditJob }: JobsListProps) {
             name
           )
         `)
-        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching jobs:', error);
+        throw error;
+      }
+
+      console.log('Jobs fetched:', data?.length || 0, 'jobs');
 
       // Calculate costs for each job
       const jobsWithCosts = await Promise.all((data || []).map(async (job) => {

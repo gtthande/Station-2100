@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { UserMenu } from '@/components/navigation/UserMenu';
+import { BackButton } from '@/components/navigation/BackButton';
 import { Link } from 'react-router-dom';
 import { BarChart3, Plus, Settings, TrendingUp, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { StockMovementReport } from '@/components/stock/StockMovementReport';
 import { StockValuationReport } from '@/components/stock/StockValuationReport';
 import { BatchBreakdownReport } from '@/components/stock/BatchBreakdownReport';
 import { StockMovementsList } from '@/components/stock/StockMovementsList';
+import { BatchMovementReport } from '@/components/reports/BatchMovementReport';
 
 const StockMovements = () => {
   const [openingBalanceOpen, setOpeningBalanceOpen] = useState(false);
@@ -22,6 +24,7 @@ const StockMovements = () => {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
+              <BackButton />
               <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
                 ← Back to Dashboard
               </Link>
@@ -53,7 +56,7 @@ const StockMovements = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="movements" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="movements" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               Movements
@@ -65,6 +68,10 @@ const StockMovements = () => {
             <TabsTrigger value="batches" className="flex items-center gap-2">
               <Package className="w-4 h-4" />
               Batch Breakdown
+            </TabsTrigger>
+            <TabsTrigger value="batch-analysis" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Batch Analysis
             </TabsTrigger>
             <TabsTrigger value="summary" className="flex items-center gap-2">
               Summary
@@ -81,6 +88,10 @@ const StockMovements = () => {
 
           <TabsContent value="batches" className="space-y-6">
             <BatchBreakdownReport />
+          </TabsContent>
+
+          <TabsContent value="batch-analysis" className="space-y-6">
+            <BatchMovementReport />
           </TabsContent>
 
           <TabsContent value="summary" className="space-y-6">

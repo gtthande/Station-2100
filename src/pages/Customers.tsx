@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Plus, Search, Edit, Trash2, User, Phone, Mail, MapPin } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { UserMenu } from '@/components/navigation/UserMenu';
+import { BackButton } from '@/components/navigation/BackButton';
 
 interface Customer {
   id: string;
@@ -225,9 +226,12 @@ const Customers = () => {
 
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-3xl font-bold text-white mb-2">Customers</h2>
-            <p className="text-white/70">Manage your customer database</p>
+          <div className="flex items-center gap-4">
+            <BackButton />
+            <div>
+              <h2 className="text-3xl font-bold text-white mb-2">Customers</h2>
+              <p className="text-white/70">Manage your customer database</p>
+            </div>
           </div>
           
           <Dialog open={isAddDialogOpen || !!editingCustomer} onOpenChange={(open) => {

@@ -42,46 +42,62 @@ export const BatchListReport = () => {
   const { data: batches, isLoading } = useQuery({
     queryKey: ['batch-list-report', user?.id],
     queryFn: async () => {
-      if (!user?.id) return [];
-      
-      const { data, error } = await supabase
-        .from('inventory_batches')
-        .select(`
-          id,
-          batch_number,
-          quantity,
-          cost_per_unit,
-          location,
-          status,
-          approval_status,
-          created_at,
-          received_date,
-          expiry_date,
-          inventory_products (
-            part_number,
-            description,
-            unit_of_measure
-          ),
-          suppliers (
-            name
-          )
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
+      // Fetch all batches in pages to avoid default 1000 row cap
+      const pageSize = 1000;
+      let from = 0;
+      const out: any[] = [];
+      for (;;) {
+        const to = from + pageSize - 1;
+        const { data, error } = await supabase
+          .from('inventory_batches')
+          .select(`
+            id,
+            batch_number,
+            quantity,
+            cost_per_unit,
+            location,
+            status,
+            approval_status,
+            created_at,
+            received_date,
+            expiry_date,
+            inventory_products (
+              part_number,
+              description,
+              unit_of_measure
+            ),
+            suppliers (
+              name
+            )
+          `)
+          .range(from, to)
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        if (data && data.length) out.push(...data);
+        if (!data || data.length < pageSize) break;
+        from += pageSize;
+      }
+      return out;
     },
-    enabled: !!user?.id,
+    enabled: !!user,
   });
 
   const filteredBatches = batches?.filter(batch => {
-    const matchesSearch = !searchTerm || 
-      batch.batch_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      batch.inventory_products?.part_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      batch.inventory_products?.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      batch.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      batch.suppliers?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const term = (searchTerm || '').trim().toLowerCase();
+    const isNumeric = /^\d+$/.test(term);
+    // If user types digits (e.g., 0023/4275), search ONLY by batch number to avoid
+    // accidental matches with product part numbers like 20023.
+    const matchesSearch = !term || (
+      isNumeric
+        ? (batch.batch_number || '').toLowerCase().includes(term)
+        : (
+            (batch.batch_number || '').toLowerCase().includes(term) ||
+            (batch.inventory_products?.part_number || '').toLowerCase().includes(term) ||
+            (batch.inventory_products?.description || '').toLowerCase().includes(term) ||
+            (batch.location || '').toLowerCase().includes(term) ||
+            (batch.suppliers?.name || '').toLowerCase().includes(term)
+          )
+    );
 
     const matchesStatus = statusFilter === 'all' || batch.status === statusFilter;
     const matchesApproval = approvalFilter === 'all' || batch.approval_status === approvalFilter;

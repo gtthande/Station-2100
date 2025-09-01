@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Tables } from '@/integrations/supabase/types';
 
 type Supplier = Tables<'suppliers'>;
+type Product = Pick<Tables<'inventory_products'>, 'id' | 'part_number' | 'description'>;
 
 interface AddBatchDialogProps {
   open: boolean;
@@ -66,6 +67,13 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
     alternate_department_id: ''
   });
 
+  // Generate a readable unique-ish batch number when dialog opens
+  const generateBatchNumber = () => {
+    const timestamp = Date.now().toString().slice(-6);
+    const randomSuffix = Math.random().toString(36).substring(2, 5).toUpperCase();
+    return `BATCH-${timestamp}-${randomSuffix}`;
+  };
+
   // Fetch suppliers
   const { data: suppliers } = useQuery({
     queryKey: ['suppliers'],
@@ -83,11 +91,37 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
     enabled: !!user,
   });
 
+  // Fetch products to ensure every batch is attached to a parent product
+  const { data: products } = useQuery({
+    queryKey: ['inventory-products-for-batch'],
+    queryFn: async () => {
+      if (!user) return [] as Product[];
+      const { data, error } = await supabase
+        .from('inventory_products')
+        .select('id, part_number, description')
+        .order('part_number');
+      if (error) throw error;
+      return (data || []) as Product[];
+    },
+    enabled: !!user,
+  });
+
   useEffect(() => {
     if (selectedProductId) {
       setFormData(prev => ({ ...prev, product_id: selectedProductId }));
     }
   }, [selectedProductId]);
+
+  // When dialog opens, prefill a batch number if missing
+  useEffect(() => {
+    if (open) {
+      setFormData(prev => ({
+        ...prev,
+        batch_number: prev.batch_number || generateBatchNumber(),
+        product_id: selectedProductId || prev.product_id
+      }));
+    }
+  }, [open]);
 
   const createBatchMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
@@ -118,7 +152,7 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
       queryClient.invalidateQueries({ queryKey: ['inventory-summary'] });
       onOpenChange(false);
       setFormData({
-        batch_number: '',
+        batch_number: generateBatchNumber(),
         product_id: selectedProductId || '',
         supplier_id: '',
         supplier_invoice_number: '',
@@ -192,6 +226,24 @@ export const AddBatchDialog = ({ open, onOpenChange, selectedProductId }: AddBat
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Basic Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-3">
+                <Label htmlFor="product_id">Parent Product *</Label>
+                <Select
+                  value={formData.product_id}
+                  onValueChange={(value) => setFormData({ ...formData, product_id: value })}
+                >
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                    <SelectValue placeholder="Select product" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-surface-dark border-white/20">
+                    {products?.map((product) => (
+                      <SelectItem key={product.id} value={product.id} className="text-white">
+                        {product.part_number} — {product.description}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div>
                 <Label htmlFor="batch_number">Batch Number *</Label>
                 <Input

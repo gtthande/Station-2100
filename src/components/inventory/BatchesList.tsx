@@ -6,11 +6,13 @@ import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/
 import { GradientButton } from '@/components/ui/gradient-button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Package2, MapPin, Calendar, Truck, Building2, DollarSign, Edit } from 'lucide-react';
+import { Search, Package2, MapPin, Calendar, Truck, Building2, DollarSign, Edit, BarChart3 } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
 import { format } from 'date-fns';
 import { EditBatchDialog } from './EditBatchDialog';
 import { BatchListReport } from '@/components/reports/BatchListReport';
+import { BatchMovementReport } from '@/components/reports/BatchMovementReport';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Extend the inventory batch type to include warehouse_id and relationships
 type ExtendedInventoryBatch = Tables<'inventory_batches'> & {
@@ -41,10 +43,18 @@ interface EditState {
   batchId: string | null;
 }
 
+interface MovementState {
+  isOpen: boolean;
+  batchId: string | null;
+  productId: string | null;
+}
+
 export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [editState, setEditState] = useState<EditState>({ isOpen: false, batchId: null });
+  const [selectedBatch, setSelectedBatch] = useState<ExtendedInventoryBatch | null>(null);
+  const [movementState, setMovementState] = useState<MovementState>({ isOpen: false, batchId: null, productId: null });
 
   const { data: batches, isLoading } = useQuery({
     queryKey: ['inventory-batches', selectedProductId],
@@ -140,11 +150,21 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
   };
 
   const handleEditBatch = (batchId: string) => {
+    const b = batches?.find(x => x.id === batchId) as ExtendedInventoryBatch | undefined;
+    if (b) setSelectedBatch(b);
     setEditState({ isOpen: true, batchId });
   };
 
   const handleCloseEdit = () => {
     setEditState({ isOpen: false, batchId: null });
+  };
+
+  const handleShowMovement = (batchId: string, productId: string) => {
+    setMovementState({ isOpen: true, batchId, productId });
+  };
+
+  const handleCloseMovement = () => {
+    setMovementState({ isOpen: false, batchId: null, productId: null });
   };
 
   if (isLoading) {
@@ -200,6 +220,7 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
                       Batch: {batch.batch_number}
                     </GlassCardTitle>
                     <div className="space-y-1">
+                      <p className="text-xs uppercase tracking-wide text-white/60">Parent Product</p>
                       <p className="text-sm font-medium text-white">
                         {batch.inventory_products?.part_number}
                       </p>
@@ -220,8 +241,18 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
                         variant="outline"
                         onClick={() => handleEditBatch(batch.id)}
                         className="p-2"
+                        title="Edit Batch"
                       >
                         <Edit className="w-4 h-4" />
+                      </GradientButton>
+                      <GradientButton
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleShowMovement(batch.id, batch.product_id)}
+                        className="p-2"
+                        title="Movement Report"
+                      >
+                        <BarChart3 className="w-4 h-4" />
                       </GradientButton>
                     </div>
                     <Badge className={`${getStatusColor(batch.status || 'active')} border text-xs`}>
@@ -334,7 +365,20 @@ export const BatchesList = ({ selectedProductId }: BatchesListProps) => {
         open={editState.isOpen}
         onOpenChange={handleCloseEdit}
         batchId={editState.batchId}
+        initialBatch={selectedBatch as any}
       />
+      
+      <Dialog open={movementState.isOpen} onOpenChange={handleCloseMovement}>
+        <DialogContent className="max-w-4xl bg-gray-900/95 border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-white">Batch Movement Report</DialogTitle>
+          </DialogHeader>
+          <BatchMovementReport 
+            batchId={movementState.batchId || undefined}
+            productId={movementState.productId || undefined}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

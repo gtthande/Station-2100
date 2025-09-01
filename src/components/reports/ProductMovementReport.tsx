@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { GlassCard } from '@/components/ui/glass-card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { BackButton } from '@/components/navigation/BackButton';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Download, Printer, TrendingUp } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -144,10 +145,15 @@ export const ProductMovementReport = () => {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden bg-surface-dark border-white/10">
           <DialogHeader>
-            <DialogTitle className="text-white flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              Product Movement Report - Batch Distribution
-            </DialogTitle>
+            <div className="flex items-center justify-between gap-3">
+              <DialogTitle className="text-white flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Product Movement Report - Batch Distribution
+              </DialogTitle>
+              <div className="hidden sm:block">
+                <BackButton label="Back to Inventory" />
+              </div>
+            </div>
           </DialogHeader>
 
           <div className="space-y-4 overflow-y-auto">

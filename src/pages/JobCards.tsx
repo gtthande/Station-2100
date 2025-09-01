@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import { BackButton } from "@/components/navigation/BackButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,11 +22,14 @@ export default function JobCards() {
     <div className="container mx-auto p-6 space-y-6 relative">
       <JobCardNotifications />
       <div className="flex justify-between items-center">
-        <div>
+        <div className="flex items-center gap-4">
+          <BackButton />
+          <div>
           <h1 className="text-3xl font-bold tracking-tight">Job Cards</h1>
           <p className="text-muted-foreground">
             Manage aircraft maintenance job cards and work orders
           </p>
+          </div>
         </div>
         <Button onClick={() => setCreateJobOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
@@ -35,15 +39,10 @@ export default function JobCards() {
 
       <Tabs defaultValue="jobs" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="interface">Job Card Creation</TabsTrigger>
           <TabsTrigger value="jobs">Existing Job Cards</TabsTrigger>
           <TabsTrigger value="items">Job Items</TabsTrigger>
           <TabsTrigger value="auth">Authorizations</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="interface" className="space-y-4">
-          <JobCardInterface />
-        </TabsContent>
 
         <TabsContent value="jobs" className="space-y-4">
           <Card>
@@ -91,7 +90,13 @@ export default function JobCards() {
         </TabsContent>
       </Tabs>
 
-      <CreateJobDialog open={createJobOpen} onOpenChange={setCreateJobOpen} />
+      <CreateJobDialog 
+        open={createJobOpen} 
+        onOpenChange={setCreateJobOpen}
+        onCreated={(jobId) => {
+          setEditingJobId(jobId);
+        }}
+      />
       <JobCardEditor 
         jobId={editingJobId}
         open={!!editingJobId}

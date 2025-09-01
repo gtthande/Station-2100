@@ -97,8 +97,10 @@ export function WarehouseATab({
             </div>
             <Button
               onClick={() => {
-                onScanForPart(barcodeInput);
-                setBarcodeInput('');
+                if (barcodeInput.trim()) {
+                  onScanForPart(barcodeInput);
+                  setBarcodeInput('');
+                }
               }}
               disabled={!barcodeInput.trim()}
               size="sm"

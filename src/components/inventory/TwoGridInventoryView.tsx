@@ -172,9 +172,14 @@ export function TwoGridInventoryView({ open, onOpenChange }: TwoGridInventoryVie
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] h-[90vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Package className="w-5 h-5" />
-            Inventory Overview
+          <DialogTitle className="flex items-center justify-between w-full">
+            <span className="flex items-center gap-2">
+              <Package className="w-5 h-5" />
+              Inventory Overview
+            </span>
+            {selectedProduct && (
+              <span className="text-sm text-white/70">Total Stock: {selectedProduct.total_quantity}</span>
+            )}
           </DialogTitle>
         </DialogHeader>
 
@@ -201,7 +206,7 @@ export function TwoGridInventoryView({ open, onOpenChange }: TwoGridInventoryVie
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
                 </div>
               ) : (
-                <div className="h-full overflow-y-auto">
+                <div className="h-full overflow-y-auto will-change-transform">
                   <Table>
                     <TableHeader className="sticky top-0 bg-surface-dark z-10">
                       <TableRow>
@@ -279,7 +284,7 @@ export function TwoGridInventoryView({ open, onOpenChange }: TwoGridInventoryVie
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
                 </div>
               ) : (
-                <div className="h-full overflow-y-auto">
+                <div className="h-full overflow-y-auto will-change-transform">
                   <Table>
                     <TableHeader className="sticky top-0 bg-surface-dark z-10">
                       <TableRow>

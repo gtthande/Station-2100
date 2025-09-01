@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
+import { StaffAuthDialog } from "./StaffAuthDialog";
 
 const jobItemSchema = z.object({
   description: z.string().optional(),
@@ -42,6 +43,7 @@ const jobItemSchema = z.object({
   category: z.enum(["spare", "consumable", "owner_supplied"]).default("spare"),
   warehouse: z.string().optional(),
   stock_card_no: z.string().optional(),
+  batch_no: z.string().optional(),
   item_date: z.string().optional(),
   verified_by: z.string().optional(),
   received_by: z.string().optional(),
@@ -61,6 +63,8 @@ interface CreateJobItemDialogProps {
 export function CreateJobItemDialog({ jobId, open, onOpenChange, onSuccess }: CreateJobItemDialogProps) {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [recipientStaff, setRecipientStaff] = useState<any | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
 
   const form = useForm<JobItemFormData>({
     resolver: zodResolver(jobItemSchema),
@@ -73,6 +77,7 @@ export function CreateJobItemDialog({ jobId, open, onOpenChange, onSuccess }: Cr
       category: "spare",
       warehouse: "",
       stock_card_no: "",
+      batch_no: "",
       item_date: new Date().toISOString().split("T")[0],
       verified_by: "",
       received_by: "",
@@ -84,12 +89,20 @@ export function CreateJobItemDialog({ jobId, open, onOpenChange, onSuccess }: Cr
   const onSubmit = async (data: JobItemFormData) => {
     if (!user?.id) return;
 
+    // Require recipient authentication before proceeding
+    if (!recipientStaff) {
+      setAuthOpen(true);
+      toast({ title: "Recipient required", description: "Authenticate the recipient before issuing." });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const qty = parseInt(data.qty);
       const unitCost = data.unit_cost ? parseFloat(data.unit_cost) : 0;
       const fittingPrice = data.fitting_price ? parseFloat(data.fitting_price) : 0;
       const totalCost = qty * unitCost;
+      const batchNo = data.batch_no && data.batch_no.trim() !== "" ? parseInt(data.batch_no) : null;
 
       const { error } = await supabase.from("job_items").insert({
         ...data,
@@ -100,6 +113,11 @@ export function CreateJobItemDialog({ jobId, open, onOpenChange, onSuccess }: Cr
         fitting_price: fittingPrice,
         total_cost: totalCost,
         item_date: data.item_date || null,
+        batch_no: batchNo,
+        issued_by_staff_id: user.id,
+        issued_at: new Date().toISOString(),
+        received_by_staff_id: recipientStaff?.id,
+        received_at: new Date().toISOString(),
       });
 
       if (error) throw error;
@@ -110,6 +128,7 @@ export function CreateJobItemDialog({ jobId, open, onOpenChange, onSuccess }: Cr
       });
 
       form.reset();
+      setRecipientStaff(null);
       onSuccess();
     } catch (error: any) {
       toast({
@@ -134,6 +153,29 @@ export function CreateJobItemDialog({ jobId, open, onOpenChange, onSuccess }: Cr
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="batch_no"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Batch/Barcode</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Scan or enter batch number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="space-y-1">
+                <FormLabel>Issuer</FormLabel>
+                <div className="text-sm border rounded-md px-3 py-2 bg-muted">
+                  {user?.email || user?.id}
+                </div>
+              </div>
+            </div>
+
             <FormField
               control={form.control}
               name="description"
@@ -290,19 +332,17 @@ export function CreateJobItemDialog({ jobId, open, onOpenChange, onSuccess }: Cr
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="received_by"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Received By</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Receiver name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <FormLabel>Recipient</FormLabel>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 text-sm border rounded-md px-3 py-2 bg-muted">
+                    {recipientStaff ? (recipientStaff.full_name || recipientStaff.email || recipientStaff.id) : "Not authenticated"}
+                  </div>
+                  <Button type="button" variant="secondary" onClick={() => setAuthOpen(true)}>
+                    Authenticate
+                  </Button>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -346,6 +386,13 @@ export function CreateJobItemDialog({ jobId, open, onOpenChange, onSuccess }: Cr
             </DialogFooter>
           </form>
         </Form>
+
+        <StaffAuthDialog
+          isOpen={authOpen}
+          onClose={() => setAuthOpen(false)}
+          onStaffAuthenticated={(staff) => setRecipientStaff(staff)}
+          action="receive"
+        />
       </DialogContent>
     </Dialog>
   );

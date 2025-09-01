@@ -45,9 +45,10 @@ type JobFormData = z.infer<typeof jobSchema>;
 interface CreateJobDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCreated?: (jobId: number) => void;
 }
 
-export function CreateJobDialog({ open, onOpenChange }: CreateJobDialogProps) {
+export function CreateJobDialog({ open, onOpenChange, onCreated }: CreateJobDialogProps) {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -58,8 +59,7 @@ export function CreateJobDialog({ open, onOpenChange }: CreateJobDialogProps) {
       
       const { data, error } = await supabase
         .from("customers")
-        .select("id, name")
-        .eq("user_id", user.id);
+        .select("id, name");
 
       if (error) throw error;
       return data;
@@ -83,14 +83,14 @@ export function CreateJobDialog({ open, onOpenChange }: CreateJobDialogProps) {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.from("jobs").insert({
+      const { data, error } = await supabase.from("jobs").insert({
         job_no: data.job_no,
         aircraft_reg: data.aircraft_reg,
         date_opened: data.date_opened,
         status: data.status,
         user_id: user.id,
         customer_id: data.customer_id || null,
-      });
+      }).select('job_id').single();
 
       if (error) throw error;
 
@@ -98,6 +98,10 @@ export function CreateJobDialog({ open, onOpenChange }: CreateJobDialogProps) {
         title: "Success",
         description: "Job card created successfully",
       });
+
+      if (data?.job_id && onCreated) {
+        onCreated(data.job_id as number);
+      }
 
       form.reset();
       onOpenChange(false);

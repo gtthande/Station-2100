@@ -12,14 +12,16 @@ import { useToast } from '@/hooks/use-toast';
 import { Tables } from '@/integrations/supabase/types';
 
 type Supplier = Tables<'suppliers'>;
+type Product = Pick<Tables<'inventory_products'>, 'id' | 'part_number' | 'description'>;
 
 interface EditBatchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   batchId: string | null;
+  initialBatch?: any;
 }
 
-export const EditBatchDialog = ({ open, onOpenChange, batchId }: EditBatchDialogProps) => {
+export const EditBatchDialog = ({ open, onOpenChange, batchId, initialBatch }: EditBatchDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -75,7 +77,6 @@ export const EditBatchDialog = ({ open, onOpenChange, batchId }: EditBatchDialog
         .from('inventory_batches')
         .select('*')
         .eq('id', batchId)
-        .eq('user_id', user.id)
         .single();
       
       if (error) throw error;
@@ -101,51 +102,67 @@ export const EditBatchDialog = ({ open, onOpenChange, batchId }: EditBatchDialog
     enabled: !!user,
   });
 
-  // Update form when batch data loads
+  // Fetch products for parent product selection
+  const { data: products } = useQuery({
+    queryKey: ['inventory-products-for-batch'],
+    queryFn: async () => {
+      if (!user) return [] as Product[];
+      const { data, error } = await supabase
+        .from('inventory_products')
+        .select('id, part_number, description')
+        .order('part_number');
+      if (error) throw error;
+      return (data || []) as Product[];
+    },
+    enabled: !!user,
+  });
+
+  // Update form when batch data loads (or initial batch passed from list)
   useEffect(() => {
-    if (batch) {
+    const source = batch || initialBatch;
+    if (source) {
       setFormData({
-        batch_number: batch.batch_number || '',
-        product_id: batch.product_id || '',
-        supplier_id: batch.supplier_id || '',
-        supplier_invoice_number: batch.supplier_invoice_number || '',
-        quantity: batch.quantity || 0,
-        cost_per_unit: batch.cost_per_unit || 0,
-        received_date: batch.received_date || '',
-        expiry_date: batch.expiry_date || '',
-        location: batch.location || '',
-        purchase_order: batch.purchase_order || '',
-        notes: batch.notes || '',
-        url: batch.url || '',
-        receipt_id: batch.receipt_id || '',
-        department_id: batch.department_id || '',
-        buying_price: batch.buying_price || 0,
-        sale_markup_percent: batch.sale_markup_percent || 0,
-        sale_markup_value: batch.sale_markup_value || 0,
-        selling_price: batch.selling_price || 0,
-        lpo: batch.lpo || '',
-        reference_no: batch.reference_no || '',
-        batch_date: batch.batch_date || '',
-        bin_no: batch.bin_no || '',
-        the_size: batch.the_size || '',
-        dollar_rate: batch.dollar_rate || 0,
-        freight_rate: batch.freight_rate || 0,
-        total_rate: batch.total_rate || 0,
-        dollar_amount: batch.dollar_amount || 0,
-        core_value: batch.core_value || 0,
-        aircraft_reg_no: batch.aircraft_reg_no || '',
-        batch_id_a: batch.batch_id_a || '',
-        batch_id_b: batch.batch_id_b || '',
-        received_by: batch.received_by || '',
-        receive_code: batch.receive_code || '',
-        verified_by: batch.verified_by || '',
-        verification_code: batch.verification_code || '',
-        core_id: batch.core_id || '',
-        serial_no: batch.serial_no || '',
-        alternate_department_id: batch.alternate_department_id || ''
+        batch_number: source.batch_number || '',
+        product_id: source.product_id || '',
+        supplier_id: source.supplier_id || '',
+        supplier_invoice_number: source.supplier_invoice_number || '',
+        quantity: source.quantity || 0,
+        cost_per_unit: source.cost_per_unit || 0,
+        received_date: source.received_date || '',
+        expiry_date: source.expiry_date || '',
+        location: source.location || '',
+        purchase_order: source.purchase_order || '',
+        notes: source.notes || '',
+        url: source.url || '',
+        receipt_id: source.receipt_id || '',
+        department_id: source.department_id || '',
+        buying_price: source.buying_price || 0,
+        sale_markup_percent: source.sale_markup_percent || 0,
+        sale_markup_value: source.sale_markup_value || 0,
+        selling_price: source.selling_price || 0,
+        lpo: source.lpo || '',
+        reference_no: source.reference_no || '',
+        batch_date: source.batch_date || '',
+        bin_no: source.bin_no || '',
+        the_size: source.the_size || '',
+        dollar_rate: source.dollar_rate || 0,
+        freight_rate: source.freight_rate || 0,
+        total_rate: source.total_rate || 0,
+        dollar_amount: source.dollar_amount || 0,
+        core_value: source.core_value || 0,
+        aircraft_reg_no: source.aircraft_reg_no || '',
+        batch_id_a: source.batch_id_a || '',
+        batch_id_b: source.batch_id_b || '',
+        received_by: source.received_by || '',
+        receive_code: source.receive_code || '',
+        verified_by: source.verified_by || '',
+        verification_code: source.verification_code || '',
+        core_id: source.core_id || '',
+        serial_no: source.serial_no || '',
+        alternate_department_id: source.alternate_department_id || ''
       });
     }
-  }, [batch]);
+  }, [batch, initialBatch]);
 
   const updateBatchMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
@@ -164,8 +181,7 @@ export const EditBatchDialog = ({ open, onOpenChange, batchId }: EditBatchDialog
       const { error } = await supabase
         .from('inventory_batches')
         .update(batchData)
-        .eq('id', batchId)
-        .eq('user_id', user.id);
+        .eq('id', batchId);
       
       if (error) throw error;
     },
@@ -190,6 +206,14 @@ export const EditBatchDialog = ({ open, onOpenChange, batchId }: EditBatchDialog
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.product_id) {
+      toast({
+        title: 'Missing Product',
+        description: 'Please select the parent product for this batch.',
+        variant: 'destructive'
+      });
+      return;
+    }
     updateBatchMutation.mutate(formData);
   };
 
@@ -207,6 +231,24 @@ export const EditBatchDialog = ({ open, onOpenChange, batchId }: EditBatchDialog
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Basic Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-3">
+                <Label htmlFor="product_id">Parent Product *</Label>
+                <Select
+                  value={formData.product_id}
+                  onValueChange={(value) => setFormData({ ...formData, product_id: value })}
+                >
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                    <SelectValue placeholder="Select product" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-surface-dark border-white/20">
+                    {products?.map((product) => (
+                      <SelectItem key={product.id} value={product.id} className="text-white">
+                        {product.part_number} — {product.description}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div>
                 <Label htmlFor="batch_number">Batch Number *</Label>
                 <Input
