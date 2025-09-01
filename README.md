@@ -1,10 +1,34 @@
-# Welcome to your Lovable project
+# Station-2100 - Aviation Maintenance Management System
 
-## Project info
+## 🚀 Project Status: FULLY SYNCHRONIZED ✅
 
-**URL**: https://lovable.dev/projects/3be45a24-6b88-4267-b181-6d323de70799
+**Lovable Project URL**: https://lovable.dev/projects/3be45a24-6b88-4267-b181-6d323de70799  
+**GitHub Repository**: https://github.com/gtthande/Station-2100.git
 
-## How can I edit this code?
+> **🎯 Dual Development Ready**: This project is configured for seamless development between your local IDE and Lovable's AI-powered environment.
+
+## 🔄 Dual Development Workflow
+
+This project is configured for seamless development between your local environment and Lovable. Choose your preferred workflow:
+
+### 🖥️ **Local Development** (Recommended for complex features)
+- Use your preferred IDE (VS Code, WebStorm, etc.)
+- Full debugging capabilities and IntelliSense
+- Test locally with `npm run dev`
+- Commit and push changes to sync with Lovable
+
+### 🤖 **Lovable Development** (Recommended for rapid prototyping)
+- AI-powered code generation and editing
+- Quick iterations and experiments
+- Automatic commits to GitHub
+- Perfect for UI components and business logic
+
+### 🔀 **Hybrid Approach** (Best of both worlds)
+- Use Lovable for initial development and AI assistance
+- Switch to local IDE for debugging and complex features
+- Both environments stay perfectly synchronized
+
+## 📚 How can I edit this code?
 
 There are several ways of editing your application.
 
@@ -19,6 +43,31 @@ Changes made via Lovable will be committed automatically to this repo.
 If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+
+### 🚀 Quick Local Setup
+```bash
+# Clone and setup
+git clone https://github.com/gtthande/Station-2100.git
+cd Station-2100
+npm install
+
+# Start development
+npm run dev
+
+# Sync with Lovable (after making changes)
+git add .
+git commit -m "Description of changes"
+git push origin main
+```
+
+### 📊 Sync Status Check
+```bash
+# Check if local is up to date
+git status
+
+# Pull latest changes from Lovable
+git pull origin main
+```
 
 Follow these steps:
 
@@ -144,6 +193,12 @@ curl http://localhost:5173/api/supabase-check
 ```
 
 For detailed security information, see [SECURITY_FIXES.md](./SECURITY_FIXES.md).
+
+## 📖 Additional Resources
+
+- **[LOVABLE_SYNC_GUIDE.md](./LOVABLE_SYNC_GUIDE.md)** - Complete dual development workflow guide
+- **[USER_MANUAL.md](./USER_MANUAL.md)** - End-user documentation
+- **[TECHNICAL_DOCUMENTATION.md](./TECHNICAL_DOCUMENTATION.md)** - Technical implementation details
 
 ## How can I deploy this project?
 
