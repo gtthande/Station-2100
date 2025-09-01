@@ -1,0 +1,14 @@
+# Station-2100 Environment Variables
+# Copy this file to .env and fill in your values
+
+# Supabase Configuration
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+
+# GitHub Integration (for Dev Sync Panel)
+VITE_GITHUB_REPO=gtthande/Station-2100
+# VITE_GITHUB_TOKEN=ghp_xxx    # needed only if repo is private or you will use the dispatch button
+
+# Database Password (for Supabase CLI)
+SUPABASE_DB_PASSWORD=Series-2100Station-2100
