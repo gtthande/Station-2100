@@ -31,7 +31,6 @@ export function BatchMovementReport({ productId, batchId }: Props) {
           event_type, 
           quantity, 
           unit_cost, 
-          reference_number,
           notes,
           inventory_batches(batch_number), 
           inventory_products(part_number, description)
@@ -303,7 +302,7 @@ export function BatchMovementReport({ productId, batchId }: Props) {
                           ${value.toFixed(2)}
                         </td>
                         <td className="py-3 px-2 text-white/70 text-xs">
-                          {r.reference_number || '-'}
+                          -
                         </td>
                         <td className="py-3 px-2 text-white/60 text-xs max-w-32 truncate">
                           {r.notes || '-'}

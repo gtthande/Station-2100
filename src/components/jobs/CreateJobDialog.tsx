@@ -83,7 +83,7 @@ export function CreateJobDialog({ open, onOpenChange, onCreated }: CreateJobDial
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.from("jobs").insert({
+      const { data: insertedData, error } = await supabase.from("jobs").insert({
         job_no: data.job_no,
         aircraft_reg: data.aircraft_reg,
         date_opened: data.date_opened,
@@ -99,8 +99,8 @@ export function CreateJobDialog({ open, onOpenChange, onCreated }: CreateJobDial
         description: "Job card created successfully",
       });
 
-      if (data?.job_id && onCreated) {
-        onCreated(data.job_id as number);
+      if (insertedData?.job_id && onCreated) {
+        onCreated(insertedData.job_id as number);
       }
 
       form.reset();
