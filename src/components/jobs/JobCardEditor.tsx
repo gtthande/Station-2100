@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trash2 } from "lucide-react";
+import { Trash2, Edit } from "lucide-react";
 import { TabbedJobInterface } from "./TabbedJobInterface";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
