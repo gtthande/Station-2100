@@ -1,0 +1,4 @@
+﻿# Normalize line endings across platforms
+* text=auto
+*.ps1 text eol=crlf
+*.sh  text eol=lf

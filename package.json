@@ -3,14 +3,17 @@
     "private":  true,
     "version":  "0.0.0",
     "type":  "module",
-    "scripts":  {
-                    "dev":  "vite --port 8080 --strictPort",
-                    "db:push":  "npx supabase@latest db push --yes --password \\\"$env:SUPABASE_DB_PASSWORD\\\"",
-                    "link":  "npx supabase@latest link --project-ref jarlvtojzqkccovburmi --password \\\"$env:SUPABASE_DB_PASSWORD\\\"",
-                    "start:all":  "npm run db:push ; npm run dev",
-                    "reset":  "taskkill /F /IM node.exe /T 2>$null ; npm run link ; npm run db:push ; npm run dev",
-                    "migrate":  "powershell -NoProfile -ExecutionPolicy Bypass -Command \\\"$name = Read-Host 'Migration name (e.g. add_work_orders)'; npx supabase@latest migration new \\\\\\\"$name\\\\\\\"; Write-Host '*** Edit the generated SQL in supabase/migrations, then press Enter to push...'; Read-Host; npx supabase@latest db push --yes --password \\\\\\\"$env:SUPABASE_DB_PASSWORD\\\\\\\"\\\""
-                },
+    "scripts": {
+        "dev": "vite --port 8080 --strictPort",
+        "build": "tsc && vite build",
+        "build:dev": "vite build --mode development",
+        "preview": "vite preview",
+        "db:push": "npx supabase@latest db push --yes --password \"$env:SUPABASE_DB_PASSWORD\"",
+        "link": "npx supabase@latest link --project-ref jarlvtojzqkccovburmi --password \"$env:SUPABASE_DB_PASSWORD\"",
+        "start:all": "npm run db:push && npm run dev",
+        "reset": "taskkill /F /IM node.exe /T 2>$null && npm run link && npm run db:push && npm run dev",
+        "migrate": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$name = Read-Host 'Migration name (e.g. add_work_orders)'; npx supabase@latest migration new \\\"$name\\\"; Write-Host '*** Edit the generated SQL in supabase/migrations, then press Enter to push...'; Read-Host; npx supabase@latest db push --yes --password \\\"$env:SUPABASE_DB_PASSWORD\\\"\""
+    },
     "dependencies":  {
                          "@hookform/resolvers":  "^3.9.0",
                          "@radix-ui/react-accordion":  "^1.2.0",
