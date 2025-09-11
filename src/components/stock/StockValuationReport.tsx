@@ -25,6 +25,7 @@ import {
   Search, 
   CalendarIcon,
   Download,
+  Printer,
   TrendingUp,
   Package
 } from 'lucide-react';
@@ -115,6 +116,68 @@ export function StockValuationReport(props?: ValuationProps) {
   const totalValue = filteredSearch.reduce((sum, item) => sum + item.total_value, 0);
   const totalQuantity = filteredSearch.reduce((sum, item) => sum + item.quantity_on_hand, 0);
 
+  // Print-friendly rendering
+  const printReport = () => {
+    const doc = window.open('', '_blank');
+    if (!doc) return;
+    const title = `Stock Valuation Report - ${format(asOfDate, 'yyyy-MM-dd')}`;
+    const rowsHtml = filteredSearch.map((item) => `
+      <tr>
+        <td style="padding:6px;border-bottom:1px solid #eee;font-family:ui-sans-serif,system-ui">${item.part_number}</td>
+        <td style="padding:6px;border-bottom:1px solid #eee;font-family:ui-sans-serif,system-ui">${item.description || ''}</td>
+        <td style="padding:6px;border-bottom:1px solid #eee;text-align:right;font-family:ui-sans-serif,system-ui">${item.quantity_on_hand.toFixed(2)}</td>
+        <td style="padding:6px;border-bottom:1px solid #eee;text-align:right;font-family:ui-sans-serif,system-ui">${formatCurrency(item.weighted_avg_cost)}</td>
+        <td style="padding:6px;border-bottom:1px solid #eee;text-align:right;font-weight:600;font-family:ui-sans-serif,system-ui">${formatCurrency(item.total_value)}</td>
+      </tr>
+    `).join('');
+
+    const html = `
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>${title}</title>
+          <style>
+            @media print { @page { size: A4 portrait; margin: 12mm; } }
+            h1 { font-family: ui-sans-serif, system-ui; font-size: 18px; margin: 0 0 12px; }
+            .meta { font-family: ui-sans-serif, system-ui; color: #555; margin-bottom: 12px; }
+            table { width: 100%; border-collapse: collapse; }
+            th { text-align: left; padding: 6px; border-bottom: 1px solid #ccc; font-family: ui-sans-serif,system-ui }
+            tfoot td { font-weight: 700; }
+          </style>
+        </head>
+        <body>
+          <h1>${title}</h1>
+          <div class="meta">Total Products: ${filteredSearch.length} | Total Qty: ${totalQuantity.toFixed(2)} | Total Value: ${formatCurrency(totalValue)}</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Part Number</th>
+                <th>Description</th>
+                <th style="text-align:right">Qty On Hand</th>
+                <th style="text-align:right">Weighted Avg Cost</th>
+                <th style="text-align:right">Total Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="2">Totals (${filteredSearch.length} products)</td>
+                <td style="text-align:right">${totalQuantity.toFixed(2)}</td>
+                <td></td>
+                <td style="text-align:right">${formatCurrency(totalValue)}</td>
+              </tr>
+            </tfoot>
+          </table>
+          <script>window.onload = () => { window.print(); setTimeout(() => window.close(), 300); };</script>
+        </body>
+      </html>
+    `;
+    doc.document.write(html);
+    doc.document.close();
+  };
+
   const exportToCsv = () => {
     const headers = ['Part Number', 'Description', 'Quantity on Hand', 'Weighted Avg Cost', 'Total Value'];
     const csvContent = [
@@ -195,6 +258,10 @@ export function StockValuationReport(props?: ValuationProps) {
             <Button variant="outline" onClick={exportToCsv} disabled={filteredSearch.length === 0}>
               <Download className="w-4 h-4 mr-2" />
               Export CSV
+            </Button>
+            <Button variant="secondary" onClick={printReport} disabled={filteredSearch.length === 0}>
+              <Printer className="w-4 h-4 mr-2" />
+              Print
             </Button>
           </div>
         </div>

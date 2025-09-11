@@ -22,6 +22,7 @@ import JobCards from "./pages/JobCards";
 import StockMovements from "./pages/StockMovements";
 import Tools from "./pages/Tools";
 import RotableLLP from "./pages/RotableLLP";
+import DevSyncPage from "./pages/DevSyncPage";
 
 const queryClient = new QueryClient();
 
@@ -136,6 +137,14 @@ const App = () => {
                   } 
                 />
                 <Route path="/auth" element={<Auth />} />
+                <Route 
+                  path="/dev-sync" 
+                  element={
+                    <ProtectedRoute>
+                      <DevSyncPage />
+                    </ProtectedRoute>
+                  } 
+                />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

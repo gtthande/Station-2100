@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState } from "react";
-import { useAdminGuard } from "../../lib/auth/useAdminGuard";
+import { useAdminGuard } from "@/lib/auth/useAdminGuard";
 
 type CommitInfo = {
   sha?: string;
@@ -19,6 +19,11 @@ export default function DevToolsClient() {
   const [commit, setCommit] = useState<CommitInfo | null>(null);
   const [commitLoading, setCommitLoading] = useState(true);
   const repo = import.meta.env.VITE_GITHUB_REPO || "gtthande/Station-2100";
+  const devSafe = import.meta.env.DEV && window.location.hostname === "localhost";
+  const syncBase = "http://localhost:8787";
+  const [busy, setBusy] = useState<string | null>(null);
+  const [status, setStatus] = useState<any>(null);
+  const [log, setLog] = useState<string>("");
 
   useEffect(() => {
     (async () => {
@@ -153,6 +158,24 @@ export default function DevToolsClient() {
           # VITE_GITHUB_TOKEN=ghp_xxx (optional for public repos)
         </div>
       </section>
+
+      {devSafe && (
+        <section className="rounded-2xl border p-4 space-y-3">
+          <h3 className="font-semibold">Local Code & DB Sync (Dev-only)</h3>
+          <p className="text-sm text-gray-600">Requires sync server on http://localhost:8787 and ALLOW_SYNC=1 in .env.local</p>
+          <div className="flex gap-2 flex-wrap">
+            <button className="px-3 py-2 border rounded disabled:opacity-50" disabled={!!busy}
+              onClick={async () => { setBusy('status'); try { const r = await fetch(`${syncBase}/sync/status`); const j = await r.json(); setStatus(j); setLog(JSON.stringify(j,null,2)); } finally { setBusy(null); } }}>Status</button>
+            <button className="px-3 py-2 border rounded disabled:opacity-50" disabled={!!busy}
+              onClick={async () => { setBusy('down'); try { const r = await fetch(`${syncBase}/sync/down`, { method: 'POST' }); const j = await r.json(); setLog(j.log || JSON.stringify(j,null,2)); } finally { setBusy(null); } }}>Pull (git pull)</button>
+            <button className="px-3 py-2 border rounded disabled:opacity-50" disabled={!!busy}
+              onClick={async () => { const msg = prompt('Commit message', 'Sync from Station-2100 UI') || 'Sync from Station-2100 UI'; setBusy('up'); try { const r = await fetch(`${syncBase}/sync/up`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: msg }) }); const j = await r.json(); setLog(j.log || JSON.stringify(j,null,2)); } finally { setBusy(null); } }}>Push (add/commit/push)</button>
+            <button className="px-3 py-2 border rounded disabled:opacity-50" disabled={!!busy}
+              onClick={async () => { setBusy('db'); try { const r = await fetch(`${syncBase}/sync/db-push`, { method: 'POST' }); const j = await r.json(); setLog(j.log || JSON.stringify(j,null,2)); } finally { setBusy(null); } }}>DB Push (Supabase)</button>
+          </div>
+          <pre className="bg-black text-green-300 p-3 rounded text-xs overflow-auto max-h-80 whitespace-pre-wrap">{busy ? `Running ${busy}...` : log}</pre>
+        </section>
+      )}
     </div>
   );
 }

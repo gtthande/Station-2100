@@ -15,7 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from '@/components/ui/select';
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { CalendarIcon, Download, Search, Filter } from 'lucide-react';
+import { CalendarIcon, Download, Search, Filter, Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -213,6 +213,72 @@ export function StockMovementReport({ onOpenValuation }: { onOpenValuation?: (p:
     URL.revokeObjectURL(url);
   };
 
+  // Print-friendly view similar to classic reports
+  const printReport = () => {
+    const doc = window.open('', '_blank');
+    if (!doc) return;
+    const title = `Stock Movement Report ${format(fromDate, 'yyyy-MM-dd')} to ${format(toDate, 'yyyy-MM-dd')}`;
+    const rowsHtml = filtered.map((r) => `
+      <tr>
+        <td style="padding:6px;border-bottom:1px solid #eee;font-family:ui-sans-serif,system-ui">${format(new Date(r.movement_date), 'yyyy-MM-dd')}</td>
+        <td style="padding:6px;border-bottom:1px solid #eee;font-family:ui-sans-serif,system-ui">${r.inventory_products?.part_number || ''}<div style="color:#666;font-size:11px">${r.inventory_products?.description || ''}</div></td>
+        <td style="padding:6px;border-bottom:1px solid #eee;font-family:ui-sans-serif,system-ui">${r.inventory_batches?.batch_number || ''}</td>
+        <td style="padding:6px;border-bottom:1px solid #eee;font-family:ui-sans-serif,system-ui">${r.event_type}</td>
+        <td style="padding:6px;border-bottom:1px solid #eee;text-align:right;font-family:ui-sans-serif,system-ui">${Number(r.quantity) >= 0 ? '+' : ''}${r.quantity}</td>
+        <td style="padding:6px;border-bottom:1px solid #eee;text-align:right;font-family:ui-sans-serif,system-ui">${formatCurrency(r.unit_cost)}</td>
+        <td style="padding:6px;border-bottom:1px solid #eee;text-align:right;font-weight:600;font-family:ui-sans-serif,system-ui">${formatCurrency(Number(r.quantity) * Number(r.unit_cost))}</td>
+        <td style="padding:6px;border-bottom:1px solid #eee;font-family:ui-sans-serif,system-ui">${r.source_ref}</td>
+      </tr>
+    `).join('');
+
+    const html = `
+      <html>
+        <head>
+          <meta charset=\"utf-8\" />
+          <title>${title}</title>
+          <style>
+            @media print { @page { size: A4 portrait; margin: 12mm; } }
+            h1 { font-family: ui-sans-serif, system-ui; font-size: 18px; margin: 0 0 12px; }
+            .meta { font-family: ui-sans-serif, system-ui; color: #555; margin-bottom: 12px; }
+            table { width: 100%; border-collapse: collapse; }
+            th { text-align: left; padding: 6px; border-bottom: 1px solid #ccc; font-family: ui-sans-serif,system-ui }
+            tfoot td { font-weight: 700; }
+          </style>
+        </head>
+        <body>
+          <h1>${title}</h1>
+          <div class="meta">Total Qty: ${totals.quantity.toFixed(2)} | Total Value: ${formatCurrency(totals.value)}</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Part Number / Description</th>
+                <th>Batch</th>
+                <th>Event</th>
+                <th style="text-align:right">Quantity</th>
+                <th style="text-align:right">Unit Cost</th>
+                <th style="text-align:right">Line Value</th>
+                <th>Source Ref</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+            <tfoot>
+              <tr>
+                <td colspan="4">Totals</td>
+                <td style="text-align:right">${totals.quantity.toFixed(2)}</td>
+                <td></td>
+                <td style="text-align:right">${formatCurrency(totals.value)}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+          <script>window.onload = () => { window.print(); setTimeout(() => window.close(), 300); };</script>
+        </body>
+      </html>`;
+    doc.document.write(html);
+    doc.document.close();
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -228,6 +294,9 @@ export function StockMovementReport({ onOpenValuation }: { onOpenValuation?: (p:
             </div>
             <Button variant="outline" onClick={exportCsv} disabled={rows.length === 0}> 
               <Download className="w-4 h-4 mr-2" /> Export CSV
+            </Button>
+            <Button variant="secondary" onClick={printReport} disabled={rows.length === 0}>
+              <Printer className="w-4 h-4 mr-2" /> Print
             </Button>
           </div>
         </div>

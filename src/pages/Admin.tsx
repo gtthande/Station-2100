@@ -13,9 +13,10 @@ import { SampleUsersManagement } from '@/components/admin/SampleUsersManagement'
 import { CustomerPermissionManagement } from '@/components/admin/CustomerPermissionManagement';
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { useUserRoles } from '@/hooks/useUserRoles';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { BackButton } from '@/components/navigation/BackButton';
-import { Shield, Users, Settings, UserCheck, Cog, Upload, Building2, Package, Lock, Eye } from 'lucide-react';
+import { Shield, Users, Settings, UserCheck, Cog, Upload, Building2, Package, Lock, Eye, Code2 } from 'lucide-react';
+import DevToolsPage from '@/components/admin/dev-tools';
 import { Button } from '@/components/ui/button';
 import { GlassCard, GlassCardContent } from '@/components/ui/glass-card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -23,6 +24,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 const Admin = () => {
   const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'custom-roles' | 'advanced-assignment' | 'import' | 'departments' | 'stock-categories' | 'sample-users' | 'hr-management' | 'security-audit'>('users');
   const { canManageSystem, isLoading } = useUserRoles();
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -86,6 +88,16 @@ const Admin = () => {
       {/* Navigation Tabs */}
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex gap-2 mb-6 flex-wrap">
+          {import.meta.env.DEV && window.location.hostname === 'localhost' && (
+          <Button
+            variant="outline"
+            onClick={() => navigate("/dev-sync")}
+            className="border-white/20 text-white hover:bg-white/10"
+          >
+            <Code2 className="w-4 h-4 mr-2" />
+            Dev Sync Panel
+          </Button>
+          )}
           <Button
             variant={activeTab === 'users' ? 'default' : 'outline'}
             onClick={() => setActiveTab('users')}
@@ -223,6 +235,9 @@ const Admin = () => {
         {activeTab === 'sample-users' && <SampleUsersManagement />}
         {activeTab === 'hr-management' && <HRManagement />}
         {activeTab === 'security-audit' && <SecurityAuditLog />}
+        {activeTab === 'dev-sync' && import.meta.env.DEV && window.location.hostname === 'localhost' && (
+          <DevToolsPage />
+        )}
       </div>
     </div>
   );

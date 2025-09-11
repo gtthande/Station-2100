@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useAdminGuard() {
   const [user, setUser] = useState(null);

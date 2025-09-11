@@ -1,11 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Package, DollarSign, Building2, Truck, FileText, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Calendar as CalendarIcon, Package, DollarSign, Building2, Truck, FileText, CheckCircle, XCircle, Clock, Printer } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Input } from '@/components/ui/input';
+import { format } from 'date-fns';
 import { GlassCard, GlassCardContent } from '@/components/ui/glass-card';
 import { useToast } from '@/hooks/use-toast';
 
@@ -37,6 +42,14 @@ export const ProductMovementDialog = ({ open, onOpenChange, productId, showAppro
   const { isAdmin, isSupervisor, isPartsApprover } = useUserRoles();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Date range for printable movement
+  const [fromDate, setFromDate] = useState<Date>(() => {
+    const d = new Date();
+    d.setDate(1);
+    return d;
+  });
+  const [toDate, setToDate] = useState<Date>(new Date());
 
   // Check if user can approve batches
   const canApproveBatches = isAdmin() || isSupervisor() || isPartsApprover();
@@ -144,6 +157,106 @@ export const ProductMovementDialog = ({ open, onOpenChange, productId, showAppro
     .reduce((sum, b) => sum + ((b.quantity || 0) * (b.cost_per_unit || 0)), 0) || 0;
   const totalValue = openingValue + batchesValue;
 
+  // Print product movement within date range
+  const handlePrintMovement = async () => {
+    if (!productId || !user) return;
+    if (fromDate > toDate) {
+      toast({ title: 'Invalid dates', description: 'From date cannot be after To date', variant: 'destructive' });
+      return;
+    }
+
+    const from = format(fromDate, 'yyyy-MM-dd');
+    const to = format(toDate, 'yyyy-MM-dd');
+
+    const { data, error } = await supabase
+      .from('stock_movements')
+      .select(`
+        movement_date,
+        quantity,
+        unit_cost,
+        source_ref,
+        event_type,
+        inventory_products(part_number, description),
+        inventory_batches(batch_number)
+      `)
+      .eq('user_id', user.id)
+      .eq('product_id', productId)
+      .gte('movement_date', from)
+      .lte('movement_date', to)
+      .order('movement_date', { ascending: true });
+
+    if (error) {
+      toast({ title: 'Failed to load movements', description: error.message, variant: 'destructive' });
+      return;
+    }
+
+    const rows = (data || []) as any[];
+    const totalQty = rows.reduce((s, r) => s + Number(r.quantity || 0), 0);
+    const totalVal = rows.reduce((s, r) => s + Number(r.quantity || 0) * Number(r.unit_cost || 0), 0);
+
+    const title = `Product Movement - ${product?.part_number} (${from} to ${to})`;
+    const doc = window.open('', '_blank');
+    if (!doc) return;
+
+    const rowsHtml = rows.map((r) => `
+      <tr>
+        <td style=\"padding:6px;border-bottom:1px solid #eee;font-family:ui-sans-serif,system-ui\">${format(new Date(r.movement_date), 'yyyy-MM-dd')}</td>
+        <td style=\"padding:6px;border-bottom:1px solid #eee;font-family:ui-sans-serif,system-ui\">${r.inventory_batches?.batch_number || ''}</td>
+        <td style=\"padding:6px;border-bottom:1px solid #eee;font-family:ui-sans-serif,system-ui\">${r.event_type}</td>
+        <td style=\"padding:6px;border-bottom:1px solid #eee;text-align:right;font-family:ui-sans-serif,system-ui\">${Number(r.quantity) >= 0 ? '+' : ''}${r.quantity}</td>
+        <td style=\"padding:6px;border-bottom:1px solid #eee;text-align:right;font-family:ui-sans-serif,system-ui\">${Number(r.unit_cost).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+        <td style=\"padding:6px;border-bottom:1px solid #eee;text-align:right;font-weight:600;font-family:ui-sans-serif,system-ui\">${(Number(r.quantity)*Number(r.unit_cost)).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+        <td style=\"padding:6px;border-bottom:1px solid #eee;font-family:ui-sans-serif,system-ui\">${r.source_ref}</td>
+      </tr>
+    `).join('');
+
+    const html = `
+      <html>
+        <head>
+          <meta charset=\"utf-8\" />
+          <title>${title}</title>
+          <style>
+            @media print { @page { size: A4 portrait; margin: 12mm; } }
+            h1 { font-family: ui-sans-serif, system-ui; font-size: 18px; margin: 0 0 12px; }
+            .meta { font-family: ui-sans-serif, system-ui; color: #555; margin-bottom: 12px; }
+            table { width: 100%; border-collapse: collapse; }
+            th { text-align: left; padding: 6px; border-bottom: 1px solid #ccc; font-family: ui-sans-serif,system-ui }
+            tfoot td { font-weight: 700; }
+          </style>
+        </head>
+        <body>
+          <h1>${title}</h1>
+          <div class=\"meta\">${product?.description || ''}</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Batch</th>
+                <th>Event</th>
+                <th style=\"text-align:right\">Qty</th>
+                <th style=\"text-align:right\">Unit Cost</th>
+                <th style=\"text-align:right\">Line Value</th>
+                <th>Source Ref</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+            <tfoot>
+              <tr>
+                <td colspan=\"3\">Totals</td>
+                <td style=\"text-align:right\">${totalQty.toFixed(2)}</td>
+                <td></td>
+                <td style=\"text-align:right\">${totalVal.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+          <script>window.onload = () => { window.print(); setTimeout(() => window.close(), 300); };</script>
+        </body>
+      </html>`;
+    doc.document.write(html);
+    doc.document.close();
+  };
+
   
   // Individual batch approval mutation
   const approveBatchMutation = useMutation({
@@ -246,7 +359,7 @@ export const ProductMovementDialog = ({ open, onOpenChange, productId, showAppro
             <GlassCard>
               <GlassCardContent className="p-6">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-blue-400" />
+                  <CalendarIcon className="w-5 h-5 text-blue-400" />
                   Opening Balance
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -279,6 +392,38 @@ export const ProductMovementDialog = ({ open, onOpenChange, productId, showAppro
               <Truck className="w-5 h-5 text-purple-400" />
               Batch Movements ({batches?.length || 0})
             </h3>
+
+            {/* Date range + print */}
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="justify-start">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    From: {format(fromDate, 'MMM dd, yyyy')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={fromDate} onSelect={(d) => d && setFromDate(d)} initialFocus />
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="justify-start">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    To: {format(toDate, 'MMM dd, yyyy')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={toDate} onSelect={(d) => d && setToDate(d)} initialFocus />
+                </PopoverContent>
+              </Popover>
+
+              <Button variant="secondary" onClick={handlePrintMovement}>
+                <Printer className="w-4 h-4 mr-2" />
+                Print Product Movement
+              </Button>
+            </div>
             
             {batchesLoading ? (
               <GlassCard>

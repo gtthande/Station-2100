@@ -36,6 +36,7 @@ A comprehensive Aviation Inventory Management System designed for aviation maint
 - **Advanced Security**: AES-256 encryption, row-level security, comprehensive audit logging
 - **Role-Based Access Control**: Granular permissions with custom roles and environment-based controls
 - **Real-Time Security**: Password breach detection with HaveIBeenPwned integration
+- **Code & DB Sync**: Development-only Git and Supabase synchronization with Lovable for seamless collaboration
 
 ### 1.3 Technology Stack
 - **Frontend**: React 18, TypeScript, Tailwind CSS, Vite
@@ -126,6 +127,8 @@ src/
 │   │   ├── SecurityAuditDashboard.tsx  # Security monitoring
 │   │   └── ProfileSecurityAlert.tsx    # Data protection alerts
 │   └── ui/                       # Base UI Components (shadcn/ui)
+├── scripts/                      # Development Scripts
+│   └── dev-sync-plugin.ts        # Vite plugin for sync middleware
 ├── hooks/                        # Custom React Hooks
 │   ├── useAuth.tsx              # Authentication state
 │   ├── usePasswordSecurity.tsx  # Password validation
@@ -137,6 +140,8 @@ src/
 │   ├── JobCards.tsx             # Job card management
 │   └── Admin.tsx                # Administration panel
 └── lib/                          # Utilities & Libraries
+    ├── auth/                    # Authentication utilities
+    │   └── useAdminGuard.ts     # Admin role verification
     ├── utils.ts                 # Common utilities
     └── validation.ts            # Form validation schemas
 ```
@@ -873,9 +878,52 @@ Event Sources:
 
 ## 6. Technical Implementation
 
-### 6.1 Frontend Architecture
+### 6.1 Development Sync Architecture
 
-#### 6.1.1 Component Structure
+#### 6.1.1 Vite Plugin Implementation
+The Code & DB Sync feature is implemented as a custom Vite plugin that provides middleware endpoints for Git and Supabase operations:
+
+```typescript
+// scripts/dev-sync-plugin.ts
+import path from "node:path";
+import { existsSync } from "node:fs";
+import { config as loadDotenv } from "dotenv";
+
+export default function devSyncPlugin() {
+  // Load environment variables at startup
+  loadEnvOnce();
+  
+  return {
+    name: "station-dev-sync",
+    configureServer(server: any) {
+      // Middleware endpoints for sync operations
+      server.middlewares.use("/__sync/ping", pingHandler);
+      server.middlewares.use("/__sync/status", statusHandler);
+      server.middlewares.use("/__sync/pull", pullHandler);
+      server.middlewares.use("/__sync/push", pushHandler);
+      server.middlewares.use("/__sync/db", dbPushHandler);
+    },
+  };
+}
+```
+
+#### 6.1.2 Security Implementation
+- **Environment Guard**: Requires `ALLOW_SYNC=1` in `.env.local`
+- **Development Only**: Plugin only applies in development mode
+- **Localhost Restriction**: UI only visible on localhost
+- **Admin Role Verification**: Uses `useAdminGuard` hook
+- **Audit Logging**: All sync operations logged
+
+#### 6.1.3 API Endpoints
+- `GET /__sync/ping` - Health check endpoint
+- `GET /__sync/status` - Git status and sync permission check
+- `POST /__sync/pull` - Git pull from remote repository
+- `POST /__sync/push` - Git push with commit message
+- `POST /__sync/db` - Supabase database migration push
+
+### 6.2 Frontend Architecture
+
+#### 6.2.1 Component Structure
 The frontend follows a modular component architecture with clear separation of concerns:
 
 **Page-Level Components**: Route handlers that orchestrate data fetching and layout
@@ -883,21 +931,21 @@ The frontend follows a modular component architecture with clear separation of c
 **UI Components**: Reusable design system components based on shadcn/ui
 **Layout Components**: Structural components for consistent application layout
 
-#### 6.1.2 State Management
+#### 6.2.2 State Management
 - **TanStack Query**: Server state management with caching and synchronization
 - **React Context**: Authentication state and user permissions
 - **Local State**: Component-specific state using React hooks
 - **Form State**: React Hook Form with Zod validation
 
-#### 6.1.3 Security Implementation
+#### 6.2.3 Security Implementation
 - **Route Protection**: ProtectedRoute components with role checking
 - **Feature Gates**: Permission-based component rendering
 - **Input Validation**: Client-side validation with Zod schemas
 - **Secure Data Handling**: Encrypted data components and hooks
 
-### 6.2 Backend Architecture
+### 6.3 Backend Architecture
 
-#### 6.2.1 Supabase Configuration
+#### 6.3.1 Supabase Configuration
 The system leverages Supabase for all backend functionality:
 
 **Database**: PostgreSQL with Row-Level Security
@@ -906,34 +954,34 @@ The system leverages Supabase for all backend functionality:
 **Realtime**: WebSocket connections for live updates
 **Edge Functions**: Serverless functions for custom logic
 
-#### 6.2.2 Database Design Principles
+#### 6.3.2 Database Design Principles
 - **Row-Level Security**: All user data protected with RLS policies
 - **Data Normalization**: Proper normalization with foreign key constraints
 - **Audit Trails**: Comprehensive logging for security and compliance
 - **Performance**: Optimized indexes and query patterns
 
-#### 6.2.3 Security Functions
+#### 6.3.3 Security Functions
 Custom database functions implement business logic and security:
 - Role checking functions (SECURITY DEFINER)
 - Data encryption/decryption functions
 - Audit logging functions
 - Emergency access procedures
 
-### 6.3 Development Guidelines
+### 6.4 Development Guidelines
 
-#### 6.3.1 Code Standards
+#### 6.4.1 Code Standards
 - **TypeScript**: Strict typing for all components and functions
 - **ESLint**: Code quality and consistency enforcement
 - **Prettier**: Automatic code formatting
 - **Component Documentation**: Clear prop types and usage examples
 
-#### 6.3.2 Security Guidelines
+#### 6.4.2 Security Guidelines
 - **Input Validation**: All user inputs validated and sanitized
 - **SQL Injection Prevention**: Use Supabase client methods only
 - **XSS Prevention**: Proper data encoding and CSP headers
 - **Authentication Required**: All sensitive operations require authentication
 
-#### 6.3.3 Performance Best Practices
+#### 6.4.3 Performance Best Practices
 - **Code Splitting**: Lazy loading for route components
 - **Memoization**: React.memo and useMemo for expensive operations
 - **Database Optimization**: Efficient queries with proper indexes

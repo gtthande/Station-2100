@@ -25,6 +25,7 @@ A comprehensive Aviation Inventory Management System built with React, TypeScrip
 - **Tool Management**: Tool checkout/check-in system with tracking
 - **Advanced Security**: Row-level security, audit logging, data masking
 - **Role-Based Access**: Granular permissions with custom roles
+- **Code & DB Sync**: Development-only Git and Supabase synchronization with Lovable
 
 ### Technology Stack
 - **Frontend**: React 18, TypeScript, Tailwind CSS, Vite
@@ -55,6 +56,7 @@ src/
 ├── api/                 # API utilities and health checks
 ├── components/          # Reusable React components
 │   ├── admin/          # Admin-specific components
+│   │   └── dev-tools/  # Development sync tools
 │   ├── auth/           # Authentication components
 │   ├── inventory/      # Inventory management
 │   ├── jobs/           # Job card system
@@ -66,6 +68,8 @@ src/
 ├── lib/                # Utility functions
 ├── middleware/         # Security middleware
 ├── pages/              # Route pages
+├── scripts/            # Development scripts
+│   └── dev-sync-plugin.ts  # Vite plugin for sync middleware
 └── main.tsx           # Application entry point
 ```
 
@@ -99,6 +103,14 @@ src/
    VITE_SUPABASE_URL=https://your-project-ref.supabase.co
    VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key-here
    SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+   ```
+   
+   For development sync features, create `.env.local`:
+   ```env
+   ALLOW_SYNC=1
+   GIT_REMOTE=origin
+   GIT_BRANCH=main
+   SUPABASE_DB_PASSWORD=your-db-password
    ```
 
 4. **Start Development Server**
@@ -699,8 +711,60 @@ src/
 ├── hooks/              # Custom React hooks
 ├── lib/                # Utility functions
 ├── pages/              # Route components
+├── scripts/            # Development scripts
+│   └── dev-sync-plugin.ts  # Vite sync middleware
 └── types/              # TypeScript type definitions
 ```
+
+### Development Sync Features
+
+#### Vite Plugin Architecture
+The development sync functionality is implemented as a Vite plugin that provides middleware endpoints:
+
+```typescript
+// scripts/dev-sync-plugin.ts
+export default function devSyncPlugin() {
+  return {
+    name: "station-dev-sync",
+    configureServer(server: any) {
+      // Middleware endpoints for Git and DB operations
+      server.middlewares.use("/__sync/status", ...);
+      server.middlewares.use("/__sync/pull", ...);
+      server.middlewares.use("/__sync/push", ...);
+      server.middlewares.use("/__sync/db", ...);
+    },
+  };
+}
+```
+
+#### Environment Loading
+The plugin automatically loads environment variables from `.env.local` and `.env` files:
+
+```typescript
+import { config as loadDotenv } from "dotenv";
+
+function loadEnvOnce() {
+  const root = process.cwd();
+  for (const name of [".env.local", ".env"]) {
+    const p = path.join(root, name);
+    if (existsSync(p)) loadDotenv({ path: p, override: false });
+  }
+}
+```
+
+#### Security Implementation
+- **Development Only**: Plugin only applies in development mode
+- **Localhost Restriction**: UI only visible on localhost
+- **Admin Guard**: Requires admin role for access
+- **Environment Guard**: Requires `ALLOW_SYNC=1` for operations
+- **Audit Logging**: All sync operations logged
+
+#### API Endpoints
+- `GET /__sync/ping` - Health check
+- `GET /__sync/status` - Git status and sync permission
+- `POST /__sync/pull` - Git pull from remote
+- `POST /__sync/push` - Git push with commit message
+- `POST /__sync/db` - Supabase database push
 
 ### Component Guidelines
 - Use functional components with hooks
