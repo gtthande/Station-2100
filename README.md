@@ -110,7 +110,8 @@ Invoke-RestMethod -Uri "http://localhost:8080/__sync/status"
 
 ## Architecture Diagrams
 
-- **[Architecture Documentation](./docs/architecture.md)** - ERD, component diagrams, and deployment diagrams (coming soon)
+- **[Architecture Documentation](./docs/architecture.md)** - ERD, component diagrams, and deployment diagrams
+- **[Architecture Diagrams Folder](./docs/architecture/)** - Visual diagrams and technical specifications
 
 ## Conclusion
 
