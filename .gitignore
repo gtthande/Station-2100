@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Documentation - Word reports (local only)
+*.docx
+docs/*.docx
