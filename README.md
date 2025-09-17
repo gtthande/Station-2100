@@ -3,10 +3,11 @@
 ## Table of Contents
 
 - [Project Overview](#project-overview)
-- [Current Progress](#current-progress-intermediate--september-2025)
+- [Current Progress (Intermediate – September 2025)](#current-progress-intermediate--september-2025)
 - [Next Steps](#next-steps)
 - [Documentation](#documentation)
 - [Development Workflow Restart Guide](#development-workflow-restart-guide)
+- [Architecture Diagrams](#architecture-diagrams)
 - [Conclusion](#conclusion)
 
 ## Project Overview
@@ -106,6 +107,10 @@ Invoke-RestMethod -Uri "http://localhost:8080/__sync/status"
 - **Sync Issues**: Verify `.env.local` contains `ALLOW_SYNC=1`
 - **Git Conflicts**: Use `pull-changes.ps1` for safe resolution
 - **Environment Issues**: Run `Station-2100.ps1` for automated setup
+
+## Architecture Diagrams
+
+- **[Architecture Documentation](./docs/architecture.md)** - ERD, component diagrams, and deployment diagrams (coming soon)
 
 ## Conclusion
 
