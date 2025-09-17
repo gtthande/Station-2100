@@ -7,7 +7,7 @@ import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/
 import { GradientButton } from '@/components/ui/gradient-button';
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Package, BarChart3, Plus, TrendingUp, AlertTriangle, DollarSign, ArrowLeft } from 'lucide-react';
+import { Package, BarChart3, Plus, TrendingUp, AlertTriangle, DollarSign, ArrowLeft, Send } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ProductsList } from '@/components/inventory/ProductsList';
 import { BatchesList } from '@/components/inventory/BatchesList';
@@ -188,6 +188,12 @@ const Inventory = () => {
             <TabsTrigger value="batches" className="data-[state=active]:bg-white/10">
               Batches
             </TabsTrigger>
+            <TabsTrigger value="submit-batch" className="data-[state=active]:bg-white/10">
+              Submit Batch
+            </TabsTrigger>
+            <TabsTrigger value="stock-movements" className="data-[state=active]:bg-white/10">
+              Stock Movement & Valuation
+            </TabsTrigger>
             <TabsTrigger value="analytics" className="data-[state=active]:bg-white/10">
               Analytics
             </TabsTrigger>
@@ -202,6 +208,40 @@ const Inventory = () => {
 
           <TabsContent value="batches">
             <BatchesList selectedProductId={selectedProductId} />
+          </TabsContent>
+
+          <TabsContent value="submit-batch">
+            <div className="space-y-6">
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <Send className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">Submit New Batch</h3>
+                <p className="text-white/70 mb-6">Submit new batches for approval</p>
+                <GradientButton onClick={() => setAddBatchOpen(true)} className="gap-2">
+                  <Send className="w-4 h-4" />
+                  Submit Batch
+                </GradientButton>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="stock-movements">
+            <div className="space-y-6">
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <BarChart3 className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">Stock Movement & Valuation</h3>
+                <p className="text-white/70 mb-6">Track stock movements, calculate valuations, and generate comprehensive reports</p>
+                <Link to="/stock-movements">
+                  <GradientButton variant="outline" className="gap-2">
+                    <BarChart3 className="w-4 h-4" />
+                    View Stock Reports
+                  </GradientButton>
+                </Link>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="analytics">

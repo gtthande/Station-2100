@@ -15,14 +15,14 @@ import { UserMenu } from '@/components/navigation/UserMenu';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link, useNavigate } from 'react-router-dom';
 import { BackButton } from '@/components/navigation/BackButton';
-import { Shield, Users, Settings, UserCheck, Cog, Upload, Building2, Package, Lock, Eye, Code2 } from 'lucide-react';
+import { Shield, Users, Settings, UserCheck, Cog, Upload, Building2, Package, Lock, Eye, Code2, Database } from 'lucide-react';
 import DevToolsPage from '@/components/admin/dev-tools';
 import { Button } from '@/components/ui/button';
 import { GlassCard, GlassCardContent } from '@/components/ui/glass-card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'custom-roles' | 'advanced-assignment' | 'import' | 'departments' | 'stock-categories' | 'sample-users' | 'hr-management' | 'security-audit'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'custom-roles' | 'advanced-assignment' | 'import' | 'departments' | 'stock-categories' | 'sample-users' | 'hr-management' | 'security-audit' | 'dev-sync'>('users');
   const { canManageSystem, isLoading } = useUserRoles();
   const navigate = useNavigate();
 
@@ -98,6 +98,14 @@ const Admin = () => {
             Dev Sync Panel
           </Button>
           )}
+          <Button
+            variant="outline"
+            onClick={() => window.open('https://supabase.com/dashboard/project/jarlvtojzqkccovburmi', '_blank')}
+            className="border-white/20 text-white hover:bg-white/10"
+          >
+            <Database className="w-4 h-4 mr-2" />
+            Database Access
+          </Button>
           <Button
             variant={activeTab === 'users' ? 'default' : 'outline'}
             onClick={() => setActiveTab('users')}

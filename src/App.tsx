@@ -23,6 +23,7 @@ import StockMovements from "./pages/StockMovements";
 import Tools from "./pages/Tools";
 import RotableLLP from "./pages/RotableLLP";
 import DevSyncPage from "./pages/DevSyncPage";
+import CustomersSuppliers from "./pages/CustomersSuppliers";
 
 const queryClient = new QueryClient();
 
@@ -142,6 +143,14 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <DevSyncPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/customers-suppliers" 
+                  element={
+                    <ProtectedRoute>
+                      <CustomersSuppliers />
                     </ProtectedRoute>
                   } 
                 />

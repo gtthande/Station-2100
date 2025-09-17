@@ -1,135 +1,74 @@
-﻿# ------------- Station-2100 Control Panel (safe, single-quote) -------------
-$ErrorActionPreference = 'Stop'
+﻿# --- Station-2100 Dev Quick Start & Health Check ---
+$ErrorActionPreference = "Stop"
 
-# >>>>> EDIT THIS PATH IF YOUR FOLDER MOVES <<<<<
-$ProjectPath   = 'E:\Gtthande Dropbox\George Thande\Projects\Cusor\Station-2100'
-$RemoteName    = 'origin'
-$DefaultBranch = 'main'
-$DevRunnerName = 'dev-runner.ps1'
+# 0) Go to project
+Set-Location "E:\Gtthande Dropbox\George Thande\Projects\Cusor\Station-2100"
 
-# Nice window title/size (best-effort)
+# 1) Ensure sync flag in .env.local
+if (-not (Test-Path .\.env.local)) { New-Item -ItemType File -Path .\.env.local | Out-Null }
+if (-not (Select-String -Path .\.env.local -Pattern '^ALLOW_SYNC=1$' -SimpleMatch -Quiet)) {
+  Add-Content -Path .\.env.local -Value 'ALLOW_SYNC=1'
+  Write-Host "[env] ALLOW_SYNC=1 added to .env.local" -ForegroundColor Cyan
+} else {
+  Write-Host "[env] ALLOW_SYNC=1 already present" -ForegroundColor DarkGray
+}
+
+# 2) Kill any stale Node (ignore if not running)
+try { taskkill /IM node.exe /F 2>$null | Out-Null } catch { }
+Write-Host "[proc] Cleared any stray node.exe" -ForegroundColor DarkGray
+
+# 3) Verify dotenv dependency and auto-install if missing
 try {
-  $host.UI.RawUI.WindowTitle = 'Station-2100 Control Panel'
-  $rawUI = $host.UI.RawUI
-  $size  = $rawUI.WindowSize
-  $size.Width  = 100
-  $size.Height = 35
-  $rawUI.WindowSize = $size
-} catch {}
-
-# ---------------- Helpers ----------------
-function Ensure-Path {
-  if (-not (Test-Path -LiteralPath $ProjectPath)) {
-    Write-Host '[ERROR] Project path not found: ' -ForegroundColor Red -NoNewline
-    Write-Host $ProjectPath
-    Pause
-    return $false
+  $pkg = Get-Content -Raw -Path .\package.json | ConvertFrom-Json
+  $hasDotenv = ($pkg.dependencies.PSObject.Properties.Name -contains "dotenv" -or
+                $pkg.devDependencies.PSObject.Properties.Name -contains "dotenv")
+  if (-not $hasDotenv) {
+    Write-Host "[warn] 'dotenv' not found in package.json. Installing..." -ForegroundColor Yellow
+    npm install dotenv --save-dev | Out-Null
+    Write-Host "[ok] dotenv installed" -ForegroundColor Green
+  } else {
+    Write-Host "[ok] dotenv dependency found" -ForegroundColor Green
   }
-  return $true
+} catch {
+  Write-Host "[warn] Could not parse package.json to check dotenv" -ForegroundColor Yellow
 }
 
-function In-Project {
-  param([scriptblock]$Do)
-  if (-not (Ensure-Path)) { return }
-  Push-Location -LiteralPath $ProjectPath
-  try { & $Do } finally { Pop-Location }
-}
+# 4) Start Vite dev server (logs will show here)
+Write-Host "[vite] Starting: npm run dev ..." -ForegroundColor Cyan
+Start-Process powershell -ArgumentList "-NoExit","-Command","npm run dev" -WorkingDirectory (Get-Location)
 
-function Get-Branch {
-  In-Project {
-    $b = git rev-parse --abbrev-ref HEAD 2>$null
-    if ($LASTEXITCODE -eq 0 -and $b) { $b.Trim() } else { $DefaultBranch }
-  }
-}
-
-function Git-Quiet {
-  param([string]$Args)
-  In-Project { & cmd /c 'git ' + $Args + ' >nul 2>nul' }
-}
-
-# ---------------- Dev Server ----------------
-function Start-Station {
-  if (-not (Ensure-Path)) { return }
-  Write-Host '[INFO] Killing stray node.exe...' -ForegroundColor Yellow
-  try { taskkill /IM node.exe /F 2>$null | Out-Null } catch {}
-
-  Write-Host '[INFO] Preparing dev runner...' -ForegroundColor Green
-  $runner = Join-Path $ProjectPath $DevRunnerName
-  $runnerContent = @"
-`$host.UI.RawUI.WindowTitle = 'Station-2100 Dev Server'
-Set-Location -LiteralPath '$ProjectPath'
-npm run dev
-"@
-  Set-Content -Path $runner -Value $runnerContent -Encoding UTF8
-  Unblock-File $runner
-
-  $pwsh = if (Get-Command pwsh.exe -ErrorAction SilentlyContinue) { 'pwsh.exe' } else { 'powershell.exe' }
-  Write-Host '[INFO] Opening dev server window...' -ForegroundColor Cyan
-  Start-Process -FilePath $pwsh -ArgumentList @(
-    '-NoExit','-NoLogo','-ExecutionPolicy','Bypass','-File', $runner
-  ) -WorkingDirectory $ProjectPath -WindowStyle Normal
-
-  Write-Host '→ Dev server window started. Visit http://localhost:8080' -ForegroundColor Cyan
-}
-
-function Stop-Station {
-  Write-Host '[INFO] Stopping dev server (killing node.exe)...' -ForegroundColor Yellow
-  $old = $ErrorActionPreference; $ErrorActionPreference = 'SilentlyContinue'
-  taskkill /IM node.exe /F 2>$null | Out-Null
-  $ErrorActionPreference = $old
-  Write-Host '✔ Node processes stopped.' -ForegroundColor Green
-}
-
-# ---------------- Sync ----------------
-function Sync-Down {
-  $branch = Get-Branch
-  Write-Host ('[INFO] Sync DOWN: pulling ''{0}/{1}'' → local ''{1}''...' -f $RemoteName,$branch) -ForegroundColor Cyan
-  Git-Quiet ('fetch {0} {1}' -f $RemoteName,$branch)
-
-  In-Project {
-    & cmd /c ('git pull {0} {1} >nul 2>nul' -f $RemoteName,$branch)
-    if ($LASTEXITCODE -eq 0) {
-      Write-Host '✔ Pull completed.' -ForegroundColor Green
-    } else {
-      Write-Host '⚠ Pull may have failed (check repo status).' -ForegroundColor Yellow
+# 5) Helper: wait for endpoint with retries
+function Wait-JsonOk([string]$url, [int]$tries = 20, [int]$delayMs = 800) {
+  for ($i = 1; $i -le $tries; $i++) {
+    try {
+      $res = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 2
+      $json = $res.Content | ConvertFrom-Json
+      if ($json.ok) {
+        Write-Host ("[ok] {0} -> {1}" -f $url, ($res.Content)) -ForegroundColor Green
+        return $json
+      } else {
+        Write-Host ("[wait] {0} -> not ok (try {1}/{2})" -f $url, $i, $tries) -ForegroundColor Yellow
+      }
+    } catch {
+      Write-Host ("[wait] {0} -> not reachable (try {1}/{2})" -f $url, $i, $tries) -ForegroundColor Yellow
     }
+    Start-Sleep -Milliseconds $delayMs
   }
+  throw "Timed out waiting for $url"
 }
 
-function Sync-Up {
-  $branch = Get-Branch
-  Write-Host ('[INFO] Sync UP: local → ''{0}/{1}''...' -f $RemoteName,$branch) -ForegroundColor Cyan
-  Git-Quiet 'add -A'
-  Git-Quiet 'commit -m "Sync-up from Station-2100"'
+# 6) Wait for /__sync/ping and /__sync/status
+Start-Sleep -Seconds 3
+$ping   = Wait-JsonOk "http://localhost:8080/__sync/ping"
+$status = Wait-JsonOk "http://localhost:8080/__sync/status"
 
-  In-Project {
-    & cmd /c ('git push {0} {1} >nul 2>nul' -f $RemoteName,$branch)
-    if ($LASTEXITCODE -eq 0) {
-      Write-Host '✔ Push completed.' -ForegroundColor Green
-    } else {
-      Write-Host '⚠ Push may have failed (check repo status/credentials).' -ForegroundColor Yellow
-    }
-  }
+# 7) Show summary
+Write-Host "`n=== Sync Health ===" -ForegroundColor Cyan
+Write-Host ("Ping  : ok={0}" -f $ping.ok)
+Write-Host ("Status: ok={0} allow={1}" -f $status.ok, $status.allow)
+
+if (-not $status.allow) {
+  Write-Host "`n[hint] 'allow' is false. Ensure ALLOW_SYNC=1 in .env.local (already set), then CTRL+C the dev server and rerun this script." -ForegroundColor Yellow
+} else {
+  Write-Host "`nAll good! Open http://localhost:8080/ and the Dev Sync Panel should work." -ForegroundColor Green
 }
-
-# ---------------- Menu ----------------
-do {
-  Clear-Host
-  Write-Host '=============== Station-2100 ===============' -ForegroundColor Cyan
-  Write-Host '1. Start Dev Server'
-  Write-Host '2. Stop Dev Server'
-  Write-Host '3. Sync DOWN (GitHub/Lovable → local)'
-  Write-Host '4. Sync UP (local → GitHub/Lovable)'
-  Write-Host '5. Quit'
-  Write-Host '--------------------------------------------'
-  $choice = Read-Host 'Select option'
-
-  switch ($choice) {
-    '1' { Start-Station; Pause }
-    '2' { Stop-Station;  Pause }
-    '3' { Sync-Down;     Pause }
-    '4' { Sync-Up;       Pause }
-    '5' { Write-Host 'Exiting Station-2100 Control Panel...' -ForegroundColor Yellow }
-    default { Write-Host 'Invalid choice. Try again.' -ForegroundColor Red; Pause }
-  }
-} until ($choice -eq '5')

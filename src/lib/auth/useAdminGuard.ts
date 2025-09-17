@@ -19,7 +19,7 @@ export function useAdminGuard() {
 
         // Check if user has admin role (adjust based on your role system)
         const { data: profile } = await supabase
-          .from("user_profiles")
+          .from("profiles")
           .select("role")
           .eq("id", user.id)
           .single();

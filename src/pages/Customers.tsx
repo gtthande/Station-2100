@@ -9,7 +9,7 @@ import { GlassCard, GlassCardContent, GlassCardHeader, GlassCardTitle } from '@/
 import { GradientButton } from '@/components/ui/gradient-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Search, Edit, Trash2, User, Phone, Mail, MapPin } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, User, Phone, Mail, MapPin, X, Save, Plane, Globe } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { BackButton } from '@/components/navigation/BackButton';
@@ -22,12 +22,12 @@ interface Customer {
   address: string | null;
   city: string | null;
   state: string | null;
-  zip_code: string | null;
   country: string | null;
   aircraft_type: string | null;
   tail_number: string | null;
   contact_person: string | null;
   notes: string | null;
+  user_id: string;
   created_at: string;
   updated_at: string;
 }
@@ -45,6 +45,8 @@ const Customers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [isEditingInPanel, setIsEditingInPanel] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -52,7 +54,6 @@ const Customers = () => {
     address: '',
     city: '',
     state: '',
-    zip_code: '',
     country: 'United States',
     aircraft_type: '',
     tail_number: '',
@@ -60,19 +61,22 @@ const Customers = () => {
     notes: ''
   });
 
-  // Fetch customers using secure view with field-level permissions
+  // Fetch customers using the same pattern as job cards
   const { data: customers = [], isLoading } = useQuery({
-    queryKey: ['customers-secure'],
+    queryKey: ['customers', user?.id],
     queryFn: async () => {
+      if (!user?.id) return [];
+      
       const { data, error } = await supabase
-        .from('customers_secure_view')
+        .from('customers')
         .select('*')
+        .eq('user_id', user.id)
         .order('name');
       
       if (error) throw error;
       return data as Customer[];
     },
-    enabled: !!user && canViewCustomers()
+    enabled: !!user?.id
   });
 
   // Add customer mutation
@@ -88,7 +92,7 @@ const Customers = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers-secure'] });
+      queryClient.invalidateQueries({ queryKey: ['customers', user?.id] });
       setIsAddDialogOpen(false);
       resetForm();
       toast({
@@ -116,7 +120,7 @@ const Customers = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers-secure'] });
+      queryClient.invalidateQueries({ queryKey: ['customers', user?.id] });
       setEditingCustomer(null);
       resetForm();
       toast({
@@ -144,7 +148,7 @@ const Customers = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers-secure'] });
+      queryClient.invalidateQueries({ queryKey: ['customers', user?.id] });
       toast({
         title: "Customer Deleted",
         description: "Customer has been successfully deleted.",
@@ -167,13 +171,24 @@ const Customers = () => {
       address: '',
       city: '',
       state: '',
-      zip_code: '',
       country: 'United States',
       aircraft_type: '',
       tail_number: '',
       contact_person: '',
       notes: ''
     });
+  };
+
+  // Simple customer selection
+  const handleCustomerSelect = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setIsEditingInPanel(false); // Exit edit mode when switching customers
+  };
+
+  // Close panel
+  const handleClosePanel = () => {
+    setSelectedCustomer(null);
+    setIsEditingInPanel(false);
   };
 
   const handleEdit = (customer: Customer) => {
@@ -185,7 +200,6 @@ const Customers = () => {
       address: customer.address || '',
       city: customer.city || '',
       state: customer.state || '',
-      zip_code: customer.zip_code || '',
       country: customer.country || 'United States',
       aircraft_type: customer.aircraft_type || '',
       tail_number: customer.tail_number || '',
@@ -336,11 +350,11 @@ const Customers = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="zip_code" className="text-white">ZIP Code</Label>
+                        <Label htmlFor="country" className="text-white">Country</Label>
                         <Input
-                          id="zip_code"
-                          value={formData.zip_code}
-                          onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
+                          id="country"
+                          value={formData.country}
+                          onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                           className="bg-white/10 border-white/20 text-white"
                         />
                       </div>
@@ -369,6 +383,18 @@ const Customers = () => {
                       className="bg-white/10 border-white/20 text-white"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="notes" className="text-white">Notes</Label>
+                  <textarea
+                    id="notes"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    placeholder="Additional notes about the customer..."
+                    rows={3}
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
+                  />
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4">
@@ -440,98 +466,81 @@ const Customers = () => {
             </div>
           ) : (
             filteredCustomers.map((customer) => (
-              <GlassCard key={customer.id} className="hover:bg-white/5 transition-colors">
+              <GlassCard 
+                key={customer.id} 
+                className={`hover:bg-white/5 transition-all duration-200 cursor-pointer ${
+                  selectedCustomer?.id === customer.id ? 'ring-2 ring-blue-500/50 bg-white/5' : ''
+                }`}
+                onClick={() => handleCustomerSelect(customer)}
+              >
                 <GlassCardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div>
                       <GlassCardTitle className="text-lg mb-1">{customer.name}</GlassCardTitle>
-                      {customer.tail_number && (
-                        <p className="text-sm text-white/70">Tail: {customer.tail_number}</p>
-                      )}
                     </div>
-                    {canManageCustomers() && (
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => handleEdit(customer)}
-                          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                        >
-                          <Edit className="w-4 h-4 text-white/70" />
-                        </button>
-                        <button
-                          onClick={() => deleteCustomerMutation.mutate(customer.id)}
-                          className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4 text-red-400" />
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => handleEdit(customer)}
+                        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                      >
+                        <Edit className="w-4 h-4 text-white/70" />
+                      </button>
+                      <button
+                        onClick={() => deleteCustomerMutation.mutate(customer.id)}
+                        className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-400" />
+                      </button>
+                    </div>
                   </div>
                 </GlassCardHeader>
                 <GlassCardContent className="pt-0">
                   <div className="space-y-2">
-                    {/* Contact Person - show if available or show protected status */}
-                    {customer.contact_person && customer.contact_person !== '[PROTECTED]' && (
+                    {/* Contact Person */}
+                    {customer.contact_person && (
                       <div className="flex items-center gap-2 text-sm text-white/70">
                         <User className="w-4 h-4" />
                         {customer.contact_person}
                       </div>
                     )}
-                    {customer.contact_person === '[PROTECTED]' && (
-                      <div className="flex items-center gap-2 text-sm text-white/40 italic">
-                        <User className="w-4 h-4" />
-                        Contact info protected
-                      </div>
-                    )}
                     
-                    {/* Email - show if available or show protected status */}
-                    {customer.email && customer.email !== '[PROTECTED]' && (
+                    {/* Email */}
+                    {customer.email && (
                       <div className="flex items-center gap-2 text-sm text-white/70">
                         <Mail className="w-4 h-4" />
                         {customer.email}
                       </div>
                     )}
-                    {customer.email === '[PROTECTED]' && (
-                      <div className="flex items-center gap-2 text-sm text-white/40 italic">
-                        <Mail className="w-4 h-4" />
-                        Email protected
-                      </div>
-                    )}
                     
-                    {/* Phone - show if available or show protected status */}
-                    {customer.phone && customer.phone !== '[PROTECTED]' && (
+                    {/* Phone */}
+                    {customer.phone && (
                       <div className="flex items-center gap-2 text-sm text-white/70">
                         <Phone className="w-4 h-4" />
                         {customer.phone}
                       </div>
                     )}
-                    {customer.phone === '[PROTECTED]' && (
-                      <div className="flex items-center gap-2 text-sm text-white/40 italic">
-                        <Phone className="w-4 h-4" />
-                        Phone protected
-                      </div>
-                    )}
                     
-                    {/* Location - show city/state (usually not protected) */}
-                    {customer.city && customer.state && (
+                    {/* Location */}
+                    {customer.city && (
                       <div className="flex items-center gap-2 text-sm text-white/70">
                         <MapPin className="w-4 h-4" />
-                        {customer.city}, {customer.state}
+                        {customer.city}, {customer.country}
                       </div>
                     )}
                     
-                    {/* Address protection indicator for full address */}
-                    {customer.address === '[PROTECTED]' && (
-                      <div className="flex items-center gap-2 text-sm text-white/40 italic">
-                        <MapPin className="w-4 h-4" />
-                        Full address protected
-                      </div>
-                    )}
-                    
-                    {/* Aircraft info - generally not sensitive */}
+                    {/* Aircraft Type */}
                     {customer.aircraft_type && (
-                      <div className="mt-3 p-2 bg-white/5 rounded-lg">
-                        <p className="text-xs text-white/50 mb-1">Aircraft</p>
-                        <p className="text-sm text-white">{customer.aircraft_type}</p>
+                      <div className="flex items-center gap-2 text-sm text-white/70">
+                        <Plane className="w-4 h-4" />
+                        {customer.aircraft_type}
+                      </div>
+                    )}
+                    
+                    {/* Tail Number */}
+                    {customer.tail_number && (
+                      <div className="flex items-center gap-2 text-sm text-white/70">
+                        <Plane className="w-4 h-4" />
+                        Tail: {customer.tail_number}
                       </div>
                     )}
                   </div>
@@ -541,6 +550,314 @@ const Customers = () => {
           )}
         </div>
       </div>
+
+      {/* Customer Details Side Panel */}
+      {selectedCustomer && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex justify-end">
+          <div className="w-full max-w-md bg-surface-dark border-l border-white/10 h-full overflow-y-auto">
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-xl font-bold text-white">Customer Details</h3>
+                  {filteredCustomers.length > 1 && (
+                    <div className="flex items-center gap-2 text-sm text-white/60">
+                      <span>
+                        {filteredCustomers.findIndex(c => c.id === selectedCustomer.id) + 1} of {filteredCustomers.length}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={handleClosePanel}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-white/70" />
+                </button>
+              </div>
+
+
+              {/* Customer Info */}
+              <div className="space-y-6">
+                {/* Basic Info */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                      <User className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      {isEditingInPanel ? (
+                        <Input
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="bg-white/10 border-white/20 text-white font-semibold text-lg"
+                        />
+                      ) : (
+                        <h4 className="text-lg font-semibold text-white">{selectedCustomer.name}</h4>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Contact Person */}
+                  <div className="space-y-2">
+                    <Label className="text-white/70 text-sm">Contact Person</Label>
+                    {isEditingInPanel ? (
+                      <Input
+                        value={formData.contact_person}
+                        onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
+                        className="bg-white/10 border-white/20 text-white"
+                      />
+                    ) : (
+                      <p className="text-white">{selectedCustomer.contact_person || 'Not specified'}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                {canViewContactInfo() && (
+                  <div className="space-y-4">
+                    <h5 className="text-white font-medium flex items-center gap-2">
+                      <Phone className="w-4 h-4" />
+                      Contact Information
+                    </h5>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-white/70 text-sm">Email</Label>
+                        {isEditingInPanel ? (
+                          <Input
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            className="bg-white/10 border-white/20 text-white"
+                          />
+                        ) : (
+                          <p className="text-white">{selectedCustomer.email || 'Not provided'}</p>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <Label className="text-white/70 text-sm">Phone</Label>
+                        {isEditingInPanel ? (
+                          <Input
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            className="bg-white/10 border-white/20 text-white"
+                          />
+                        ) : (
+                          <p className="text-white">{selectedCustomer.phone || 'Not provided'}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Address Information */}
+                {canViewFullDetails() && (
+                  <div className="space-y-4">
+                    <h5 className="text-white font-medium flex items-center gap-2">
+                      <MapPin className="w-4 h-4" />
+                      Address Information
+                    </h5>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-white/70 text-sm">Address</Label>
+                        {isEditingInPanel ? (
+                          <Input
+                            value={formData.address}
+                            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                            className="bg-white/10 border-white/20 text-white"
+                          />
+                        ) : (
+                          <p className="text-white">{selectedCustomer.address || 'Not provided'}</p>
+                        )}
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <Label className="text-white/70 text-sm">City</Label>
+                          {isEditingInPanel ? (
+                            <Input
+                              value={formData.city}
+                              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                              className="bg-white/10 border-white/20 text-white"
+                            />
+                          ) : (
+                            <p className="text-white">{selectedCustomer.city || '-'}</p>
+                          )}
+                        </div>
+                        <div>
+                          <Label className="text-white/70 text-sm">State</Label>
+                          {isEditingInPanel ? (
+                            <Input
+                              value={formData.state}
+                              onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                              className="bg-white/10 border-white/20 text-white"
+                            />
+                          ) : (
+                            <p className="text-white">{selectedCustomer.state || '-'}</p>
+                          )}
+                        </div>
+                        <div>
+                          <Label className="text-white/70 text-sm">Country</Label>
+                          {isEditingInPanel ? (
+                            <Input
+                              value={formData.country}
+                              onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                              className="bg-white/10 border-white/20 text-white"
+                            />
+                          ) : (
+                            <p className="text-white">{selectedCustomer.country || 'United States'}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Aircraft Information */}
+                <div className="space-y-4">
+                  <h5 className="text-white font-medium flex items-center gap-2">
+                    <Plane className="w-4 h-4" />
+                    Aircraft Information
+                  </h5>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-white/70 text-sm">Aircraft Type</Label>
+                      {isEditingInPanel ? (
+                        <Input
+                          value={formData.aircraft_type}
+                          onChange={(e) => setFormData({ ...formData, aircraft_type: e.target.value })}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      ) : (
+                        <p className="text-white">{selectedCustomer.aircraft_type || 'Not specified'}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Label className="text-white/70 text-sm">Tail Number</Label>
+                      {isEditingInPanel ? (
+                        <Input
+                          value={formData.tail_number}
+                          onChange={(e) => setFormData({ ...formData, tail_number: e.target.value })}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      ) : (
+                        <p className="text-white">{selectedCustomer.tail_number || 'Not specified'}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div className="space-y-4">
+                  <h5 className="text-white font-medium flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Notes
+                  </h5>
+                  
+                  <div>
+                    <Label className="text-white/70 text-sm">Additional Notes</Label>
+                    {isEditingInPanel ? (
+                      <textarea
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        placeholder="Additional notes about the customer..."
+                        rows={3}
+                        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
+                      />
+                    ) : (
+                      <p className="text-white">{selectedCustomer.notes || 'No notes provided'}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4 border-t border-white/10">
+                  {isEditingInPanel ? (
+                    <>
+                      <GradientButton
+                        onClick={() => {
+                          updateCustomerMutation.mutate({ 
+                            id: selectedCustomer.id, 
+                            data: formData 
+                          });
+                          setIsEditingInPanel(false);
+                        }}
+                        className="flex-1 gap-2"
+                        disabled={updateCustomerMutation.isPending}
+                      >
+                        <Save className="w-4 h-4" />
+                        Save Changes
+                      </GradientButton>
+                      <GradientButton
+                        variant="outline"
+                        onClick={() => {
+                          setIsEditingInPanel(false);
+                          // Reset form data to original values
+                          setFormData({
+                            name: selectedCustomer.name,
+                            email: selectedCustomer.email || '',
+                            phone: selectedCustomer.phone || '',
+                            address: selectedCustomer.address || '',
+                            city: selectedCustomer.city || '',
+                            state: selectedCustomer.state || '',
+                            zip_code: selectedCustomer.zip_code || '',
+                            country: selectedCustomer.country || 'United States',
+                            aircraft_type: selectedCustomer.aircraft_type || '',
+                            tail_number: selectedCustomer.tail_number || '',
+                            contact_person: selectedCustomer.contact_person || '',
+                            notes: selectedCustomer.notes || ''
+                          });
+                        }}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </GradientButton>
+                    </>
+                  ) : (
+                    <>
+                      <GradientButton
+                        onClick={() => {
+                          setIsEditingInPanel(true);
+                          setFormData({
+                            name: selectedCustomer.name,
+                            email: selectedCustomer.email || '',
+                            phone: selectedCustomer.phone || '',
+                            address: selectedCustomer.address || '',
+                            city: selectedCustomer.city || '',
+                            state: selectedCustomer.state || '',
+                            country: selectedCustomer.country || 'United States',
+                            aircraft_type: selectedCustomer.aircraft_type || '',
+                            tail_number: selectedCustomer.tail_number || '',
+                            contact_person: selectedCustomer.contact_person || '',
+                            notes: selectedCustomer.notes || ''
+                          });
+                        }}
+                        className="flex-1 gap-2"
+                      >
+                        <Edit className="w-4 h-4" />
+                        Edit Customer
+                      </GradientButton>
+                      <GradientButton
+                        variant="outline"
+                        onClick={() => deleteCustomerMutation.mutate(selectedCustomer.id)}
+                        className="flex-1 gap-2 text-red-400 border-red-400 hover:bg-red-500/10"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete
+                      </GradientButton>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

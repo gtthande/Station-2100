@@ -1,6 +1,10 @@
-﻿import { defineConfig } from "vite";
+﻿import dotenv from "dotenv";
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
+
+// Load .env.local at the very top to ensure ALLOW_SYNC is available
+dotenv.config({ path: ".env.local" });
 
 export default defineConfig(async () => {
   const extraPlugins: any[] = [];

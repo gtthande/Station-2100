@@ -15,8 +15,22 @@
 
 ## Getting Started
 
+### Development Environment Setup
+**Recommended Startup Method:**
+```powershell
+powershell -ExecutionPolicy Bypass -File ".\Station-2100.ps1"
+```
+
+This script will:
+- Set up the `.env.local` file with `ALLOW_SYNC=1`
+- Clear any stale Node.js processes
+- Verify and install the `dotenv` dependency if needed
+- Start the Vite development server
+- Wait for sync endpoints to be ready
+- Display sync health status
+
 ### System Access
-1. Navigate to the application URL
+1. Navigate to the application URL (typically http://localhost:8080)
 2. Create an account or sign in with existing credentials
 3. Verify email address if required
 4. Complete profile setup
@@ -83,14 +97,32 @@ The main dashboard provides:
 **Access Levels**:
 - Basic: Company name and general information
 - Contact: Phone and email access
-- Full: Complete customer information
+- Full: Complete customer information including address details
 - Management: All data plus editing capabilities
+
+**Customer Information Fields**:
+- **Name** (Required): Customer company or individual name
+- **Contact Person**: Primary contact for the customer
+- **Email**: Customer email address
+- **Phone**: Customer phone number
+- **Address**: Street address
+- **City**: City location
+- **State**: State or province
+- **Country**: Country (defaults to "United States")
+- **Aircraft Type**: Type of aircraft (e.g., Cessna 172, Boeing 737)
+- **Tail Number**: Aircraft registration number (e.g., N123AB)
+- **Notes**: Additional notes and comments about the customer
 
 **Adding Customers**:
 1. Navigate to Customers
 2. Click "Add Customer"
-3. Enter customer information based on your access level
-4. Include aircraft information if applicable
+3. Enter customer information based on your access level:
+   - Fill in required fields (Name)
+   - Add contact information if you have contact access
+   - Include full address details if you have full access
+   - Add aircraft information if applicable
+   - Include any additional notes
+4. Click "Add Customer" to save
 
 ## Tool Management
 

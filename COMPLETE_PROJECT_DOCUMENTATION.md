@@ -885,26 +885,8 @@ The Code & DB Sync feature is implemented as a custom Vite plugin that provides 
 
 ```typescript
 // scripts/dev-sync-plugin.ts
-import path from "node:path";
-import { existsSync } from "node:fs";
-import { config as loadDotenv } from "dotenv";
-
-export default function devSyncPlugin() {
-  // Load environment variables at startup
-  loadEnvOnce();
-  
-  return {
-    name: "station-dev-sync",
-    configureServer(server: any) {
-      // Middleware endpoints for sync operations
-      server.middlewares.use("/__sync/ping", pingHandler);
-      server.middlewares.use("/__sync/status", statusHandler);
-      server.middlewares.use("/__sync/pull", pullHandler);
-      server.middlewares.use("/__sync/push", pushHandler);
-      server.middlewares.use("/__sync/db", dbPushHandler);
-    },
-  };
-}
+// See the actual implementation in scripts/dev-sync-plugin.ts
+// This plugin provides sync endpoints for development workflow
 ```
 
 #### 6.1.2 Security Implementation
@@ -1201,14 +1183,32 @@ The main dashboard provides:
 **Access Levels**:
 - Basic: Company name and general information
 - Contact: Phone and email access
-- Full: Complete customer information
+- Full: Complete customer information including address details
 - Management: All data plus editing capabilities
+
+**Customer Information Fields**:
+- **Name** (Required): Customer company or individual name
+- **Contact Person**: Primary contact for the customer
+- **Email**: Customer email address
+- **Phone**: Customer phone number
+- **Address**: Street address
+- **City**: City location
+- **State**: State or province
+- **Country**: Country (defaults to "United States")
+- **Aircraft Type**: Type of aircraft (e.g., Cessna 172, Boeing 737)
+- **Tail Number**: Aircraft registration number (e.g., N123AB)
+- **Notes**: Additional notes and comments about the customer
 
 **Adding Customers**:
 1. Navigate to Customers
 2. Click "Add Customer"
-3. Enter customer information based on your access level
-4. Include aircraft information if applicable
+3. Enter customer information based on your access level:
+   - Fill in required fields (Name)
+   - Add contact information if you have contact access
+   - Include full address details if you have full access
+   - Add aircraft information if applicable
+   - Include any additional notes
+4. Click "Add Customer" to save
 
 ### 8.5 Security Features
 
@@ -1327,12 +1327,18 @@ Key security metrics tracked:
    cd aviation-inventory-system
    ```
 
-2. **Install Dependencies**
-   ```bash
-   npm install
+2. **Quick Start (Recommended)**
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File ".\Station-2100.ps1"
    ```
 
-3. **Environment Configuration**
+3. **Manual Installation (Alternative)**
+   ```bash
+   npm install
+   npm run dev
+   ```
+
+4. **Environment Configuration**
    ```bash
    cp .env.example .env
    ```
@@ -1343,12 +1349,12 @@ Key security metrics tracked:
    VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
    ```
 
-4. **Database Setup**
+5. **Database Setup**
    - Run migrations through Supabase dashboard
    - Configure Row-Level Security policies
    - Set up security functions and triggers
 
-5. **Authentication Configuration**
+6. **Authentication Configuration**
    - Set OTP expiry to 120 seconds (2 minutes)
    - Enable leaked password protection
    - Configure email templates

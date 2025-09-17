@@ -67,8 +67,8 @@ const Index = () => {
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           <Link to="/inventory">
-            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
-              <GlassCardContent className="p-6 text-center">
+            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer h-full">
+              <GlassCardContent className="p-6 text-center h-full flex flex-col justify-center">
                 <div className="w-12 h-12 gradient-primary rounded-xl flex items-center justify-center mx-auto mb-3">
                   <Package className="w-6 h-6 text-white" />
                 </div>
@@ -79,8 +79,8 @@ const Index = () => {
           </Link>
 
           <Link to="/tools">
-            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
-              <GlassCardContent className="p-6 text-center">
+            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer h-full">
+              <GlassCardContent className="p-6 text-center h-full flex flex-col justify-center">
                 <div className="w-12 h-12 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <Wrench className="w-6 h-6 text-white" />
                 </div>
@@ -91,8 +91,8 @@ const Index = () => {
           </Link>
 
           <Link to="/job-cards">
-            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
-              <GlassCardContent className="p-6 text-center">
+            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer h-full">
+              <GlassCardContent className="p-6 text-center h-full flex flex-col justify-center">
                 <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <FileText className="w-6 h-6 text-white" />
                 </div>
@@ -102,24 +102,11 @@ const Index = () => {
             </GlassCard>
           </Link>
 
-          {canSubmitBatches && (
-            <Link to="/batch-submission">
-              <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
-                <GlassCardContent className="p-6 text-center">
-                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <Send className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">Submit Batch</h3>
-                  <p className="text-white/60 text-sm">Submit new batches for approval</p>
-                </GlassCardContent>
-              </GlassCard>
-            </Link>
-          )}
 
           {canAccessApprovals && (
             <Link to="/approvals">
-              <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
-                <GlassCardContent className="p-6 text-center">
+              <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer h-full">
+                <GlassCardContent className="p-6 text-center h-full flex flex-col justify-center">
                   <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                     <CheckCircle className="w-6 h-6 text-white" />
                   </div>
@@ -132,8 +119,8 @@ const Index = () => {
 
           {canViewReports && (
             <Link to="/reports">
-              <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
-                <GlassCardContent className="p-6 text-center">
+              <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer h-full">
+                <GlassCardContent className="p-6 text-center h-full flex flex-col justify-center">
                   <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                     <FileText className="w-6 h-6 text-white" />
                   </div>
@@ -145,8 +132,8 @@ const Index = () => {
           )}
 
           <Link to="/rotable-llp">
-            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
-              <GlassCardContent className="p-6 text-center">
+            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer h-full">
+              <GlassCardContent className="p-6 text-center h-full flex flex-col justify-center">
                 <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <RotateCcw className="w-6 h-6 text-white" />
                 </div>
@@ -156,10 +143,22 @@ const Index = () => {
             </GlassCard>
           </Link>
 
+          <Link to="/customers-suppliers">
+            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer h-full">
+              <GlassCardContent className="p-6 text-center h-full flex flex-col justify-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">Customers & Suppliers</h3>
+                <p className="text-white/60 text-sm">Manage customers and supplier relationships</p>
+              </GlassCardContent>
+            </GlassCard>
+          </Link>
+
           {canAccessAdmin && (
             <Link to="/admin">
-              <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
-                <GlassCardContent className="p-6 text-center">
+              <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer h-full">
+                <GlassCardContent className="p-6 text-center h-full flex flex-col justify-center">
                   <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                     <Shield className="w-6 h-6 text-white" />
                   </div>
@@ -169,108 +168,12 @@ const Index = () => {
               </GlassCard>
             </Link>
           )}
+
         </div>
 
         {/* Main Navigation */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <Link to="/job-cards">
-            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
-              <GlassCardHeader>
-                <GlassCardTitle className="flex items-center gap-3">
-                  <Wrench className="w-6 h-6" />
-                  Job Cards
-                </GlassCardTitle>
-              </GlassCardHeader>
-              <GlassCardContent>
-                <p className="text-white/70 mb-4">
-                  Manage aircraft maintenance job cards and work orders.
-                </p>
-                <div className="flex items-center text-blue-400 font-medium">
-                  View Job Cards
-                  <FileText className="w-4 h-4 ml-2" />
-                </div>
-              </GlassCardContent>
-            </GlassCard>
-          </Link>
-          <Link to="/customers">
-            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
-              <GlassCardHeader>
-                <GlassCardTitle className="flex items-center gap-3">
-                  <Users className="w-6 h-6" />
-                  Customers
-                </GlassCardTitle>
-              </GlassCardHeader>
-              <GlassCardContent>
-                <p className="text-white/70 mb-4">
-                  Manage customer information, aircraft details, and service records.
-                </p>
-                <div className="flex items-center text-blue-400 font-medium">
-                  View Customers
-                  <TrendingUp className="w-4 h-4 ml-2" />
-                </div>
-              </GlassCardContent>
-            </GlassCard>
-          </Link>
 
-          <Link to="/suppliers">
-            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
-              <GlassCardHeader>
-                <GlassCardTitle className="flex items-center gap-3">
-                  <Truck className="w-6 h-6" />
-                  Suppliers
-                </GlassCardTitle>
-              </GlassCardHeader>
-              <GlassCardContent>
-                <p className="text-white/70 mb-4">
-                  Track supplier relationships, parts sourcing, and delivery schedules.
-                </p>
-                <div className="flex items-center text-blue-400 font-medium">
-                  View Suppliers
-                  <Building2 className="w-4 h-4 ml-2" />
-                </div>
-              </GlassCardContent>
-            </GlassCard>
-          </Link>
-
-          <Link to="/inventory">
-            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
-              <GlassCardHeader>
-                <GlassCardTitle className="flex items-center gap-3">
-                  <Package className="w-6 h-6" />
-                  Inventory
-                </GlassCardTitle>
-              </GlassCardHeader>
-              <GlassCardContent>
-                <p className="text-white/70 mb-4">
-                  Monitor stock levels, track parts movement, and manage inventory batches.
-                </p>
-                <div className="flex items-center text-blue-400 font-medium">
-                  View Inventory
-                  <BarChart3 className="w-4 h-4 ml-2" />
-                </div>
-              </GlassCardContent>
-            </GlassCard>
-          </Link>
-
-          <Link to="/stock-movements">
-            <GlassCard className="hover:bg-white/5 transition-all duration-300 cursor-pointer">
-              <GlassCardHeader>
-                <GlassCardTitle className="flex items-center gap-3">
-                  <BarChart3 className="w-6 h-6" />
-                  Stock Movement & Valuation
-                </GlassCardTitle>
-              </GlassCardHeader>
-              <GlassCardContent>
-                <p className="text-white/70 mb-4">
-                  Track stock movements, calculate valuations, and generate comprehensive reports.
-                </p>
-                <div className="flex items-center text-blue-400 font-medium">
-                  View Stock Reports
-                  <BarChart3 className="w-4 h-4 ml-2" />
-                </div>
-              </GlassCardContent>
-            </GlassCard>
-          </Link>
         </div>
 
         {/* System Status */}

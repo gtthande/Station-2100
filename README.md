@@ -1,8 +1,18 @@
-# Welcome to your Lovable project
+# Station-2100 - Aviation Management System
 
 ## Project info
 
 **URL**: https://lovable.dev/projects/3be45a24-6b88-4267-b181-6d323de70799
+**GitHub**: https://github.com/gtthande/Station-2100
+
+## Recent Updates
+
+### Customer Management Enhancements
+- ✅ Added **State** field to customer information
+- ✅ Added **Notes** field for additional customer details
+- ✅ Updated customer dialog with improved form layout
+- ✅ Enhanced customer display panel with new fields
+- ✅ Maintained security permissions for sensitive information
 
 ## How can I edit this code?
 
@@ -86,6 +96,12 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 
 ### Local Development
 
+**Recommended Startup Method:**
+```powershell
+powershell -ExecutionPolicy Bypass -File ".\Station-2100.ps1"
+```
+
+**Alternative Method:**
 ```bash
 # Install dependencies
 npm install

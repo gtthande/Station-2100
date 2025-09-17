@@ -721,21 +721,7 @@ src/
 #### Vite Plugin Architecture
 The development sync functionality is implemented as a Vite plugin that provides middleware endpoints:
 
-```typescript
-// scripts/dev-sync-plugin.ts
-export default function devSyncPlugin() {
-  return {
-    name: "station-dev-sync",
-    configureServer(server: any) {
-      // Middleware endpoints for Git and DB operations
-      server.middlewares.use("/__sync/status", ...);
-      server.middlewares.use("/__sync/pull", ...);
-      server.middlewares.use("/__sync/push", ...);
-      server.middlewares.use("/__sync/db", ...);
-    },
-  };
-}
-```
+The dev sync plugin is implemented in `scripts/dev-sync-plugin.ts` and provides middleware endpoints for Git and DB operations.
 
 #### Environment Loading
 The plugin automatically loads environment variables from `.env.local` and `.env` files:
