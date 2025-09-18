@@ -14,7 +14,8 @@
         "start:all": "npm run db:push && npm run dev",
         "reset": "taskkill /F /IM node.exe /T 2>$null && npm run link && npm run db:push && npm run dev",
         "fix:stubs": "node scripts/dev-scan-and-stub.mjs",
-        "migrate": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$name = Read-Host 'Migration name (e.g. add_work_orders)'; npx supabase@latest migration new \\\"$name\\\"; Write-Host '*** Edit the generated SQL in supabase/migrations, then press Enter to push...'; Read-Host; npx supabase@latest db push --yes --password \\\"$env:SUPABASE_DB_PASSWORD\\\"\""
+        "migrate": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$name = Read-Host 'Migration name (e.g. add_work_orders)'; npx supabase@latest migration new \\\"$name\\\"; Write-Host '*** Edit the generated SQL in supabase/migrations, then press Enter to push...'; Read-Host; npx supabase@latest db push --yes --password \\\"$env:SUPABASE_DB_PASSWORD\\\"\"",
+        "dev:clean": "cross-env-shell \"rmdir /s /q node_modules\\.vite 2>nul & npm run dev || rm -rf node_modules/.vite && npm run dev\""
     },
     "dependencies": {
         "@hookform/resolvers": "^3.9.0",

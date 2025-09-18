@@ -174,7 +174,7 @@ export const BatchApprovalReport = () => {
       { 'Website': companyInfo.contact.website },
       { 'Tax ID': companyInfo.taxId },
       { '': '' },
-      { 'REPORT INFORMATION' },
+      { 'REPORT INFORMATION': '' },
       { '': '' },
       { 'Report Title': 'Batch Approval Report' },
       { 'Generated Date': format(new Date(), 'MMM dd, yyyy HH:mm') },
