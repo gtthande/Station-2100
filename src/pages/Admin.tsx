@@ -11,18 +11,19 @@ import { HRManagement } from '@/components/admin/HRManagement';
 import { SecurityAuditLog } from '@/components/admin/SecurityAuditLog';
 import { SampleUsersManagement } from '@/components/admin/SampleUsersManagement';
 import { CustomerPermissionManagement } from '@/components/admin/CustomerPermissionManagement';
+import CompanyManagement from '@/components/admin/CompanyManagement';
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link, useNavigate } from 'react-router-dom';
 import { BackButton } from '@/components/navigation/BackButton';
-import { Shield, Users, Settings, UserCheck, Cog, Upload, Building2, Package, Lock, Eye, Code2, Database } from 'lucide-react';
+import { Shield, Users, Settings, UserCheck, Cog, Upload, Building2, Package, Lock, Eye, Code2, Database, FileText } from 'lucide-react';
 import DevToolsPage from '@/components/admin/dev-tools';
 import { Button } from '@/components/ui/button';
 import { GlassCard, GlassCardContent } from '@/components/ui/glass-card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'custom-roles' | 'advanced-assignment' | 'import' | 'departments' | 'stock-categories' | 'sample-users' | 'hr-management' | 'security-audit' | 'dev-sync'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'custom-roles' | 'advanced-assignment' | 'import' | 'departments' | 'stock-categories' | 'sample-users' | 'hr-management' | 'security-audit' | 'company' | 'dev-sync'>('users');
   const { canManageSystem, isLoading } = useUserRoles();
   const navigate = useNavigate();
 
@@ -226,6 +227,18 @@ const Admin = () => {
             <Eye className="w-4 h-4 mr-2" />
             Security Audit
           </Button>
+          <Button
+            variant={activeTab === 'company' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('company')}
+            className={
+              activeTab === 'company'
+                ? 'bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700'
+                : 'border-white/20 text-white hover:bg-white/10'
+            }
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            Company Details
+          </Button>
         </div>
 
         {activeTab === 'users' && (
@@ -243,6 +256,7 @@ const Admin = () => {
         {activeTab === 'sample-users' && <SampleUsersManagement />}
         {activeTab === 'hr-management' && <HRManagement />}
         {activeTab === 'security-audit' && <SecurityAuditLog />}
+        {activeTab === 'company' && <CompanyManagement />}
         {activeTab === 'dev-sync' && import.meta.env.DEV && window.location.hostname === 'localhost' && (
           <DevToolsPage />
         )}

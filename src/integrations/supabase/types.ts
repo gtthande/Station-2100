@@ -63,6 +63,54 @@ export type Database = {
           },
         ]
       }
+      company: {
+        Row: {
+          id: number
+          name: string
+          address: string | null
+          city: string | null
+          country: string | null
+          phone: string | null
+          email: string | null
+          website: string | null
+          logo_url: string | null
+          tax_id: string | null
+          zip_code: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          name: string
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          phone?: string | null
+          email?: string | null
+          website?: string | null
+          logo_url?: string | null
+          tax_id?: string | null
+          zip_code?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          name?: string
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          phone?: string | null
+          email?: string | null
+          website?: string | null
+          logo_url?: string | null
+          tax_id?: string | null
+          zip_code?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       compliance_documents: {
         Row: {
           certificate_number: string | null

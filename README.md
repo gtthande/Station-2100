@@ -69,6 +69,49 @@
 - **[USER_MANUAL.md](./USER_MANUAL.md)** - User guide and feature documentation
 - **[TECHNICAL_DOCUMENTATION.md](./TECHNICAL_DOCUMENTATION.md)** - Technical architecture and implementation details
 
+## Supabase Environment Setup
+
+### Required Environment Variables
+
+Create a `.env.local` file in the project root with the following variables:
+
+```bash
+# Supabase Configuration
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+
+# Development Sync
+ALLOW_SYNC=1
+
+# GitHub Integration
+VITE_GITHUB_REPO=gtthande/Station-2100
+VITE_GITHUB_TOKEN=your-github-token-here
+
+# Database Password
+SUPABASE_DB_PASSWORD=Series-2100Station-2100
+
+# Optional: HaveIBeenPwned API for password security
+HAVEIBEENPWNED_API_KEY=your-hibp-api-key-here
+```
+
+### Getting Supabase Keys
+
+1. **Go to your Supabase Dashboard**: https://supabase.com/dashboard
+2. **Select your project** (or create a new one)
+3. **Navigate to Settings → API**
+4. **Copy the following values**:
+   - **Project URL** → `VITE_SUPABASE_URL`
+   - **anon public** key → `VITE_SUPABASE_ANON_KEY`
+   - **service_role** key → `SUPABASE_SERVICE_ROLE_KEY`
+
+### Security Notes
+
+- **Never commit `.env.local`** to version control (it's in `.gitignore`)
+- **Use `.env.example`** as a template for team members
+- **Service role key** should only be used server-side (has admin privileges)
+- **Anon key** is safe for client-side use (respects RLS policies)
+
 ## Development Workflow Restart Guide
 
 ### Quick Start
