@@ -100,7 +100,7 @@ const Admin = () => {
           )}
           <Button
             variant="outline"
-            onClick={() => window.open('https://supabase.com/dashboard/project/jarlvtojzqkccovburmi', '_blank')}
+            onClick={() => window.open('https://supabase.com/dashboard', '_blank')}
             className="border-white/20 text-white hover:bg-white/10"
           >
             <Database className="w-4 h-4 mr-2" />

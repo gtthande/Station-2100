@@ -1,6 +1,7 @@
-# ==== CONFIG (already filled for your project) ====
-$SupabaseUrl = 'https://jarlvtojzqkccovburmi.supabase.co'
-$AnonKey     = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphcmx2dG9qenFrY2NvdmJ1cm1pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5NzMwNTcsImV4cCI6MjA2NjU0OTA1N30.tFLcrolwr79OVXymCyTxdPcp6-qsQo6NDIrGOZ9h_Iw'
+# ==== CONFIG (Update with your project values) ====
+# Please update these values with your actual Supabase project details
+$SupabaseUrl = 'https://your-project-ref.supabase.co'
+$AnonKey     = 'your-anon-key-here'
 # ================================================
 
 Write-Host "== A) Ensure .env / .env.local has hosted Supabase values ==" -ForegroundColor Cyan

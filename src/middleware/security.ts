@@ -14,11 +14,11 @@ export const getSecurityHeaders = (): SecurityHeaders => ({
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
   'Content-Security-Policy': [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://jarlvtojzqkccovburmi.supabase.co",
+    "script-src 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https: blob:",
     "font-src 'self' data:",
-    "connect-src 'self' https://jarlvtojzqkccovburmi.supabase.co wss://jarlvtojzqkccovburmi.supabase.co",
+    "connect-src 'self'",
     "media-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",

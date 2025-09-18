@@ -23,6 +23,20 @@ dist-ssr
 *.sln
 *.sw?
 
+# Environment variables (security)
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+
+# Supabase local files
+.supabase/
+
 # Documentation - Word reports (local only)
 *.docx
 docs/*.docx
+
+# Local development files
+*.local
+.vscode/settings.json

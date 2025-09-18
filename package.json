@@ -10,7 +10,7 @@
         "preview": "vite preview",
         "sync:server": "tsx server/sync-server.ts",
         "db:push": "npx supabase@latest db push --yes --password \"$env:SUPABASE_DB_PASSWORD\"",
-        "link": "npx supabase@latest link --project-ref jarlvtojzqkccovburmi --password \"$env:SUPABASE_DB_PASSWORD\"",
+        "link": "npx supabase@latest link --password \"$env:SUPABASE_DB_PASSWORD\"",
         "start:all": "npm run db:push && npm run dev",
         "reset": "taskkill /F /IM node.exe /T 2>$null && npm run link && npm run db:push && npm run dev",
         "fix:stubs": "node scripts/dev-scan-and-stub.mjs",

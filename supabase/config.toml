@@ -1,4 +1,5 @@
-project_id = "jarlvtojzqkccovburmi"
+# project_id will be set when linking to your Supabase project
+# Run: npx supabase link --password "your-db-password"
 
 [api]
 enabled = true

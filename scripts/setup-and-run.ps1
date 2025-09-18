@@ -4,7 +4,7 @@ $ProgressPreference = "SilentlyContinue"
 
 # Config
 $env:SUPABASE_DB_PASSWORD = "Series-2100Station-2100"
-$PROJECT_REF = "jarlvtojzqkccovburmi"
+# PROJECT_REF will be determined from environment variables or config
 $LOG = "./scripts/setup.fast.log"
 
 function Log([string]$msg) {
@@ -28,8 +28,8 @@ if ($env:SUPABASE_ACCESS_TOKEN) {
   Log "Skipping Supabase login (no SUPABASE_ACCESS_TOKEN set)"
 }
 
-# Link to remote project
-Step "Supabase link"   "npx supabase@latest link --project-ref $PROJECT_REF --password `"$env:SUPABASE_DB_PASSWORD`""
+# Link to remote project (will use config.toml or environment)
+Step "Supabase link"   "npx supabase@latest link --password `"$env:SUPABASE_DB_PASSWORD`""
 
 # Run 'status' only if Docker service is running (prevents Windows Docker noise)
 $dockerRunning = $false

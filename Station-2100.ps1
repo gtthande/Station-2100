@@ -4,8 +4,33 @@ $ErrorActionPreference = "Stop"
 # 0) Go to project
 Set-Location "E:\Gtthande Dropbox\George Thande\Projects\Cusor\Station-2100"
 
-# 1) Ensure sync flag in .env.local
-if (-not (Test-Path .\.env.local)) { New-Item -ItemType File -Path .\.env.local | Out-Null }
+# 1) Ensure environment file exists with required variables
+if (-not (Test-Path .\.env.local)) { 
+  Write-Host "[env] Creating .env.local template..." -ForegroundColor Cyan
+  @"
+# Station-2100 Environment Variables
+# Update these with your actual Supabase project values
+
+# Supabase Configuration
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+
+# Development Sync
+ALLOW_SYNC=1
+
+# GitHub Integration
+VITE_GITHUB_REPO=gtthande/Station-2100
+
+# Database Password
+SUPABASE_DB_PASSWORD=Series-2100Station-2100
+"@ | Out-File -FilePath .\.env.local -Encoding UTF8
+  Write-Host "[env] .env.local created with template. Please update with your actual Supabase values!" -ForegroundColor Yellow
+} else {
+  Write-Host "[env] .env.local exists" -ForegroundColor DarkGray
+}
+
+# Ensure ALLOW_SYNC=1 is present
 if (-not (Select-String -Path .\.env.local -Pattern '^ALLOW_SYNC=1$' -SimpleMatch -Quiet)) {
   Add-Content -Path .\.env.local -Value 'ALLOW_SYNC=1'
   Write-Host "[env] ALLOW_SYNC=1 added to .env.local" -ForegroundColor Cyan
