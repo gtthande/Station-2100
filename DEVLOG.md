@@ -4,6 +4,65 @@ This file tracks the ongoing development of the Station-2100 modernization proje
 
 ---
 
+## 💱 Exchange Rates Manager Implementation (September 2025)
+
+### Database Schema
+- **Created `exchange_rates` table** with comprehensive currency tracking:
+  - `id`: UUID primary key with auto-generation
+  - `base_currency`: Source currency (USD, EUR, SCR)
+  - `target_currency`: Target currency (KES)
+  - `rate`: Exchange rate with 6 decimal precision
+  - `source`: Track rate origin (api, manual, system)
+  - `updated_at`: Automatic timestamp updates
+  - **Unique constraint** on currency pairs
+  - **Row Level Security** with admin-only access policies
+
+### Backend Integration
+- **Supabase Edge Function**: `update-exchange-rates`
+  - Fetches live rates from `https://api.exchangerate.host/latest?base=USD`
+  - Supports USD→KES, EUR→KES, SCR→KES conversions
+  - Handles API errors gracefully with retry logic
+  - Updates database with latest rates and timestamps
+  - Returns success/error status with detailed logging
+
+### Admin Panel UI
+- **Exchange Rates Manager Component**: Full-featured management interface
+  - **Real-time table** showing all currency pairs with rates and sources
+  - **Update from API** button for manual rate refresh
+  - **Edit functionality** with modal dialogs for manual rate override
+  - **Reset capability** to restore API values from manual overrides
+  - **Source tracking** with color-coded badges (api, manual, system)
+  - **Timestamp display** showing when rates were last updated
+
+### Inventory Integration
+- **Enhanced Receiving Component**: `InventoryReceivingWithExchange`
+  - **Automatic currency conversion** when items are priced in foreign currencies
+  - **Local Guide Price** display showing equivalent KES value
+  - **Exchange rate information** showing current rate and source
+  - **Manual override support** for special pricing situations
+  - **Real-time calculation** as user types price and selects currency
+
+### Custom Hooks
+- **`useExchangeRates`**: Reusable hook for currency operations
+  - Fetches and caches exchange rates from database
+  - Provides `getExchangeRate()` and `convertCurrency()` functions
+  - Handles loading states and error management
+  - Supports automatic refresh functionality
+
+### Security & Permissions
+- **Row Level Security**: Only admin users can modify exchange rates
+- **Source tracking**: Distinguishes between API and manual rates
+- **Audit trail**: Timestamps for all rate changes
+- **Validation**: Ensures positive rates and valid currency codes
+
+### API Integration
+- **External API**: `https://api.exchangerate.host/latest?base=USD`
+- **Error handling**: Graceful fallback when API is unavailable
+- **Rate limiting**: Respects API usage limits
+- **Data validation**: Ensures received rates are valid numbers
+
+---
+
 ## 🔑 Supabase API Keys Configuration (September 2025)
 
 ### Environment Security Update

@@ -39,6 +39,8 @@
 #### Core Features
 - **Customer Management**: Enhanced with State and Notes fields
 - **Security Framework**: Comprehensive permission-based access controls
+- **Exchange Rates Manager**: Live API sync with manual override capabilities
+- **Inventory Integration**: Automatic currency conversion for cost calculations
 - **Documentation**: Comprehensive and up-to-date documentation structure
 
 ### 🔧 Current Status
@@ -55,6 +57,50 @@
 3. **Job Cards Module**: Complete job card lifecycle management
 4. **Inventory System**: Advanced inventory tracking and management
 5. **Customers/Suppliers**: Enhanced relationship management
+
+## Exchange Rates Manager
+
+### Overview
+The Exchange Rates Manager provides real-time currency conversion capabilities for Station-2100's inventory management system. It automatically fetches live exchange rates from external APIs and allows manual overrides when needed.
+
+### Features
+- **Live API Integration**: Fetches current exchange rates from `https://api.exchangerate.host/latest?base=USD`
+- **Manual Override**: Admins can manually set exchange rates for specific currency pairs
+- **Source Tracking**: Tracks whether rates come from API, manual input, or system defaults
+- **Inventory Integration**: Automatically converts foreign currency prices to local currency (KES)
+- **Admin Panel**: Full management interface in the Admin Panel under "Exchange Rates"
+
+### Supported Currencies
+- **USD** → KES (US Dollar to Kenyan Shilling)
+- **EUR** → KES (Euro to Kenyan Shilling)  
+- **SCR** → KES (Seychelles Rupee to Kenyan Shilling)
+
+### Database Schema
+```sql
+CREATE TABLE exchange_rates (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    base_currency TEXT NOT NULL,
+    target_currency TEXT NOT NULL,
+    rate NUMERIC(15,6) NOT NULL,
+    source TEXT NOT NULL DEFAULT 'api',
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(base_currency, target_currency)
+);
+```
+
+### API Endpoints
+- **Update Rates**: `POST /functions/v1/update-exchange-rates`
+- **Manual Override**: Update via Admin Panel UI
+- **Reset to API**: Restore manual rates to latest API values
+
+### Usage in Inventory
+When receiving inventory items priced in foreign currencies:
+1. Select the item's currency (USD, EUR, SCR)
+2. Enter the unit price
+3. System automatically calculates equivalent KES price
+4. Shows "Local Guide Price" for reference
+5. Allows manual override if needed
 
 ### Development Workflow Improvements
 - Automated testing integration

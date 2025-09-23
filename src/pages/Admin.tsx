@@ -12,18 +12,19 @@ import { SecurityAuditLog } from '@/components/admin/SecurityAuditLog';
 import { SampleUsersManagement } from '@/components/admin/SampleUsersManagement';
 import { CustomerPermissionManagement } from '@/components/admin/CustomerPermissionManagement';
 import CompanyManagement from '@/components/admin/CompanyManagement';
+import ExchangeRatesManager from '@/components/admin/ExchangeRatesManager';
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link, useNavigate } from 'react-router-dom';
 import { BackButton } from '@/components/navigation/BackButton';
-import { Shield, Users, Settings, UserCheck, Cog, Upload, Building2, Package, Lock, Eye, Code2, Database, FileText } from 'lucide-react';
+import { Shield, Users, Settings, UserCheck, Cog, Upload, Building2, Package, Lock, Eye, Code2, Database, FileText, DollarSign } from 'lucide-react';
 import DevToolsPage from '@/components/admin/dev-tools';
 import { Button } from '@/components/ui/button';
 import { GlassCard, GlassCardContent } from '@/components/ui/glass-card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'custom-roles' | 'advanced-assignment' | 'import' | 'departments' | 'stock-categories' | 'sample-users' | 'hr-management' | 'security-audit' | 'company' | 'dev-sync'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'custom-roles' | 'advanced-assignment' | 'import' | 'departments' | 'stock-categories' | 'sample-users' | 'hr-management' | 'security-audit' | 'company' | 'exchange-rates' | 'dev-sync'>('users');
   const { canManageSystem, isLoading } = useUserRoles();
   const navigate = useNavigate();
 
@@ -239,6 +240,18 @@ const Admin = () => {
             <FileText className="w-4 h-4 mr-2" />
             Company Details
           </Button>
+          <Button
+            variant={activeTab === 'exchange-rates' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('exchange-rates')}
+            className={
+              activeTab === 'exchange-rates'
+                ? 'bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700'
+                : 'border-white/20 text-white hover:bg-white/10'
+            }
+          >
+            <DollarSign className="w-4 h-4 mr-2" />
+            Exchange Rates
+          </Button>
         </div>
 
         {activeTab === 'users' && (
@@ -257,6 +270,7 @@ const Admin = () => {
         {activeTab === 'hr-management' && <HRManagement />}
         {activeTab === 'security-audit' && <SecurityAuditLog />}
         {activeTab === 'company' && <CompanyManagement />}
+        {activeTab === 'exchange-rates' && <ExchangeRatesManager />}
         {activeTab === 'dev-sync' && import.meta.env.DEV && window.location.hostname === 'localhost' && (
           <DevToolsPage />
         )}
