@@ -13,6 +13,7 @@
         "sync:server": "tsx server/sync-server.ts",
         "check:sync": "tsx scripts/check-sync.ts",
         "sync-up": "powershell -ExecutionPolicy Bypass -File sync-up.ps1",
+        "git-sync": "powershell -ExecutionPolicy Bypass -File git-sync.ps1",
         "db:push": "npx supabase@latest db push --yes --password \"$env:SUPABASE_DB_PASSWORD\"",
         "link": "npx supabase@latest link --password \"$env:SUPABASE_DB_PASSWORD\"",
         "start:all": "npm run db:push && npm run dev",
