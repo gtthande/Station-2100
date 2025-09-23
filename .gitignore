@@ -6,6 +6,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+watchdog.log
 
 node_modules
 dist
@@ -29,6 +30,9 @@ dist-ssr
 .env.development
 .env.production
 .env.staging
+
+# Allow .env.example to be committed
+!.env.example
 
 # Supabase local files
 .supabase/
