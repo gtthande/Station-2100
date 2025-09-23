@@ -25,13 +25,10 @@ dist-ssr
 *.sw?
 
 # Environment variables (security)
-.env
-.env.local
-.env.development
-.env.production
-.env.staging
+# Ignore all .env files
+.env*
 
-# Allow .env.example to be committed
+# But explicitly allow .env.example to be committed
 !.env.example
 
 # Supabase local files
