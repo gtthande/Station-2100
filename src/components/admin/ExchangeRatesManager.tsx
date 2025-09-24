@@ -310,3 +310,4 @@ export default function ExchangeRatesManager() {
     </Card>
   )
 }
+

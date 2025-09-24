@@ -96,3 +96,4 @@ COMMENT ON COLUMN exchange_rates.target_currency IS 'Target currency code (e.g.,
 COMMENT ON COLUMN exchange_rates.rate IS 'Exchange rate from base to target currency';
 COMMENT ON COLUMN exchange_rates.source IS 'Source of the rate: api, manual, or system';
 COMMENT ON COLUMN exchange_rates.updated_at IS 'Timestamp when the rate was last updated';
+

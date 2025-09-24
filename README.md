@@ -61,7 +61,40 @@
 ## Exchange Rates Manager
 
 ### Overview
-The Exchange Rates Manager provides real-time currency conversion capabilities for Station-2100's inventory management system. It automatically fetches live exchange rates from external APIs and allows manual overrides when needed.
+The Exchange Rates Manager provides real-time currency conversion capabilities for inventory cost calculations, supporting both automated API updates and manual rate overrides.
+
+### Features
+- **Live API Integration**: Fetches current exchange rates from `https://api.exchangerate.host/latest?base=USD`
+- **Manual Override**: Admin users can manually set exchange rates with source tracking
+- **Currency Support**: USD, EUR, SCR to KES conversions
+- **Inventory Integration**: Automatic cost conversion during item receiving
+- **Audit Trail**: Tracks rate sources (API, manual, system) and update timestamps
+
+### Database Schema
+```sql
+CREATE TABLE exchange_rates (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    base_currency TEXT NOT NULL,
+    target_currency TEXT NOT NULL,
+    rate NUMERIC(15,6) NOT NULL,
+    source TEXT NOT NULL DEFAULT 'api',
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(base_currency, target_currency)
+);
+```
+
+### Admin Panel Usage
+1. **View Rates**: Navigate to Admin Panel → Exchange Rates
+2. **Update from API**: Click "Update from API" to fetch latest rates
+3. **Manual Override**: Click "Edit" on any rate to set custom value
+4. **Reset to API**: Click "Reset" to restore API value for manually set rates
+
+### API Integration
+- **Edge Function**: `update-exchange-rates` handles API synchronization
+- **Automatic Updates**: Can be triggered manually or scheduled periodically
+- **Error Handling**: Graceful fallback and error reporting
+
 
 ### Features
 - **Live API Integration**: Fetches current exchange rates from `https://api.exchangerate.host/latest?base=USD`
