@@ -7,8 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import { RefreshCw, Edit, RotateCcw, DollarSign } from 'lucide-react'
+import { RefreshCw, Edit, RotateCcw, DollarSign, Globe } from 'lucide-react'
 import { toast } from 'sonner'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface ExchangeRate {
   id: string
@@ -28,6 +29,8 @@ export default function ExchangeRatesManager() {
   const [editingRate, setEditingRate] = useState<ExchangeRate | null>(null)
   const [editValue, setEditValue] = useState('')
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [selectedSource, setSelectedSource] = useState('exchangerate.host')
+  const [availableSources, setAvailableSources] = useState<string[]>(['exchangerate.host', 'exchangerate-api'])
 
   // Fetch exchange rates from database
   const fetchExchangeRates = async () => {
@@ -52,19 +55,22 @@ export default function ExchangeRatesManager() {
   const updateExchangeRates = async () => {
     try {
       setUpdating(true)
-      const { data, error } = await supabase.functions.invoke('update-exchange-rates')
+      const { data, error } = await supabase.functions.invoke('update-exchange-rates', {
+        body: { source: selectedSource }
+      })
 
       if (error) throw error
 
       if (data.success) {
-        toast.success('Exchange rates updated successfully')
+        toast.success(`Exchange rates updated successfully from ${data.source}`)
+        setAvailableSources(data.availableSources || availableSources)
         await fetchExchangeRates()
       } else {
         throw new Error(data.error || 'Failed to update exchange rates')
       }
     } catch (error) {
       console.error('Error updating exchange rates:', error)
-      toast.error('Failed to update exchange rates from API')
+      toast.error(`Failed to update exchange rates from ${selectedSource}`)
     } finally {
       setUpdating(false)
     }
@@ -199,7 +205,23 @@ export default function ExchangeRatesManager() {
         <CardDescription>
           Manage currency exchange rates for inventory cost calculations
         </CardDescription>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <div className="flex items-center gap-2">
+            <Globe className="h-4 w-4" />
+            <Label htmlFor="source-select">Source:</Label>
+            <Select value={selectedSource} onValueChange={setSelectedSource}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Select source" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableSources.map((source) => (
+                  <SelectItem key={source} value={source}>
+                    {source}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Button 
             onClick={updateExchangeRates} 
             disabled={updating}

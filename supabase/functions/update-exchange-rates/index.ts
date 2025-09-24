@@ -19,6 +19,36 @@ interface ExchangeRate {
   source: string
 }
 
+interface ExchangeRateSource {
+  name: string
+  url: string
+  parser: (data: any) => Record<string, number>
+}
+
+// Define multiple exchange rate sources
+const exchangeRateSources: ExchangeRateSource[] = [
+  {
+    name: 'exchangerate.host',
+    url: 'https://api.exchangerate.host/latest?base=USD',
+    parser: (data: any) => data.rates || {}
+  },
+  {
+    name: 'fixer.io',
+    url: 'https://api.fixer.io/latest?base=USD&access_key=YOUR_API_KEY', // Note: Requires API key
+    parser: (data: any) => data.rates || {}
+  },
+  {
+    name: 'currencylayer',
+    url: 'https://api.currencylayer.com/live?access_key=YOUR_API_KEY&currencies=KES,EUR,SCR', // Note: Requires API key
+    parser: (data: any) => data.quotes || {}
+  },
+  {
+    name: 'exchangerate-api',
+    url: 'https://api.exchangerate-api.com/v4/latest/USD',
+    parser: (data: any) => data.rates || {}
+  }
+]
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -32,17 +62,28 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Fetch exchange rates from API
-    const response = await fetch('https://api.exchangerate.host/latest?base=USD')
+    // Get source parameter from request
+    const url = new URL(req.url)
+    const requestedSource = url.searchParams.get('source') || 'exchangerate.host'
     
-    if (!response.ok) {
-      throw new Error(`Failed to fetch exchange rates: ${response.statusText}`)
+    // Find the requested source
+    const source = exchangeRateSources.find(s => s.name === requestedSource)
+    if (!source) {
+      throw new Error(`Unknown source: ${requestedSource}. Available sources: ${exchangeRateSources.map(s => s.name).join(', ')}`)
     }
 
-    const data: ExchangeRateResponse = await response.json()
+    // Fetch exchange rates from selected source
+    const response = await fetch(source.url)
     
-    if (!data.rates) {
-      throw new Error('Invalid response from exchange rate API')
+    if (!response.ok) {
+      throw new Error(`Failed to fetch exchange rates from ${source.name}: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    const rates = source.parser(data)
+    
+    if (!rates || Object.keys(rates).length === 0) {
+      throw new Error(`Invalid response from ${source.name} API`)
     }
 
     // Define target currencies we want to track
@@ -51,34 +92,34 @@ serve(async (req) => {
 
     // Extract rates for our target currencies
     for (const targetCurrency of targetCurrencies) {
-      if (data.rates[targetCurrency]) {
+      if (rates[targetCurrency]) {
         exchangeRates.push({
           base_currency: 'USD',
           target_currency: targetCurrency,
-          rate: data.rates[targetCurrency],
-          source: 'api'
+          rate: rates[targetCurrency],
+          source: source.name
         })
       }
     }
 
     // Also add EUR to KES and SCR to KES if available
-    if (data.rates['EUR'] && data.rates['KES']) {
-      const eurToKes = data.rates['KES'] / data.rates['EUR']
+    if (rates['EUR'] && rates['KES']) {
+      const eurToKes = rates['KES'] / rates['EUR']
       exchangeRates.push({
         base_currency: 'EUR',
         target_currency: 'KES',
         rate: eurToKes,
-        source: 'api'
+        source: source.name
       })
     }
 
-    if (data.rates['SCR'] && data.rates['KES']) {
-      const scrToKes = data.rates['KES'] / data.rates['SCR']
+    if (rates['SCR'] && rates['KES']) {
+      const scrToKes = rates['KES'] / rates['SCR']
       exchangeRates.push({
         base_currency: 'SCR',
         target_currency: 'KES',
         rate: scrToKes,
-        source: 'api'
+        source: source.name
       })
     }
 
@@ -108,9 +149,11 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Exchange rates updated successfully',
+        message: `Exchange rates updated successfully from ${source.name}`,
+        source: source.name,
         rates: exchangeRates,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        availableSources: exchangeRateSources.map(s => s.name)
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
