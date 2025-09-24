@@ -2,32 +2,36 @@
 $ErrorActionPreference = "Stop"
 
 # 0) Go to project
-Set-Location "E:\Gtthande Dropbox\George Thande\Projects\Cusor\Station-2100"
+Set-Location "E:\Projects\Cusor\Station-2100"
 
 # 1) Ensure environment file exists with required variables
 if (-not (Test-Path .\.env.local)) { 
-  Write-Host "[env] Creating .env.local template..." -ForegroundColor Cyan
+  Write-Host "[env] Creating .env.local with required variables..." -ForegroundColor Cyan
   @"
 # Station-2100 Environment Variables
-# Update these with your actual Supabase project values
-
-# Supabase Configuration
-VITE_SUPABASE_URL=https://your-project-ref.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
-
-# Development Sync
+VITE_SUPABASE_URL=https://jarlvtojzqkccovburmi.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphcmx2dG9qenFrY2NvdmJ1cm1pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5NzMwNTcsImV4cCI6MjA2NjU0OTA1N30.tFLcrolwr79OVXymCyTxdPcp6-qsQo6NDIrGOZ9h_Iw
 ALLOW_SYNC=1
-
-# GitHub Integration
-VITE_GITHUB_REPO=gtthande/Station-2100
-
-# Database Password
-SUPABASE_DB_PASSWORD=Series-2100Station-2100
 "@ | Out-File -FilePath .\.env.local -Encoding UTF8
-  Write-Host "[env] .env.local created with template. Please update with your actual Supabase values!" -ForegroundColor Yellow
+  Write-Host "[env] .env.local created with required Supabase variables!" -ForegroundColor Green
 } else {
-  Write-Host "[env] .env.local exists" -ForegroundColor DarkGray
+  Write-Host "[env] .env.local exists, checking for required variables..." -ForegroundColor DarkGray
+  
+  # Check and add VITE_SUPABASE_URL if missing
+  if (-not (Select-String -Path .\.env.local -Pattern '^VITE_SUPABASE_URL=' -SimpleMatch -Quiet)) {
+    Add-Content -Path .\.env.local -Value 'VITE_SUPABASE_URL=https://jarlvtojzqkccovburmi.supabase.co'
+    Write-Host "[env] VITE_SUPABASE_URL added to .env.local" -ForegroundColor Cyan
+  } else {
+    Write-Host "[env] VITE_SUPABASE_URL already present" -ForegroundColor DarkGray
+  }
+  
+  # Check and add VITE_SUPABASE_ANON_KEY if missing
+  if (-not (Select-String -Path .\.env.local -Pattern '^VITE_SUPABASE_ANON_KEY=' -SimpleMatch -Quiet)) {
+    Add-Content -Path .\.env.local -Value 'VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphcmx2dG9qenFrY2NvdmJ1cm1pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5NzMwNTcsImV4cCI6MjA2NjU0OTA1N30.tFLcrolwr79OVXymCyTxdPcp6-qsQo6NDIrGOZ9h_Iw'
+    Write-Host "[env] VITE_SUPABASE_ANON_KEY added to .env.local" -ForegroundColor Cyan
+  } else {
+    Write-Host "[env] VITE_SUPABASE_ANON_KEY already present" -ForegroundColor DarkGray
+  }
 }
 
 # Ensure ALLOW_SYNC=1 is present
