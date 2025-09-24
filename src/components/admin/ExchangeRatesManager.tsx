@@ -16,9 +16,8 @@ interface ExchangeRate {
   base_currency: string
   target_currency: string
   rate: number
-  source: string
-  updated_at: string
-  created_at: string
+  last_updated: string
+  manual_override: boolean
 }
 
 export default function ExchangeRatesManager() {
@@ -82,9 +81,9 @@ export default function ExchangeRatesManager() {
       const { error } = await supabase
         .from('exchange_rates')
         .update({ 
-          rate: newRate, 
-          source: 'manual',
-          updated_at: new Date().toISOString()
+          rate: newRate,
+          manual_override: true,
+          last_updated: new Date().toISOString()
         })
         .eq('id', id)
 
@@ -104,8 +103,8 @@ export default function ExchangeRatesManager() {
       const { error } = await supabase
         .from('exchange_rates')
         .update({ 
-          source: 'api',
-          updated_at: new Date().toISOString()
+          manual_override: false,
+          last_updated: new Date().toISOString()
         })
         .eq('id', id)
 
@@ -160,13 +159,8 @@ export default function ExchangeRatesManager() {
   }
 
   // Get source badge variant
-  const getSourceBadgeVariant = (source: string) => {
-    switch (source) {
-      case 'api': return 'default'
-      case 'manual': return 'secondary'
-      case 'system': return 'outline'
-      default: return 'default'
-    }
+  const getSourceBadgeVariant = (manualOverride: boolean) => {
+    return manualOverride ? 'secondary' : 'default'
   }
 
   useEffect(() => {
@@ -252,11 +246,11 @@ export default function ExchangeRatesManager() {
                   </TableCell>
                   <TableCell>{formatRate(rate.rate)}</TableCell>
                   <TableCell>
-                    <Badge variant={getSourceBadgeVariant(rate.source)}>
-                      {rate.source}
+                    <Badge variant={getSourceBadgeVariant(rate.manual_override)}>
+                      {rate.manual_override ? 'manual' : 'api'}
                     </Badge>
                   </TableCell>
-                  <TableCell>{formatDate(rate.updated_at)}</TableCell>
+                  <TableCell>{formatDate(rate.last_updated)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                       <Button

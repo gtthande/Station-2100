@@ -131,8 +131,8 @@ serve(async (req) => {
           base_currency: rate.base_currency,
           target_currency: rate.target_currency,
           rate: rate.rate,
-          source: rate.source,
-          updated_at: new Date().toISOString()
+          last_updated: new Date().toISOString(),
+          manual_override: false
         }, {
           onConflict: 'base_currency,target_currency'
         })
