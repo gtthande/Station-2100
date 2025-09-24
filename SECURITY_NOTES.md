@@ -87,6 +87,26 @@ Before production:
 4. Review and test all RLS policies with different user roles
 5. Ensure backup and recovery procedures are in place
 
+### Known Vulnerabilities
+
+#### xlsx Package (High Severity)
+- **Package**: `xlsx` (used for Excel import/export functionality)
+- **Vulnerabilities**: 
+  - Prototype Pollution in sheetJS (GHSA-4r6h-8v6p-xvw6)
+  - Regular Expression Denial of Service (ReDoS) (GHSA-5pgg-2g8v-p4x9)
+- **Status**: No fix available - monitoring for updates
+- **Mitigation**: 
+  - Excel files are only processed in controlled admin environments
+  - Input validation and sanitization applied to all Excel data
+  - No user-uploaded Excel files are executed as code
+- **Action Required**: Monitor for package updates and consider alternative libraries if critical
+
+#### esbuild Package (Moderate Severity)
+- **Package**: `esbuild` (development dependency via Vite)
+- **Vulnerability**: Development server request interception (GHSA-67mh-4wv8-2f99)
+- **Status**: No fix available - affects development only
+- **Mitigation**: Only affects development environment, not production builds
+
 ### Contact & Support
 
 For security issues or questions:

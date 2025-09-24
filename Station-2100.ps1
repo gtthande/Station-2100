@@ -10,7 +10,7 @@ if (-not (Test-Path .\.env.local)) {
   @"
 # Station-2100 Environment Variables
 VITE_SUPABASE_URL=https://jarlvtojzqkccovburmi.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphcmx2dG9qenFrY2NvdmJ1cm1pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5NzMwNTcsImV4cCI6MjA2NjU0OTA1N30.tFLcrolwr79OVXymCyTxdPcp6-qsQo6NDIrGOZ9h_Iw
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphcmx2dG9qenFrY2tjb3ZidXJtaSIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzUwOTczMDU3LCJleHAiOjIwNjY1NDkwNTd9.tFLcrolwr79OVXymCyTxdCPd6-qsQo6NDrtGOZ9h_Iw
 ALLOW_SYNC=1
 "@ | Out-File -FilePath .\.env.local -Encoding UTF8
   Write-Host "[env] .env.local created with required Supabase variables!" -ForegroundColor Green
@@ -27,10 +27,42 @@ ALLOW_SYNC=1
   
   # Check and add VITE_SUPABASE_ANON_KEY if missing
   if (-not (Select-String -Path .\.env.local -Pattern '^VITE_SUPABASE_ANON_KEY=' -SimpleMatch -Quiet)) {
-    Add-Content -Path .\.env.local -Value 'VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphcmx2dG9qenFrY2NvdmJ1cm1pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5NzMwNTcsImV4cCI6MjA2NjU0OTA1N30.tFLcrolwr79OVXymCyTxdPcp6-qsQo6NDIrGOZ9h_Iw'
+    Add-Content -Path .\.env.local -Value 'VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphcmx2dG9qenFrY2tjb3ZidXJtaSIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzUwOTczMDU3LCJleHAiOjIwNjY1NDkwNTd9.tFLcrolwr79OVXymCyTxdCPd6-qsQo6NDrtGOZ9h_Iw'
     Write-Host "[env] VITE_SUPABASE_ANON_KEY added to .env.local" -ForegroundColor Cyan
   } else {
     Write-Host "[env] VITE_SUPABASE_ANON_KEY already present" -ForegroundColor DarkGray
+  }
+  
+  # Check and add VITE_SUPABASE_SERVICE_ROLE_KEY if missing
+  if (-not (Select-String -Path .\.env.local -Pattern '^VITE_SUPABASE_SERVICE_ROLE_KEY=' -SimpleMatch -Quiet)) {
+    Add-Content -Path .\.env.local -Value 'VITE_SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphcmx2dG9qenFrY2tjb3ZidXJtaSIsInJvbGUiOiJzZXJ2aWNlX3JvbGUiLCJpYXQiOjE3NTA5NzMwNTcsImV4cCI6MjA2NjU0OTA1N30.95sSXw5CWjxM1mY7X21PGpkKfx0XW8lmkREkwIa8ExA'
+    Write-Host "[env] VITE_SUPABASE_SERVICE_ROLE_KEY added to .env.local" -ForegroundColor Cyan
+  } else {
+    Write-Host "[env] VITE_SUPABASE_SERVICE_ROLE_KEY already present" -ForegroundColor DarkGray
+  }
+  
+  # Check and add SUPABASE_DB_PASSWORD if missing
+  if (-not (Select-String -Path .\.env.local -Pattern '^SUPABASE_DB_PASSWORD=' -SimpleMatch -Quiet)) {
+    Add-Content -Path .\.env.local -Value 'SUPABASE_DB_PASSWORD=Series-2100Station-2100'
+    Write-Host "[env] SUPABASE_DB_PASSWORD added to .env.local" -ForegroundColor Cyan
+  } else {
+    Write-Host "[env] SUPABASE_DB_PASSWORD already present" -ForegroundColor DarkGray
+  }
+  
+  # Check and add VITE_GITHUB_TOKEN if missing
+  if (-not (Select-String -Path .\.env.local -Pattern '^VITE_GITHUB_TOKEN=' -SimpleMatch -Quiet)) {
+    Add-Content -Path .\.env.local -Value 'VITE_GITHUB_TOKEN=your-github-token-here'
+    Write-Host "[env] VITE_GITHUB_TOKEN added to .env.local" -ForegroundColor Cyan
+  } else {
+    Write-Host "[env] VITE_GITHUB_TOKEN already present" -ForegroundColor DarkGray
+  }
+  
+  # Check and add HAVEIBEENPWNED_API_KEY if missing
+  if (-not (Select-String -Path .\.env.local -Pattern '^HAVEIBEENPWNED_API_KEY=' -SimpleMatch -Quiet)) {
+    Add-Content -Path .\.env.local -Value 'HAVEIBEENPWNED_API_KEY='
+    Write-Host "[env] HAVEIBEENPWNED_API_KEY added to .env.local" -ForegroundColor Cyan
+  } else {
+    Write-Host "[env] HAVEIBEENPWNED_API_KEY already present" -ForegroundColor DarkGray
   }
 }
 
@@ -41,6 +73,8 @@ if (-not (Select-String -Path .\.env.local -Pattern '^ALLOW_SYNC=1$' -SimpleMatc
 } else {
   Write-Host "[env] ALLOW_SYNC=1 already present" -ForegroundColor DarkGray
 }
+
+Write-Host "[env] ready" -ForegroundColor Green
 
 # 2) Kill any stale Node (ignore if not running)
 try { taskkill /IM node.exe /F 2>$null | Out-Null } catch { }

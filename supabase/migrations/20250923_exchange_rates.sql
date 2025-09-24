@@ -45,10 +45,9 @@ CREATE POLICY "Allow authenticated users to read exchange rates" ON exchange_rat
 CREATE POLICY "Allow admin users to insert exchange rates" ON exchange_rates
     FOR INSERT WITH CHECK (
         EXISTS (
-            SELECT 1 FROM user_roles ur
-            JOIN roles r ON ur.role_id = r.id
-            WHERE ur.user_id = auth.uid()
-            AND r.name = 'admin'
+            SELECT 1 FROM public.profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role = 'admin'
         )
     );
 
@@ -56,10 +55,9 @@ CREATE POLICY "Allow admin users to insert exchange rates" ON exchange_rates
 CREATE POLICY "Allow admin users to update exchange rates" ON exchange_rates
     FOR UPDATE USING (
         EXISTS (
-            SELECT 1 FROM user_roles ur
-            JOIN roles r ON ur.role_id = r.id
-            WHERE ur.user_id = auth.uid()
-            AND r.name = 'admin'
+            SELECT 1 FROM public.profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role = 'admin'
         )
     );
 
@@ -67,10 +65,9 @@ CREATE POLICY "Allow admin users to update exchange rates" ON exchange_rates
 CREATE POLICY "Allow admin users to delete exchange rates" ON exchange_rates
     FOR DELETE USING (
         EXISTS (
-            SELECT 1 FROM user_roles ur
-            JOIN roles r ON ur.role_id = r.id
-            WHERE ur.user_id = auth.uid()
-            AND r.name = 'admin'
+            SELECT 1 FROM public.profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role = 'admin'
         )
     );
 
