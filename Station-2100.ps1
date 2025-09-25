@@ -11,9 +11,13 @@ if (-not (Test-Path .\.env.local)) {
 # Station-2100 Environment Variables
 VITE_SUPABASE_URL=https://jarlvtojzqkccovburmi.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphcmx2dG9qenFrY2tjb3ZidXJtaSIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzUwOTczMDU3LCJleHAiOjIwNjY1NDkwNTd9.tFLcrolwr79OVXymCyTxdCPd6-qsQo6NDrtGOZ9h_Iw
+VITE_SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphcmx2dG9qenFrY2tjb3ZidXJtaSIsInJvbGUiOiJzZXJ2aWNlX3JvbGUiLCJpYXQiOjE3NTA5NzMwNTcsImV4cCI6MjA2NjU0OTA1N30.95sSXw5CWjxM1mY7X21PGpkKfx0XW8lmkREkwIa8ExA
+SUPABASE_DB_PASSWORD=Series-2100Station-2100
+VITE_GITHUB_TOKEN=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
+HAVEIBEENPWNED_API_KEY=
 ALLOW_SYNC=1
 "@ | Out-File -FilePath .\.env.local -Encoding UTF8
-  Write-Host "[env] .env.local created with required Supabase variables!" -ForegroundColor Green
+  Write-Host "[env] .env.local created with all required variables!" -ForegroundColor Green
 } else {
   Write-Host "[env] .env.local exists, checking for required variables..." -ForegroundColor DarkGray
   
