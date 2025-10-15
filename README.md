@@ -1,247 +1,594 @@
 # Station-2100 - Aviation Management System
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5.3-blue.svg)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-2.58.0-green.svg)](https://supabase.com/)
+[![Vite](https://img.shields.io/badge/Vite-5.4.20-646CFF.svg)](https://vitejs.dev/)
+[![Cubic Matrix](https://img.shields.io/badge/Cubic_Matrix-v5-purple.svg)](https://raw.githubusercontent.com/gtthande/dev-profiles/main/Dev_Profile_and_Cursor_Prompt_Pack.md)
+
 ## Table of Contents
 
 - [Project Overview](#project-overview)
-- [Current Progress (Intermediate – September 2025)](#current-progress-intermediate--september-2025)
-- [Next Steps](#next-steps)
+- [Quick Start](#quick-start)
+- [System Architecture](#system-architecture)
+- [Features](#features)
+- [Authentication & Security](#authentication--security)
+- [Development Setup](#development-setup)
 - [Documentation](#documentation)
-- [Development Workflow Restart Guide](#development-workflow-restart-guide)
-- [Architecture Diagrams](#architecture-diagrams)
-- [Conclusion](#conclusion)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
 
 ## Project Overview
 
-**Station-2100** is a comprehensive aviation inventory and job card management system built with modern web technologies:
+**Station-2100** is a comprehensive aviation inventory and job card management system designed for aviation maintenance professionals. Built with modern web technologies, it provides secure, role-based access to inventory management, job card workflows, customer data, and rotable parts lifecycle tracking.
 
-- **Frontend**: Next.js 14+, Vite, React 18, TypeScript
+### 🛩️ **Core Capabilities**
+- **Inventory Management**: Complete product catalog with batch tracking and approval workflows
+- **Job Card System**: Aviation-specific job card creation and multi-level approval processes
+- **Customer Management**: Secure customer data with granular permission controls
+- **Rotable Parts**: Full lifecycle tracking for aviation rotable components
+- **Tool Management**: Tool checkout/check-in system with tracking
+- **Exchange Rates**: Real-time currency conversion for international operations
+- **Security**: Enterprise-grade security with audit logging and data protection
+
+### 🏗️ **Technology Stack**
+- **Frontend**: React 18, TypeScript, Vite, TailwindCSS
 - **Backend**: Supabase (PostgreSQL, Auth, Storage, Realtime)
-- **Database**: Prisma ORM with Supabase
-- **Styling**: TailwindCSS with shadcn/ui components
+- **UI Components**: shadcn/ui, Radix UI primitives
 - **State Management**: TanStack Query (React Query)
-- **Security**: Row-Level Security, AES-256 encryption, audit logging
+- **Form Handling**: React Hook Form with Zod validation
+- **Security**: Row-Level Security, AES-256 encryption, comprehensive audit logging
 
-## Current Progress (Intermediate – September 2025)
+## Quick Start
 
-### ✅ Completed Infrastructure
+### 🚀 **Get Started in 3 Steps**
 
-#### PowerShell Automation Scripts
-- **`Station-2100.ps1`**: Comprehensive startup script with environment setup
-- **`dev-health.ps1`**: Health monitoring and endpoint validation
-- **`push-changes.ps1`**: Automated Git commit and push workflows
+1. **Clone and Setup**
+   ```bash
+   git clone https://github.com/gtthande/Station-2100.git
+   cd Station-2100
+   npm ci --prefer-offline --no-audit --no-fund
+   ```
 
-#### Development Environment
-- **Sync Health Checks**: Real-time endpoint monitoring (`/__sync/ping`, `/__sync/status`)
-- **Cursor Integration**: Seamless AI-assisted development workflow
-- **GitHub Automation**: Automated commit and push processes
-- **Environment Management**: Proper `.env.local` configuration with `ALLOW_SYNC=1`
+2. **Configure Environment**
+   ```bash
+   # Environment file is auto-created from template
+   # Edit .env.local with your Supabase credentials if needed
+   ```
 
-#### Core Features
-- **Customer Management**: Enhanced with State and Notes fields
-- **Security Framework**: Comprehensive permission-based access controls
-- **Exchange Rates Manager**: Live API sync with manual override capabilities
-- **Inventory Integration**: Automatic currency conversion for cost calculations
-- **Documentation**: Comprehensive and up-to-date documentation structure
+3. **Start Development Server**
+   ```bash
+   npm run dev
+   # Open http://localhost:8080
+   ```
 
-### 🔧 Current Status
-- **Development Server**: ✅ Running at http://localhost:8080
-- **Health Checks**: ✅ All sync endpoints operational
-- **GitHub Integration**: ✅ Automated workflows active
-- **Documentation**: ✅ Comprehensive and up-to-date
-
-## Next Steps
-
-### Immediate Priorities
-1. **`pull-changes.ps1`**: Enhanced Git workflow automation with conflict resolution
-2. **Environment Validation**: Cross-machine consistency checks
-3. **Job Cards Module**: Complete job card lifecycle management
-4. **Inventory System**: Advanced inventory tracking and management
-5. **Customers/Suppliers**: Enhanced relationship management
-
-## Exchange Rates Manager
-
-### Overview
-The Exchange Rates Manager provides real-time currency conversion capabilities for inventory cost calculations, supporting both automated API updates and manual rate overrides.
-
-### Features
-- **Live API Integration**: Fetches current exchange rates from `https://api.exchangerate.host/latest?base=USD`
-- **Manual Override**: Admin users can manually set exchange rates with source tracking
-- **Currency Support**: USD, EUR, SCR to KES conversions
-- **Inventory Integration**: Automatic cost conversion during item receiving
-- **Audit Trail**: Tracks rate sources (API, manual, system) and update timestamps
-
-### Database Schema
-```sql
-CREATE TABLE exchange_rates (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    base_currency TEXT NOT NULL,
-    target_currency TEXT NOT NULL,
-    rate NUMERIC(15,6) NOT NULL,
-    source TEXT NOT NULL DEFAULT 'api',
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(base_currency, target_currency)
-);
+### 🔄 **Alternative: Automated Setup**
+```powershell
+# Windows PowerShell - Automated setup
+.\Station-2100.ps1
+# or
+.\scripts\setup-and-run.ps1
 ```
 
-### Admin Panel Usage
-1. **View Rates**: Navigate to Admin Panel → Exchange Rates
-2. **Update from API**: Click "Update from API" to fetch latest rates
-3. **Manual Override**: Click "Edit" on any rate to set custom value
-4. **Reset to API**: Click "Reset" to restore API value for manually set rates
+### 🔐 **Default Admin Access**
+- **Email**: `gtthande@gmail.com`
+- **Password**: `Password100%`
+- **Role**: System Administrator
 
-### API Integration
-- **Edge Function**: `update-exchange-rates` handles API synchronization
-- **Automatic Updates**: Can be triggered manually or scheduled periodically
-- **Error Handling**: Graceful fallback and error reporting
+## System Architecture
 
+### 🏗️ **High-Level Architecture**
 
-### Features
-- **Live API Integration**: Fetches current exchange rates from `https://api.exchangerate.host/latest?base=USD`
-- **Manual Override**: Admins can manually set exchange rates for specific currency pairs
-- **Source Tracking**: Tracks whether rates come from API, manual input, or system defaults
-- **Inventory Integration**: Automatically converts foreign currency prices to local currency (KES)
-- **Admin Panel**: Full management interface in the Admin Panel under "Exchange Rates"
-
-### Supported Currencies
-- **USD** → KES (US Dollar to Kenyan Shilling)
-- **EUR** → KES (Euro to Kenyan Shilling)  
-- **SCR** → KES (Seychelles Rupee to Kenyan Shilling)
-
-### Database Schema
-```sql
-CREATE TABLE exchange_rates (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    base_currency TEXT NOT NULL,
-    target_currency TEXT NOT NULL,
-    rate NUMERIC(15,6) NOT NULL,
-    source TEXT NOT NULL DEFAULT 'api',
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(base_currency, target_currency)
-);
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        A[React 18 + TypeScript]
+        B[Vite Dev Server]
+        C[shadcn/ui Components]
+        D[TailwindCSS Styling]
+    end
+    
+    subgraph "Backend Layer"
+        E[Supabase API]
+        F[PostgreSQL Database]
+        G[Row Level Security]
+        H[Authentication]
+    end
+    
+    subgraph "External Services"
+        I[Exchange Rate API]
+        J[HaveIBeenPwned API]
+        K[GitHub Integration]
+    end
+    
+    A --> E
+    B --> A
+    C --> A
+    D --> A
+    E --> F
+    E --> G
+    E --> H
+    E --> I
+    E --> J
+    A --> K
 ```
 
-### API Endpoints
-- **Update Rates**: `POST /functions/v1/update-exchange-rates`
-- **Manual Override**: Update via Admin Panel UI
-- **Reset to API**: Restore manual rates to latest API values
+### 📊 **Database Architecture**
 
-### Usage in Inventory
-When receiving inventory items priced in foreign currencies:
-1. Select the item's currency (USD, EUR, SCR)
-2. Enter the unit price
-3. System automatically calculates equivalent KES price
-4. Shows "Local Guide Price" for reference
-5. Allows manual override if needed
+```mermaid
+erDiagram
+    USERS ||--o{ PROFILES : has
+    USERS ||--o{ USER_ROLES : assigned
+    PROFILES ||--o{ INVENTORY_PRODUCTS : owns
+    INVENTORY_PRODUCTS ||--o{ INVENTORY_BATCHES : contains
+    PROFILES ||--o{ CUSTOMERS : manages
+    PROFILES ||--o{ JOB_CARDS : creates
+    PROFILES ||--o{ ROTABLE_PARTS : tracks
+    PROFILES ||--o{ TOOLS : manages
+    
+    USERS {
+        uuid id PK
+        string email
+        timestamp created_at
+    }
+    
+    PROFILES {
+        uuid id PK
+        string email
+        string full_name
+        string position
+        boolean is_staff
+        boolean staff_active
+    }
+    
+    INVENTORY_PRODUCTS {
+        uuid id PK
+        uuid user_id FK
+        string part_number
+        string description
+        decimal unit_cost
+        string unit_of_measure
+    }
+    
+    CUSTOMERS {
+        uuid id PK
+        uuid user_id FK
+        string name
+        string email
+        string phone
+        string aircraft_type
+        string tail_number
+    }
+```
 
-### Development Workflow Improvements
-- Automated testing integration
-- Performance optimization
-- Mobile responsiveness enhancements
-- Advanced reporting features
+## Features
 
-## Documentation
+### 🛩️ **Aviation-Specific Features**
 
-- **[DEVLOG.md](./DEVLOG.md)** - Development history and progress tracking
-- **[docs/](./docs/)** - Reference documents and detailed reports
-- **[USER_MANUAL.md](./USER_MANUAL.md)** - User guide and feature documentation
-- **[TECHNICAL_DOCUMENTATION.md](./TECHNICAL_DOCUMENTATION.md)** - Technical architecture and implementation details
+#### **Inventory Management**
+- **Product Catalog**: Complete part number management with descriptions and specifications
+- **Batch Tracking**: Lot-based inventory tracking with expiry dates and approval workflows
+- **Multi-Currency Support**: Real-time exchange rate conversion (USD, EUR, SCR → KES)
+- **Stock Valuation**: Automated cost calculations with weighted average pricing
+- **Reorder Management**: Automated reorder point calculations and notifications
 
-## Supabase Environment Setup
+#### **Job Card System**
+- **Multi-Level Approval**: Warehouse A, B/C, and Owner Supplied approval workflows
+- **Aircraft Integration**: Tail number and aircraft type tracking
+- **Customer Integration**: Direct customer and aircraft association
+- **Status Tracking**: Draft → Pending → Approved → Active workflow
 
-### Required Environment Variables
+#### **Rotable Parts Lifecycle**
+- **Status Management**: Serviceable → In Service → Repair → Scrapped
+- **Flight Tracking**: Hours and cycles tracking with compliance monitoring
+- **Installation Logs**: Complete installation and removal history
+- **Repair/Exchange**: Track repair history and exchange records
 
-Create a `.env.local` file in the project root with the following variables:
+### 🔐 **Security & Access Control**
 
+#### **Role-Based Access Control**
+```mermaid
+graph TD
+    A[System Owner] --> B[Admin]
+    B --> C[HR Manager]
+    B --> D[Parts Approver]
+    B --> E[Job Allocator]
+    B --> F[Batch Manager]
+    C --> G[Standard User]
+    D --> G
+    E --> G
+    F --> G
+```
+
+#### **Customer Data Permissions**
+- **Admin**: Full access to all customer data
+- **Manage**: CRUD operations on customer records
+- **View Full**: Access to all customer fields including contact information
+- **View Contact**: Basic information plus phone/email
+- **View Basic**: Company name and basic information only
+
+### 📈 **Reporting & Analytics**
+- **Stock Valuation Reports**: Real-time inventory value calculations
+- **Movement Reports**: Detailed stock movement history
+- **Batch Reports**: Batch status and approval tracking
+- **Customer Reports**: Customer activity and engagement metrics
+- **Audit Reports**: Security and access audit trails
+
+## Authentication & Security
+
+### 🔐 **Authentication System**
+
+#### **User Authentication Flow**
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant S as Supabase Auth
+    participant D as Database
+    
+    U->>F: Enter credentials
+    F->>S: signInWithPassword()
+    S->>D: Validate user
+    D-->>S: User data + roles
+    S-->>F: JWT token + session
+    F->>F: Store session
+    F-->>U: Redirect to dashboard
+```
+
+#### **Security Features**
+- **Password Security**: Real-time strength validation with HaveIBeenPwned integration
+- **Session Management**: Secure JWT tokens with automatic refresh
+- **Multi-Factor Authentication**: Ready for MFA implementation
+- **Audit Logging**: Comprehensive security event tracking
+- **Data Encryption**: AES-256 encryption for sensitive data
+- **Row-Level Security**: Database-level access control
+
+### 🛡️ **Data Protection**
+
+#### **Customer Data Security**
+```mermaid
+graph LR
+    A[User Request] --> B{Check Permissions}
+    B -->|Admin| C[Full Access]
+    B -->|Manage| D[CRUD Access]
+    B -->|View Full| E[Read All Fields]
+    B -->|View Contact| F[Basic + Contact]
+    B -->|View Basic| G[Name Only]
+    B -->|No Access| H[Access Denied]
+    
+    C --> I[Audit Log]
+    D --> I
+    E --> I
+    F --> I
+    G --> I
+    H --> I
+```
+
+#### **Emergency Access Procedures**
+- **Admin Override**: Controlled emergency access with justification
+- **Audit Trail**: All emergency access logged with detailed reasoning
+- **Time-Limited**: Emergency access automatically expires
+- **Approval Required**: Multi-level approval for sensitive operations
+
+## Development Setup
+
+### 🛠️ **Prerequisites**
+- **Node.js**: v18 or higher
+- **npm**: Latest version
+- **Git**: For version control
+- **Supabase Account**: For backend services
+
+### 📋 **Environment Configuration**
+
+#### **Required Environment Variables**
 ```bash
 # Supabase Configuration
-VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_URL=https://jarlvtojzqkccovburmi.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 
-# Development Sync
+# Development Sync (Optional)
 ALLOW_SYNC=1
+SUPABASE_DB_PASSWORD=Series-2100Station-2100
 
-# GitHub Integration
+# GitHub Integration (Optional)
 VITE_GITHUB_REPO=gtthande/Station-2100
 VITE_GITHUB_TOKEN=your-github-token-here
 
-# Database Password
-SUPABASE_DB_PASSWORD=Series-2100Station-2100
-
-# Optional: HaveIBeenPwned API for password security
+# Security (Optional)
 HAVEIBEENPWNED_API_KEY=your-hibp-api-key-here
 ```
 
-### Getting Supabase Keys
+### 🚀 **Development Workflow**
 
-1. **Go to your Supabase Dashboard**: https://supabase.com/dashboard
-2. **Select your project** (or create a new one)
-3. **Navigate to Settings → API**
-4. **Copy the following values**:
-   - **Project URL** → `VITE_SUPABASE_URL`
-   - **anon public** key → `VITE_SUPABASE_ANON_KEY`
-   - **service_role** key → `SUPABASE_SERVICE_ROLE_KEY`
-
-### Security Notes
-
-- **Never commit `.env.local`** to version control (it's in `.gitignore`)
-- **Use `.env.example`** as a template for team members
-- **Service role key** should only be used server-side (has admin privileges)
-- **Anon key** is safe for client-side use (respects RLS policies)
-
-## Development Workflow Restart Guide
-
-### Quick Start
+#### **Automated Setup (Recommended)**
 ```powershell
-# 1. Navigate to project directory
-cd "E:\Gtthande Dropbox\George Thande\Projects\Cusor\Station-2100"
-
-# 2. Run automated setup script
+# Windows PowerShell
 .\Station-2100.ps1
-
-# 3. Verify health checks
-.\dev-health.ps1
-
-# 4. Access application
-# Open browser to http://localhost:8080
 ```
 
-### Manual Setup (if needed)
-```powershell
-# Environment setup
-echo "ALLOW_SYNC=1" | Out-File -FilePath .env.local -Encoding UTF8
+This script automatically:
+- Sets up environment variables
+- Installs dependencies
+- Starts the development server
+- Verifies sync endpoints
+- Displays health status
 
+#### **Manual Setup**
+```bash
 # Install dependencies
 npm install
+
+# Create environment file
+cp .env.example .env.local
+# Edit .env.local with your credentials
 
 # Start development server
 npm run dev
 
-# Verify sync endpoints
-Invoke-RestMethod -Uri "http://localhost:8080/__sync/ping"
-Invoke-RestMethod -Uri "http://localhost:8080/__sync/status"
+# Verify setup
+curl http://localhost:8080/__sync/ping
 ```
 
-### Troubleshooting
-- **Cursor Hangs**: Restart with summary context for continuity
-- **Sync Issues**: Verify `.env.local` contains `ALLOW_SYNC=1`
-- **Git Conflicts**: Use `pull-changes.ps1` for safe resolution
-- **Environment Issues**: Run `Station-2100.ps1` for automated setup
+### 🔄 **Development Sync Features**
 
-## Architecture Diagrams
+#### **Code & DB Sync Panel**
+Available in development mode for seamless collaboration:
 
-- **[Architecture Documentation](./docs/architecture.md)** - ERD, component diagrams, and deployment diagrams
-- **[Architecture Diagrams Folder](./docs/architecture/)** - Visual diagrams and technical specifications
+```mermaid
+graph TB
+    A[Dev Sync Panel] --> B[Git Status]
+    A --> C[Pull from GitHub]
+    A --> D[Push to GitHub]
+    A --> E[Push DB Migrations]
+    
+    B --> F[Show current branch]
+    B --> G[Show ahead/behind counts]
+    
+    C --> H[Fetch latest changes]
+    C --> I[Handle merge conflicts]
+    
+    D --> J[Commit staged changes]
+    D --> K[Push to remote]
+    
+    E --> L[Deploy migrations]
+    E --> M[Update production DB]
+```
 
-## Conclusion
+#### **Available Scripts**
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run autopilot    # Dev server + watchdog
+npm run sync:server  # Start sync server
+npm run db:push      # Push database migrations
+```
 
-Station-2100 has successfully established a **stable intermediate foundation** with robust infrastructure, automated workflows, and comprehensive health monitoring. The project is now positioned for **feature-rich module development** with Job Cards, Inventory Management, and enhanced Customer/Supplier relationships as the next major milestones.
+### 🧪 **Testing & Quality Assurance**
+
+#### **Code Quality**
+```bash
+# Linting
+npm run lint
+
+# Type checking
+npm run type-check
+
+# Security audit
+npm audit
+
+# Dependency check
+npm outdated
+```
+
+#### **Database Health Checks**
+```typescript
+// Health check endpoints
+GET /__sync/ping     // Basic connectivity
+GET /__sync/status   // Git and sync status
+GET /api/health      // Application health
+```
+
+## Documentation
+
+### 📚 **Comprehensive Documentation**
+
+- **[Technical Documentation](./TECHNICAL_DOCUMENTATION.md)** - Complete technical architecture and implementation details
+- **[User Manual](./USER_MANUAL.md)** - End-user guide and feature documentation
+- **[Development Log](./DEVLOG.md)** - Development history and progress tracking
+- **[Security Notes](./SECURITY_NOTES.md)** - Security implementation and best practices
+- **[Architecture Documentation](./docs/architecture.md)** - System architecture and design decisions
+
+### 🏗️ **Architecture Diagrams**
+
+- **[Entity Relationship Diagram](./docs/architecture/erd.md)** - Complete database schema
+- **[Component Architecture](./docs/architecture/components.md)** - Frontend component structure
+- **[API Documentation](./docs/architecture/api.md)** - Backend API specifications
+- **[Security Architecture](./docs/architecture/security.md)** - Security implementation details
+
+## Deployment
+
+### 🚀 **Production Deployment**
+
+#### **Via Lovable (Recommended)**
+1. **Prepare for Deployment**
+   ```bash
+   npm run build
+   npm run type-check
+   npm audit
+   ```
+
+2. **Deploy via Lovable**
+   - Click "Publish" in Lovable interface
+   - Configure custom domain (if required)
+   - Verify deployment health
+
+#### **Alternative Deployment Methods**
+
+##### **Vercel Deployment**
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Deploy
+vercel
+
+# Configure environment variables in Vercel dashboard
+```
+
+##### **Netlify Deployment**
+```bash
+# Build project
+npm run build
+
+# Deploy to Netlify
+# Upload dist/ folder or connect Git repository
+```
+
+### 🔧 **Production Configuration**
+
+#### **Environment Variables**
+```env
+# Production Supabase Configuration
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-production-anon-key
+
+# Security Settings
+VITE_ENABLE_ANALYTICS=true
+VITE_ENABLE_ERROR_REPORTING=true
+```
+
+#### **Supabase Production Settings**
+1. **Authentication Configuration**
+   - Site URL: `https://yourdomain.com`
+   - Redirect URLs: `https://yourdomain.com/**`
+   - Email templates: Configure custom templates
+
+2. **Security Settings**
+   - Enable leaked password protection
+   - Configure rate limiting
+   - Set appropriate CORS policies
+
+3. **Database Settings**
+   - Enable connection pooling
+   - Configure backup schedules
+   - Monitor query performance
+
+### 📊 **Monitoring & Health Checks**
+
+#### **Health Check Endpoints**
+```typescript
+// Application health
+GET /api/health
+
+// Database connectivity
+GET /api/health/db
+
+// Authentication status
+GET /api/health/auth
+```
+
+#### **Monitoring Setup**
+- **Supabase Dashboard**: Monitor database performance
+- **Auth Logs**: Track authentication events
+- **Edge Function Logs**: Monitor serverless function performance
+- **Custom Analytics**: Implement application-specific metrics
+
+## Contributing
+
+### 🤝 **How to Contribute**
+
+We welcome contributions to Station-2100! Here's how you can help:
+
+#### **Development Setup**
+1. **Fork the repository**
+2. **Clone your fork**
+   ```bash
+   git clone https://github.com/your-username/Station-2100.git
+   cd Station-2100
+   ```
+3. **Install dependencies**
+   ```bash
+   npm install
+   ```
+4. **Create a feature branch**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+#### **Development Guidelines**
+- **Code Style**: Follow existing TypeScript and React patterns
+- **Testing**: Add tests for new features
+- **Documentation**: Update relevant documentation
+- **Security**: Follow security best practices
+- **Performance**: Optimize for performance and accessibility
+
+#### **Pull Request Process**
+1. **Create your feature branch**
+2. **Make your changes**
+3. **Test thoroughly**
+4. **Update documentation**
+5. **Submit a pull request**
+
+### 🐛 **Bug Reports**
+
+When reporting bugs, please include:
+- **Environment details** (OS, Node.js version, browser)
+- **Steps to reproduce**
+- **Expected vs actual behavior**
+- **Screenshots** (if applicable)
+- **Error messages** (if any)
+
+### 💡 **Feature Requests**
+
+For feature requests, please:
+- **Check existing issues** first
+- **Describe the use case** clearly
+- **Explain the expected behavior**
+- **Consider implementation complexity**
+
+### 📋 **Issue Templates**
+
+We use GitHub issue templates for:
+- **Bug Reports**
+- **Feature Requests**
+- **Security Vulnerabilities**
+- **Documentation Improvements**
+
+## Support
+
+### 🆘 **Getting Help**
+
+- **Documentation**: Check the comprehensive documentation first
+- **GitHub Issues**: Search existing issues or create a new one
+- **Discussions**: Use GitHub Discussions for questions
+- **Security**: Report security issues privately
+
+### 🔒 **Security**
+
+- **Security Issues**: Report via GitHub Security Advisories
+- **Vulnerabilities**: Follow responsible disclosure practices
+- **Audit**: Regular security audits and dependency updates
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- **Supabase** for the backend infrastructure
+- **shadcn/ui** for the component library
+- **TailwindCSS** for the styling framework
+- **React Query** for state management
+- **Vite** for the build tool
+
+---
 
 **Repository**: https://github.com/gtthande/Station-2100  
 **Lovable**: https://lovable.dev/projects/3be45a24-6b88-4267-b181-6d323de70799
 
----
-
-*Ready for advanced feature development, team collaboration, and production deployment preparation.*
+*Built with ❤️ for the aviation industry*

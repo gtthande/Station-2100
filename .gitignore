@@ -31,6 +31,9 @@ dist-ssr
 # But explicitly allow .env.example to be committed
 !.env.example
 
+# Specifically ignore .env.local to prevent confusion
+.env.local
+
 # Supabase local files
 .supabase/
 
@@ -41,3 +44,4 @@ docs/*.docx
 # Local development files
 *.local
 .vscode/settings.json
+/generated/prisma

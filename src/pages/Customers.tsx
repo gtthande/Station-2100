@@ -10,7 +10,7 @@ import { GradientButton } from '@/components/ui/gradient-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, Search, Edit, Trash2, User, Phone, Mail, MapPin, X, Save, Plane, Globe } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { BackButton } from '@/components/navigation/BackButton';
 
@@ -270,6 +270,9 @@ const Customers = () => {
                 <DialogTitle className="text-white">
                   {editingCustomer ? 'Edit Customer' : 'Add New Customer'}
                 </DialogTitle>
+                <DialogDescription className="text-white/60">
+                  {editingCustomer ? 'Update customer information' : 'Add a new customer to your system'}
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">

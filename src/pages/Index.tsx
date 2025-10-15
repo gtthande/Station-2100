@@ -40,7 +40,7 @@ const Index = () => {
         <div className="flex items-center justify-between mb-12">
           <div>
             <h1 className="text-4xl font-bold text-white mb-2">Station-2100</h1>
-            <p className="text-white/70 text-lg">Aircraft Parts Management System - Supabase Only</p>
+            <p className="text-white/70 text-lg">Aircraft Parts Management System - MySQL Edition</p>
           </div>
           <div className="flex items-center gap-4">
             <Button
@@ -63,6 +63,7 @@ const Index = () => {
 
         {/* Security Alert */}
         <ProfileSecurityAlert />
+
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">

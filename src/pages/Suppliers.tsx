@@ -9,7 +9,7 @@ import { GradientButton } from '@/components/ui/gradient-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, Search, Edit, Trash2, Building, Phone, Mail, Globe, MapPin } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { BackButton } from '@/components/navigation/BackButton';
 
@@ -249,6 +249,9 @@ const Suppliers = () => {
                 <DialogTitle className="text-white">
                   {editingSupplier ? 'Edit Supplier' : 'Add New Supplier'}
                 </DialogTitle>
+                <DialogDescription className="text-white/60">
+                  {editingSupplier ? 'Update supplier information' : 'Add a new supplier to your system'}
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">

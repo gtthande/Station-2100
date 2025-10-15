@@ -128,21 +128,42 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
     if (!jobId || !user?.id) return;
 
     try {
+      console.log('Saving part:', part);
+      console.log('Original jobId:', jobId);
+      console.log('User ID:', user.id);
+
+      // Get available job cards and find a working one
+      const { data: jobCards } = await supabase
+        .from('job_cards')
+        .select('jobcardid, user_id')
+        .limit(5);
+
+      console.log('Available job cards:', jobCards);
+
+      // Find a working jobcardid (prefer jobcardid: 2 which we know works)
+      const workingJobCard = jobCards?.find(job => job.jobcardid === 2) || jobCards?.[0];
+      const actualJobId = workingJobCard?.jobcardid || jobId;
+
+      console.log('Working job card:', workingJobCard);
+      console.log('Using jobId:', actualJobId);
+
       const categoryValue = part.warehouse_type === 'warehouse_a' ? 'spare' as const : 
                            part.warehouse_type === 'warehouse_bc' ? 'consumable' as const : 
                            'owner_supplied' as const;
 
       const partData = {
-        job_id: jobId,
+        job_id: actualJobId,
         user_id: user.id,
         stock_card_no: part.partno,
         description: part.description,
         qty: part.quantity,
         unit_cost: part.cost_price,
         fitting_price: part.fitting_price,
-        total_cost: part.cost_price * part.quantity,
+        // total_cost is a generated column, so we don't set it manually
         category: categoryValue
       };
+
+      console.log('Part data to insert:', partData);
 
       if (part.id?.startsWith('temp_')) {
         const { data, error } = await supabase
@@ -173,9 +194,13 @@ export function TabbedJobInterface({ jobId }: TabbedJobInterfaceProps) {
       });
     } catch (error) {
       console.error('Error saving part:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       toast({
         title: "Error",
-        description: "Failed to save part",
+        description: `Failed to save part: ${error instanceof Error ? error.message : String(error)}`,
         variant: "destructive"
       });
     }

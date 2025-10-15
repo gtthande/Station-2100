@@ -1,132 +1,367 @@
-# Technical Documentation
+# Technical Documentation - Station-2100
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5.3-blue.svg)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-2.58.0-green.svg)](https://supabase.com/)
+[![Vite](https://img.shields.io/badge/Vite-5.4.20-646CFF.svg)](https://vitejs.dev/)
+[![Cubic Matrix](https://img.shields.io/badge/Cubic_Matrix-v5-purple.svg)](https://raw.githubusercontent.com/gtthande/dev-profiles/main/Dev_Profile_and_Cursor_Prompt_Pack.md)
 
 ## Table of Contents
 1. [Project Overview](#project-overview)
-2. [Architecture](#architecture)
-3. [Setup Instructions](#setup-instructions)
-4. [Database Schema](#database-schema)
-5. [API Reference](#api-reference)
-6. [Authentication & Authorization](#authentication--authorization)
-7. [Security Features](#security-features)
-8. [Deployment Instructions](#deployment-instructions)
-9. [Development Guidelines](#development-guidelines)
-10. [Troubleshooting](#troubleshooting)
+2. [System Architecture](#system-architecture)
+3. [Database Architecture](#database-architecture)
+4. [API Reference](#api-reference)
+5. [Authentication & Authorization](#authentication--authorization)
+6. [Security Implementation](#security-implementation)
+7. [Development Environment](#development-environment)
+8. [Deployment Architecture](#deployment-architecture)
+9. [Performance & Monitoring](#performance--monitoring)
+10. [Troubleshooting Guide](#troubleshooting-guide)
 
 ## Project Overview
 
-### Description
-A comprehensive Aviation Inventory Management System built with React, TypeScript, Tailwind CSS, and Supabase. The system manages inventory, job cards, customer data, rotable parts lifecycle, and tools with advanced role-based access control.
+### 🛩️ **System Description**
+Station-2100 is a comprehensive Aviation Inventory Management System designed specifically for aviation maintenance operations. Built with modern web technologies, it provides secure, role-based access to inventory management, job card workflows, customer data, and rotable parts lifecycle tracking.
 
-### Key Features
-- **Inventory Management**: Product tracking, batch management, stock movements
-- **Job Card System**: Aviation job card creation and approval workflows
-- **Customer Management**: Secure customer data with permission-based access
-- **Rotable Parts Lifecycle**: Complete lifecycle tracking for aviation rotable components
+### 🎯 **Core Capabilities**
+- **Inventory Management**: Complete product catalog with batch tracking and approval workflows
+- **Job Card System**: Aviation-specific job card creation and multi-level approval processes
+- **Customer Management**: Secure customer data with granular permission controls
+- **Rotable Parts**: Full lifecycle tracking for aviation rotable components
 - **Tool Management**: Tool checkout/check-in system with tracking
-- **Advanced Security**: Row-level security, audit logging, data masking
-- **Role-Based Access**: Granular permissions with custom roles
-- **Code & DB Sync**: Development-only Git and Supabase synchronization with Lovable
+- **Exchange Rates**: Real-time currency conversion for international operations
+- **Security**: Enterprise-grade security with audit logging and data protection
 
-### Technology Stack
-- **Frontend**: React 18, TypeScript, Tailwind CSS, Vite
+### 🏗️ **Technology Stack**
+- **Frontend**: React 18, TypeScript, Vite, TailwindCSS
 - **Backend**: Supabase (PostgreSQL, Auth, Storage, Realtime)
-- **UI Components**: shadcn/ui, Radix UI
+- **UI Components**: shadcn/ui, Radix UI primitives
 - **State Management**: TanStack Query (React Query)
 - **Form Handling**: React Hook Form with Zod validation
 - **Routing**: React Router DOM
 - **Build Tool**: Vite
+- **Security**: Row-Level Security, AES-256 encryption, comprehensive audit logging
 
-## Architecture
+## System Architecture
 
-### System Architecture
+### 🏗️ **High-Level System Architecture**
+
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        A[React 18 + TypeScript]
+        B[Vite Dev Server]
+        C[shadcn/ui Components]
+        D[TailwindCSS Styling]
+    end
+    
+    subgraph "API Layer"
+        E[Supabase API Gateway]
+        F[Authentication Service]
+        G[Row Level Security]
+        H[Realtime Subscriptions]
+    end
+    
+    subgraph "Data Layer"
+        I[PostgreSQL Database]
+        J[Edge Functions]
+        K[Storage Buckets]
+        L[Audit Logs]
+    end
+    
+    subgraph "External Services"
+        M[Exchange Rate API]
+        N[HaveIBeenPwned API]
+        O[GitHub Integration]
+    end
+    
+    A --> E
+    B --> A
+    C --> A
+    D --> A
+    E --> F
+    E --> G
+    E --> H
+    E --> I
+    E --> J
+    E --> K
+    E --> L
+    E --> M
+    E --> N
+    A --> O
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   React Client  │────│   Supabase API   │────│   PostgreSQL    │
-│                 │    │                  │    │   Database      │
-│  - Components   │    │  - Authentication│    │                 │
-│  - Hooks        │    │  - Row Level     │    │  - Tables       │
-│  - Pages        │    │    Security      │    │  - Functions    │
-│  - Utils        │    │  - Realtime      │    │  - Triggers     │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-```
 
-### Project Structure
+### 📁 **Project Structure**
+
 ```
 src/
-├── api/                 # API utilities and health checks
-├── components/          # Reusable React components
-│   ├── admin/          # Admin-specific components
-│   │   └── dev-tools/  # Development sync tools
-│   ├── auth/           # Authentication components
-│   ├── inventory/      # Inventory management
-│   ├── jobs/           # Job card system
-│   ├── rotable/        # Rotable parts management
-│   ├── tools/          # Tool management
-│   └── ui/             # Base UI components (shadcn/ui)
-├── hooks/              # Custom React hooks
-├── integrations/       # Supabase integration
-├── lib/                # Utility functions
-├── middleware/         # Security middleware
-├── pages/              # Route pages
-├── scripts/            # Development scripts
-│   └── dev-sync-plugin.ts  # Vite plugin for sync middleware
-└── main.tsx           # Application entry point
+├── api/                    # API utilities and health checks
+│   └── supabase-check.ts   # Supabase connectivity checks
+├── components/             # Reusable React components
+│   ├── admin/             # Admin-specific components
+│   │   ├── dev-tools/     # Development sync tools
+│   │   ├── CompanyManagement.tsx
+│   │   ├── UserManagement.tsx
+│   │   └── SecurityAuditLog.tsx
+│   ├── auth/              # Authentication components
+│   │   ├── AuthForm.tsx
+│   │   ├── LoginForm.tsx
+│   │   └── SignupForm.tsx
+│   ├── inventory/         # Inventory management
+│   │   ├── ProductCatalog.tsx
+│   │   ├── BatchManagement.tsx
+│   │   └── StockMovements.tsx
+│   ├── jobs/              # Job card system
+│   │   ├── JobCardForm.tsx
+│   │   ├── ApprovalWorkflow.tsx
+│   │   └── JobCardList.tsx
+│   ├── rotable/           # Rotable parts management
+│   │   ├── RotablePartsList.tsx
+│   │   ├── FlightTracking.tsx
+│   │   └── InstallationLogs.tsx
+│   ├── tools/             # Tool management
+│   │   ├── ToolCatalog.tsx
+│   │   ├── CheckoutSystem.tsx
+│   │   └── ReturnSystem.tsx
+│   └── ui/                # Base UI components (shadcn/ui)
+│       ├── button.tsx
+│       ├── input.tsx
+│       └── dialog.tsx
+├── hooks/                 # Custom React hooks
+│   ├── useAuth.tsx        # Authentication hook
+│   ├── useSupabaseClient.tsx
+│   └── useAuditLogs.tsx
+├── integrations/          # Supabase integration
+│   └── supabase/
+│       ├── client.ts
+│       └── types.ts
+├── lib/                   # Utility functions
+│   ├── utils.ts
+│   ├── validation.ts
+│   └── auth/
+│       └── security.ts
+├── middleware/            # Security middleware
+│   └── security.ts
+├── pages/                 # Route pages
+│   ├── Index.tsx
+│   ├── Auth.tsx
+│   ├── Admin.tsx
+│   ├── Inventory.tsx
+│   └── JobCards.tsx
+├── scripts/               # Development scripts
+│   ├── dev-sync-plugin.ts # Vite plugin for sync middleware
+│   └── watchdog.ts
+└── main.tsx              # Application entry point
 ```
 
-## Setup Instructions
+### 🔄 **Data Flow Architecture**
 
-### Prerequisites
-- Node.js (v18 or higher)
-- npm or yarn
-- Git
-- Supabase account
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant S as Supabase API
+    participant D as Database
+    participant A as Audit Log
+    
+    U->>F: User Action
+    F->>S: API Request
+    S->>D: Query with RLS
+    D-->>S: Data + Permissions
+    S->>A: Log Access
+    S-->>F: Response
+    F-->>U: UI Update
+```
 
-### Environment Configuration
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd <project-name>
-   ```
+## Database Architecture
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+### 🗄️ **Database Schema Overview**
 
-3. **Environment Variables**
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Update `.env` with your Supabase credentials:
-   ```env
-   VITE_SUPABASE_URL=https://your-project-ref.supabase.co
-   VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key-here
-   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
-   ```
-   
-   For development sync features, create `.env.local`:
-   ```env
-   ALLOW_SYNC=1
-   GIT_REMOTE=origin
-   GIT_BRANCH=main
-   SUPABASE_DB_PASSWORD=your-db-password
-   ```
+```mermaid
+erDiagram
+    USERS ||--o{ PROFILES : has
+    USERS ||--o{ USER_ROLES : assigned
+    PROFILES ||--o{ INVENTORY_PRODUCTS : owns
+    INVENTORY_PRODUCTS ||--o{ INVENTORY_BATCHES : contains
+    PROFILES ||--o{ CUSTOMERS : manages
+    PROFILES ||--o{ JOB_CARDS : creates
+    PROFILES ||--o{ ROTABLE_PARTS : tracks
+    PROFILES ||--o{ TOOLS : manages
+    PROFILES ||--o{ CUSTOMER_PERMISSIONS : granted
+    
+    USERS {
+        uuid id PK
+        string email
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    PROFILES {
+        uuid id PK
+        string email
+        string full_name
+        string position
+        uuid department_id FK
+        boolean is_staff
+        boolean staff_active
+        string phone
+        string badge_id
+        string profile_image_url
+        text bio
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    INVENTORY_PRODUCTS {
+        uuid id PK
+        uuid user_id FK
+        string part_number
+        text description
+        decimal unit_cost
+        decimal sale_price
+        decimal purchase_price
+        string unit_of_measure
+        decimal minimum_stock
+        decimal reorder_point
+        decimal reorder_qty
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    INVENTORY_BATCHES {
+        uuid id PK
+        uuid user_id FK
+        uuid product_id FK
+        string batch_number
+        integer quantity
+        decimal cost_per_unit
+        date received_date
+        date expiry_date
+        string status
+        string approval_status
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    CUSTOMERS {
+        uuid id PK
+        uuid user_id FK
+        string name
+        string email
+        string phone
+        text address
+        string city
+        string state
+        string zip_code
+        string country
+        string contact_person
+        string tail_number
+        string aircraft_type
+        text notes
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    JOB_CARDS {
+        integer jobcardid PK
+        uuid user_id FK
+        string customername
+        string aircraft_regno
+        text description
+        string category
+        string job_status
+        boolean warehouse_a_approved
+        boolean warehouse_bc_approved
+        boolean owner_supplied_approved
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    ROTABLE_PARTS {
+        uuid id PK
+        uuid user_id FK
+        string part_number
+        string serial_number
+        string manufacturer
+        text description
+        rotable_status status
+        decimal tso_hours
+        integer tso_cycles
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    USER_ROLES {
+        uuid id PK
+        uuid user_id FK
+        app_role role
+        timestamp created_at
+    }
+    
+    CUSTOMER_PERMISSIONS {
+        uuid id PK
+        uuid user_id FK
+        string permission_type
+        uuid granted_by FK
+        timestamp granted_at
+        timestamp expires_at
+        text notes
+    }
+```
 
-4. **Start Development Server**
-   ```bash
-   npm run dev
-   ```
+### 🔐 **Security Architecture**
 
-### Supabase Configuration
-1. **Authentication Settings** (Required)
-   - OTP expiry: 600 seconds (10 minutes)
-   - Enable leaked password protection
-   - Minimum password length: 8 characters
-   - Enable password strength requirements
+#### **Row Level Security (RLS) Policies**
 
-2. **Rate Limiting**
-   - Configure appropriate rate limits for sign-in attempts
+```mermaid
+graph TD
+    A[User Request] --> B{Authentication Check}
+    B -->|Valid| C{RLS Policy Check}
+    B -->|Invalid| D[Access Denied]
+    
+    C -->|Admin Role| E[Full Access]
+    C -->|Staff Role| F[Limited Access]
+    C -->|User Role| G[Own Data Only]
+    C -->|No Permission| H[Access Denied]
+    
+    E --> I[Audit Log]
+    F --> I
+    G --> I
+    H --> I
+```
+
+#### **Permission Hierarchy**
+
+```mermaid
+graph TD
+    A[System Owner] --> B[Admin]
+    B --> C[HR Manager]
+    B --> D[Parts Approver]
+    B --> E[Job Allocator]
+    B --> F[Batch Manager]
+    C --> G[Standard User]
+    D --> G
+    E --> G
+    F --> G
+```
+
+### 📊 **Database Functions**
+
+#### **Security Functions**
+- `has_role(user_id, role)` - Check user role
+- `has_customer_permission(user_id, permission)` - Check customer permissions
+- `secure_profile_access(profile_id, access_type)` - Secure profile access
+- `emergency_profile_access(profile_id, justification)` - Emergency access
+
+#### **Inventory Functions**
+- `get_stock_valuation_report(user_id, as_of_date)` - Stock valuation
+- `get_batch_breakdown_report(user_id, product_id, as_of_date)` - Batch details
+- `get_stock_on_hand(user_id, product_id, as_of_date, batch_id)` - Current stock
+
+#### **Audit Functions**
+- `log_rotable_action(part_id, action, description, old_values, new_values)` - Rotable logging
+- `audit_customer_access(customer_id, user_id, action)` - Customer access logging
 
 ## Database Schema
 

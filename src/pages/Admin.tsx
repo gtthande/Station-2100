@@ -13,6 +13,7 @@ import { SampleUsersManagement } from '@/components/admin/SampleUsersManagement'
 import { CustomerPermissionManagement } from '@/components/admin/CustomerPermissionManagement';
 import CompanyManagement from '@/components/admin/CompanyManagement';
 import ExchangeRatesManager from '@/components/admin/ExchangeRatesManager';
+import AdminQuickActions from '@/components/admin/AdminQuickActions';
 import { UserMenu } from '@/components/navigation/UserMenu';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link, useNavigate } from 'react-router-dom';
@@ -252,6 +253,11 @@ const Admin = () => {
             <DollarSign className="w-4 h-4 mr-2" />
             Exchange Rates
           </Button>
+        </div>
+
+        {/* Admin Quick Actions */}
+        <div className="mb-6">
+          <AdminQuickActions />
         </div>
 
         {activeTab === 'users' && (

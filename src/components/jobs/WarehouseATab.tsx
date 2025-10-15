@@ -92,7 +92,7 @@ export function WarehouseATab({
                 onChange={(e) => setBarcodeInput(e.target.value)}
                 onKeyDown={onBarcodeKeyPress}
                 placeholder="Scan or type part number, batch number, or serial number and press Enter..."
-                className="bg-white border-blue-300"
+                className="bg-white border-2 border-blue-400 text-base font-semibold text-gray-900 placeholder-gray-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-200"
               />
             </div>
             <Button
@@ -140,7 +140,7 @@ export function WarehouseATab({
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="bg-gray-50">
+              <TableRow className="bg-gray-100">
                 <TableHead className="font-semibold">Part No</TableHead>
                 <TableHead className="font-semibold">Description</TableHead>
                 <TableHead className="font-semibold text-center">Qty</TableHead>
@@ -156,13 +156,13 @@ export function WarehouseATab({
               {warehouseAParts.map((part) => {
                 const { costTotal, fittingTotal, lineTotal } = calculateLineTotals(part);
                 return (
-                  <TableRow key={part.id} className="hover:bg-gray-50">
+                  <TableRow key={part.id} className="hover:bg-gray-50 border-b border-gray-200">
                     <TableCell>
                       <Input
                         value={part.partno}
                         onChange={(e) => onUpdatePart(part.id!, 'partno', e.target.value)}
                         onBlur={() => onSavePart(part)}
-                        className="border-0 bg-transparent p-1 text-sm"
+                        className="border-2 border-gray-400 bg-white p-2 text-base font-semibold text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                         placeholder="Part number"
                       />
                     </TableCell>
@@ -171,7 +171,7 @@ export function WarehouseATab({
                         value={part.description}
                         onChange={(e) => onUpdatePart(part.id!, 'description', e.target.value)}
                         onBlur={() => onSavePart(part)}
-                        className="border-0 bg-transparent p-1 text-sm"
+                        className="border-2 border-gray-400 bg-white p-2 text-base font-semibold text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                         placeholder="Description"
                       />
                     </TableCell>
@@ -181,7 +181,7 @@ export function WarehouseATab({
                         value={part.quantity}
                         onChange={(e) => onUpdatePart(part.id!, 'quantity', e.target.value)}
                         onBlur={() => onSavePart(part)}
-                        className="border-0 bg-transparent p-1 text-sm text-center w-20"
+                        className="border-2 border-gray-400 bg-white p-2 text-base font-semibold text-gray-900 text-center w-20 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                         min="0"
                         step="1"
                       />
@@ -192,7 +192,7 @@ export function WarehouseATab({
                         value={part.cost_price}
                         onChange={(e) => onUpdatePart(part.id!, 'cost_price', e.target.value)}
                         onBlur={() => onSavePart(part)}
-                        className="border-0 bg-transparent p-1 text-sm text-right w-24"
+                        className="border-2 border-gray-400 bg-white p-2 text-base font-semibold text-gray-900 text-right w-24 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                         min="0"
                         step="0.01"
                       />
@@ -203,7 +203,7 @@ export function WarehouseATab({
                         value={part.fitting_price}
                         onChange={(e) => onUpdatePart(part.id!, 'fitting_price', e.target.value)}
                         onBlur={() => onSavePart(part)}
-                        className="border-0 bg-transparent p-1 text-sm text-right w-24"
+                        className="border-2 border-gray-400 bg-white p-2 text-base font-semibold text-gray-900 text-right w-24 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                         min="0"
                         step="0.01"
                       />

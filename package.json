@@ -1,5 +1,5 @@
 {
-    "name": "vite_react_shadcn_ts",
+    "name": "station-2100",
     "private": true,
     "version": "0.0.0",
     "type": "module",
@@ -20,10 +20,12 @@
         "reset": "taskkill /F /IM node.exe /T 2>$null && npm run link && npm run db:push && npm run dev",
         "fix:stubs": "node scripts/dev-scan-and-stub.mjs",
         "migrate": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$name = Read-Host 'Migration name (e.g. add_work_orders)'; npx supabase@latest migration new \\\"$name\\\"; Write-Host '*** Edit the generated SQL in supabase/migrations, then press Enter to push...'; Read-Host; npx supabase@latest db push --yes --password \\\"$env:SUPABASE_DB_PASSWORD\\\"\"",
-        "dev:clean": "cross-env-shell \"rmdir /s /q node_modules\\.vite 2>nul & npm run dev || rm -rf node_modules/.vite && npm run dev\""
+        "dev:clean": "cross-env-shell \"rmdir /s /q node_modules\\.vite 2>nul & npm run dev || rm -rf node_modules/.vite && npm run dev\"",
+        "sync:dev-profile": "powershell -ExecutionPolicy Bypass -File scripts/sync-dev-profile.ps1"
     },
     "dependencies": {
         "@hookform/resolvers": "^3.9.0",
+        "@prisma/client": "^6.17.1",
         "@radix-ui/react-accordion": "^1.2.0",
         "@radix-ui/react-alert-dialog": "^1.1.1",
         "@radix-ui/react-aspect-ratio": "^1.1.0",
@@ -52,7 +54,7 @@
         "@radix-ui/react-toggle-group": "^1.1.0",
         "@radix-ui/react-tooltip": "^1.1.4",
         "@supabase/ssr": "^0.7.0",
-        "@supabase/supabase-js": "^2.56.1",
+        "@supabase/supabase-js": "^2.58.0",
         "@tanstack/react-query": "^5.56.2",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
@@ -63,7 +65,9 @@
         "express": "^4.19.2",
         "input-otp": "^1.2.4",
         "lucide-react": "^0.462.0",
+        "mysql2": "^3.15.1",
         "next-themes": "^0.3.0",
+        "prisma": "^6.17.1",
         "react": "^18.3.1",
         "react-day-picker": "^8.10.1",
         "react-dom": "^18.3.1",

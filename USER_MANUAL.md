@@ -1,21 +1,29 @@
-# User Manual - Aviation Inventory Management System
+# User Manual - Station-2100 Aviation Management System
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-2.56.1-green.svg)](https://supabase.com/)
 
 ## Table of Contents
 1. [Getting Started](#getting-started)
-2. [Dashboard Overview](#dashboard-overview)
-3. [Inventory Management](#inventory-management)
-4. [Job Card Management](#job-card-management)
-5. [Customer Management](#customer-management)
-6. [Tool Management](#tool-management)
-7. [Rotable Parts Management](#rotable-parts-management)
-8. [Reports & Analytics](#reports--analytics)
-9. [Admin Functions](#admin-functions)
-10. [Security Features](#security-features)
-11. [Code & DB Sync (Development)](#code--db-sync-development)
+2. [Authentication & Login](#authentication--login)
+3. [Dashboard Overview](#dashboard-overview)
+4. [Inventory Management](#inventory-management)
+5. [Job Card Management](#job-card-management)
+6. [Customer Management](#customer-management)
+7. [Tool Management](#tool-management)
+8. [Rotable Parts Management](#rotable-parts-management)
+9. [Reports & Analytics](#reports--analytics)
+10. [Admin Functions](#admin-functions)
+11. [Security Features](#security-features)
+12. [Code & DB Sync (Development)](#code--db-sync-development)
+13. [Troubleshooting](#troubleshooting)
 
 ## Getting Started
 
-### Development Environment Setup
+### 🚀 **Quick Start Guide**
+
+#### **Development Environment Setup**
 **Recommended Startup Method:**
 ```powershell
 powershell -ExecutionPolicy Bypass -File ".\Station-2100.ps1"
@@ -29,11 +37,72 @@ This script will:
 - Wait for sync endpoints to be ready
 - Display sync health status
 
-### System Access
+#### **System Access**
 1. Navigate to the application URL (typically http://localhost:8080)
 2. Create an account or sign in with existing credentials
 3. Verify email address if required
 4. Complete profile setup
+
+## Authentication & Login
+
+### 🔐 **Login Credentials**
+
+#### **Default Admin Account**
+- **Email**: `gtthande@gmail.com`
+- **Password**: `Password100%`
+- **Role**: System Administrator
+- **Name**: George Thande
+
+#### **Creating New Accounts**
+1. **Click "Don't have an account? Sign up"** on the login page
+2. **Enter your details**:
+   - Email address
+   - Secure password (minimum 8 characters)
+   - Full name
+3. **Click "Sign Up"**
+4. **Check your email** for verification (if required)
+5. **Complete profile setup** after first login
+
+### 🔒 **Password Security**
+
+#### **Password Requirements**
+- **Minimum Length**: 8 characters
+- **Strength Validation**: Real-time password strength checking
+- **Breach Detection**: Automatic checking against HaveIBeenPwned database
+- **Security Recommendations**: System provides security suggestions
+
+#### **Password Reset**
+1. **Click "Forgot Password?"** on the login page
+2. **Enter your email address**
+3. **Check your email** for reset link
+4. **Click the reset link** (valid for 10 minutes)
+5. **Enter new password**
+6. **Confirm new password**
+
+### 👤 **User Roles & Permissions**
+
+#### **Role Hierarchy**
+```mermaid
+graph TD
+    A[System Owner] --> B[Admin]
+    B --> C[HR Manager]
+    B --> D[Parts Approver]
+    B --> E[Job Allocator]
+    B --> F[Batch Manager]
+    C --> G[Standard User]
+    D --> G
+    E --> G
+    F --> G
+```
+
+#### **Role Capabilities**
+- **System Owner**: Full system access and configuration
+- **Admin**: User management, system settings, full data access
+- **HR Manager**: User management, profile access, staff administration
+- **Parts Approver**: Inventory approval, batch management
+- **Job Allocator**: Job card allocation, workflow management
+- **Batch Manager**: Batch operations, inventory management
+- **Standard User**: Basic operations, own data access
 
 ### Dashboard Overview
 The main dashboard provides:
