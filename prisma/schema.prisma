@@ -434,3 +434,16 @@ enum MovementType {
   transfer
   adjustment
 }
+
+model sync_logs {
+  id          Int      @id @default(autoincrement())
+  run_type    String
+  tables      Json?
+  dry_run     Boolean  @default(true)
+  added       Int      @default(0)
+  updated     Int      @default(0)
+  deleted     Int      @default(0)
+  errors      String?  @db.Text
+  created_at  DateTime @default(now())
+  @@map("sync_logs")
+}

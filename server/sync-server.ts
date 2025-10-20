@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { PrismaClient } from "@prisma/client";
 import { createClient } from "@supabase/supabase-js";
 import { config } from "dotenv";
+import syncRoutes from "./sync-controller";
 
 // Load environment variables from .env.local
 config({ path: '.env.local' });
@@ -248,10 +249,16 @@ app.post("/api/admin/supabase/sync", async (req, res) => {
   }
 });
 
+// Add sync routes
+app.use("/api/sync", syncRoutes);
+
 app.listen(PORT, () => {
   console.log(`[sync] server on http://localhost:${PORT} (ALLOW_SYNC=${ALLOW ? "1" : "0"})`);
   console.log(`[admin] MySQL ping: http://localhost:${PORT}/api/admin/mysql/ping`);
   console.log(`[admin] Supabase sync: http://localhost:${PORT}/api/admin/supabase/sync`);
+  console.log(`[sync] Schema sync: http://localhost:${PORT}/api/sync/schema`);
+  console.log(`[sync] Data sync: http://localhost:${PORT}/api/sync/data`);
+  console.log(`[sync] Full sync: http://localhost:${PORT}/api/sync/full`);
 });
 
 

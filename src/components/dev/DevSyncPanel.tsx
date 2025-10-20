@@ -17,6 +17,7 @@ export default function DevSyncPanel() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("Sync from Station-2100 UI");
   const [lines, setLines] = useState<LogLine[]>([]);
+  const [dryRun, setDryRun] = useState(true);
 
   if (!visible) {
     return (
@@ -85,6 +86,20 @@ export default function DevSyncPanel() {
     }
   }
 
+  async function syncCall(endpoint: string, dryRun: boolean = false) {
+    setBusy(true);
+    try {
+      const url = `${syncBase}/api/sync/${endpoint}${dryRun ? "?dryRun=true" : ""}`;
+      const res = await fetch(url, { method: "POST" });
+      const data = await readJsonSafe(res);
+      setLines((l) => add(l, `${endpoint} ${dryRun ? "(dry-run)" : "(live)"}: ${JSON.stringify(data)}`));
+    } catch (e: any) {
+      setLines((l) => add(l, "ERROR: " + (e?.message || String(e))));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function status() {
     try {
       let res: Response | null = null;
@@ -103,6 +118,62 @@ export default function DevSyncPanel() {
 
   return (
     <div className="space-y-4">
+      {/* One-Way Sync (MySQL → Supabase) */}
+      <div className="rounded-2xl border border-neutral-700 p-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">One-Way Sync (MySQL → Supabase)</h2>
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={dryRun}
+                onChange={(e) => setDryRun(e.target.checked)}
+                className="rounded"
+              />
+              Dry Run
+            </label>
+            <button
+              onClick={() => syncCall("status")}
+              className="px-3 py-1 rounded bg-neutral-800 hover:bg-neutral-700"
+            >
+              View Logs
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <button
+            disabled={busy}
+            onClick={() => syncCall("schema", dryRun)}
+            className="rounded-xl px-4 py-2 bg-blue-600/80 hover:bg-blue-600 disabled:opacity-50"
+          >
+            {dryRun ? "🔍" : "📋"} Schema Sync
+          </button>
+
+          <button
+            disabled={busy}
+            onClick={() => syncCall("data", dryRun)}
+            className="rounded-xl px-4 py-2 bg-green-600/80 hover:bg-green-600 disabled:opacity-50"
+          >
+            {dryRun ? "🔍" : "📊"} Data Sync
+          </button>
+
+          <button
+            disabled={busy}
+            onClick={() => syncCall("full", dryRun)}
+            className="rounded-xl px-4 py-2 bg-purple-600/80 hover:bg-purple-600 disabled:opacity-50"
+          >
+            {dryRun ? "🔍" : "🔄"} Full Sync
+          </button>
+        </div>
+
+        <div className="mt-3 text-xs text-neutral-500">
+          <strong>Safety:</strong> One-way sync only (MySQL → Supabase). Never writes back to MySQL.
+          {dryRun && " <strong>Dry Run Mode:</strong> Preview changes without applying them."}
+        </div>
+      </div>
+
+      {/* Legacy Code & DB Sync */}
       <div className="rounded-2xl border border-neutral-700 p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Code & DB Sync</h2>
