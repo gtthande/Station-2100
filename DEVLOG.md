@@ -4,6 +4,37 @@ This file tracks the ongoing development of the Station-2100 modernization proje
 
 ---
 
+## 🚀 System Recovery & Hybrid Architecture - October 2025
+
+### Recovery Overview
+- **Status**: COMPLETED ✅
+- **Recovery Date**: 2025-10-20
+- **Architecture**: Hybrid MySQL Primary + Supabase Backup
+- **Database**: MariaDB (127.0.0.1:3306) + Supabase PostgreSQL
+- **Target Database**: `station` (MySQL primary)
+- **Recovery Type**: Full system restoration to 16 October baseline
+
+### Recovery Actions
+- **Git Checkout**: Restored to commit `e55af48` (16 Oct 2025)
+- **Environment Fixes**: Corrected Supabase URL configuration
+- **Database Integration**: Regenerated Prisma Client for MySQL
+- **Service Architecture**: Separated frontend (Vite) and backend (Express)
+- **Safety Backup**: Created `src_backup_2025-10-20_10-29-16/`
+
+### Key Fixes Applied
+- ✅ Fixed Supabase URL typo (`jar1vtojzqkccovburnli` → `jarlvtojzqkccovburmi`)
+- ✅ Added missing `VITE_API_URL` environment variable
+- ✅ Regenerated Prisma Client for MySQL connection
+- ✅ Verified 19 tables active in MySQL database
+- ✅ Confirmed both frontend and backend servers operational
+
+### Current System Status
+- **Frontend**: React + Vite (Port 8080) ✅
+- **Backend**: Express Sync Server (Port 8787) ✅
+- **Database**: MySQL with 19 tables ✅
+- **Authentication**: Supabase Auth ✅
+- **Backup**: Supabase PostgreSQL ✅
+
 ## 🚀 MySQL Migration Phase 2 - Cubic Matrix v5 (January 2025)
 
 ### Migration Overview

@@ -34,11 +34,13 @@
 
 ### 🏗️ **Technology Stack**
 - **Frontend**: React 18, TypeScript, Vite, TailwindCSS
-- **Backend**: Supabase (PostgreSQL, Auth, Storage, Realtime)
+- **Primary Database**: MySQL (MariaDB 10.4.32) with Prisma ORM
+- **Backup Database**: Supabase (PostgreSQL) for sync operations
+- **Authentication**: Supabase Auth for user management
 - **UI Components**: shadcn/ui, Radix UI primitives
 - **State Management**: TanStack Query (React Query)
 - **Form Handling**: React Hook Form with Zod validation
-- **Security**: Row-Level Security, AES-256 encryption, comprehensive audit logging
+- **Security**: Application-level security, AES-256 encryption, comprehensive audit logging
 
 ## Quick Start
 
@@ -84,34 +86,43 @@
 graph TB
     subgraph "Frontend Layer"
         A[React 18 + TypeScript]
-        B[Vite Dev Server]
+        B[Vite Dev Server :8080]
         C[shadcn/ui Components]
         D[TailwindCSS Styling]
     end
     
     subgraph "Backend Layer"
-        E[Supabase API]
-        F[PostgreSQL Database]
-        G[Row Level Security]
-        H[Authentication]
+        E[Express Sync Server :8787]
+        F[MySQL Database :3306]
+        G[Prisma ORM]
+        H[Supabase Auth]
+    end
+    
+    subgraph "Backup Layer"
+        I[Supabase PostgreSQL]
+        J[Sync Operations]
+        K[Data Backup]
     end
     
     subgraph "External Services"
-        I[Exchange Rate API]
-        J[HaveIBeenPwned API]
-        K[GitHub Integration]
+        L[Exchange Rate API]
+        M[HaveIBeenPwned API]
+        N[GitHub Integration]
     end
     
     A --> E
+    A --> H
     B --> A
     C --> A
     D --> A
     E --> F
     E --> G
-    E --> H
     E --> I
     E --> J
-    A --> K
+    F --> K
+    E --> L
+    E --> M
+    A --> N
 ```
 
 ### 📊 **Database Architecture**
@@ -283,7 +294,10 @@ graph LR
 
 #### **Required Environment Variables**
 ```bash
-# Supabase Configuration
+# Primary Database (MySQL)
+DATABASE_URL="mysql://root:password@localhost:3306/station"
+
+# Supabase Configuration (Auth + Backup)
 VITE_SUPABASE_URL=https://jarlvtojzqkccovburmi.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
@@ -291,6 +305,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 # Development Sync (Optional)
 ALLOW_SYNC=1
 SUPABASE_DB_PASSWORD=Series-2100Station-2100
+SYNC_TOKEN=station-2100-sync-token-3985
 
 # GitHub Integration (Optional)
 VITE_GITHUB_REPO=gtthande/Station-2100
@@ -358,12 +373,13 @@ graph TB
 
 #### **Available Scripts**
 ```bash
-npm run dev          # Start development server
+npm run dev          # Start Vite frontend server (port 8080)
+npm run sync:server  # Start Express sync server (port 8787)
+npm run autopilot    # Dev server + watchdog
 npm run build        # Build for production
 npm run preview      # Preview production build
-npm run autopilot    # Dev server + watchdog
-npm run sync:server  # Start sync server
-npm run db:push      # Push database migrations
+npm run db:push      # Push database migrations to Supabase
+npm run check:sync   # Check sync server status
 ```
 
 ### 🧪 **Testing & Quality Assurance**
