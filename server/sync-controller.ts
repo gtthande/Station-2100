@@ -16,30 +16,35 @@ const REQ_DIR = (process.env.SYNC_DIRECTION || "mysql_to_supabase").toLowerCase(
 const ALLOW_DESTRUCTIVE = String(process.env.ALLOW_DESTRUCTIVE || "false") === "true";
 const MIRROR_DELETES = String(process.env.MIRROR_DELETES || "false") === "true";
 
-// Environment validation
+// Environment validation with graceful fallback
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const SUPABASE_DB_URL = process.env.SUPABASE_DB_URL;
 
-if (!SUPABASE_URL) {
-  console.error("Missing SUPABASE_URL or VITE_SUPABASE_URL environment variable");
-  process.exit(1);
+let supabase: any = null;
+let pg: any = null;
+let supabaseReady = false;
+
+// Try to initialize Supabase (non-blocking)
+try {
+  if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+    supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    supabaseReady = true;
+    console.log("✅ Supabase client ready for sync operations");
+  }
+} catch (err: any) {
+  console.warn("⚠️ Supabase sync unavailable:", err.message);
 }
 
-if (!SUPABASE_SERVICE_ROLE_KEY) {
-  console.error("Missing SUPABASE_SERVICE_ROLE_KEY environment variable");
-  process.exit(1);
+// Try to initialize PostgreSQL connection (non-blocking)
+try {
+  if (SUPABASE_DB_URL) {
+    pg = new Pool({ connectionString: SUPABASE_DB_URL });
+    console.log("✅ PostgreSQL connection ready for schema sync");
+  }
+} catch (err: any) {
+  console.warn("⚠️ PostgreSQL connection unavailable:", err.message);
 }
-
-if (!SUPABASE_DB_URL) {
-  console.error("Missing SUPABASE_DB_URL environment variable");
-  process.exit(1);
-}
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-// Raw PG for schema DDL where needed
-const pg = new Pool({ connectionString: SUPABASE_DB_URL });
 
 type SyncLog = {
   run_type: "schema" | "data" | "full",
@@ -79,6 +84,16 @@ router.post("/schema", async (req, res) => {
   let added = 0, updated = 0;
   const errors: string[] = [];
   const start = Date.now();
+
+  // Check if Supabase is available
+  if (!supabaseReady || !pg) {
+    return res.status(503).json({ 
+      error: "Supabase unavailable", 
+      details: "Schema sync requires Supabase connection. Continuing in MySQL-only mode.",
+      supabase_ready: supabaseReady,
+      postgres_ready: !!pg
+    });
+  }
 
   try {
     // Generate Postgres SQL diff script (additive)
@@ -156,6 +171,15 @@ router.post("/data", async (req, res) => {
   const errors: string[] = [];
   let added = 0, updated = 0, deleted = 0;
   const start = Date.now();
+
+  // Check if Supabase is available
+  if (!supabaseReady) {
+    return res.status(503).json({ 
+      error: "Supabase unavailable", 
+      details: "Data sync requires Supabase connection. Continuing in MySQL-only mode.",
+      supabase_ready: supabaseReady
+    });
+  }
 
   try {
     if (dryRun) {
